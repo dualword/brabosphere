@@ -62,7 +62,7 @@ class OrbitalThread : public QThread
     void calcRandomDots();              // calculates random points according to the probability
     void calcRadialPart();              // calculates only the radial part of the orbital
     void calcAngularPart();             // calculates only the angular part of the orbital
-    void updateList(std::vector<Point3D<float> >& newCoords);         // updates the shared list of coordinates with a new set
+    void updateList(std::vector<Point3D<float> >& newCoords, bool final = false);         // updates the shared list of coordinates with a new set
     float associatedLegendre(const float x, const int m, const unsigned int l); // returns the associated Legendre polynomial
     float associatedLaguerre(const float x, const int m, const unsigned int n); // returns the associated Laguerre polynomial
     template <class T> T factorial(const unsigned int number);        // returns the factorial (n!) of the number (n)
@@ -87,7 +87,7 @@ class OrbitalThread : public QThread
 
     // private static constants
     static const float abohr;           ///< The Bohr radius.
-    static const unsigned int updateSize;         // THe amount of dots that have to be calculated before the list of dots is updated and the mutex is locked
+    static const unsigned int updateSize;         // The amount of dots that have to be calculated before the list of dots is updated and the mutex is locked
 };
 
 #endif

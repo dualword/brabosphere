@@ -330,6 +330,7 @@ void OrbitalThread::calcIsoProbability()
       }
     }    
   }
+  updateList(coordsList, true);
 }
 
 ///// calcAccumulatedProbability //////////////////////////////////////////////
@@ -432,6 +433,7 @@ void OrbitalThread::calcAccumulatedProbability()
       if(r > maximumRadius) maximumRadius = r;
     }
   }
+  updateList(coordsList, true);
 }
 
 ///// calcRandomDots //////////////////////////////////////////////////////////
@@ -548,6 +550,7 @@ void OrbitalThread::calcRandomDots()
       }
     }
   }
+  updateList(coordsList, true);
   qDebug("final maximum probability = %f", maxProb);
   qDebug(" corresponding radius = %f", maxProbR);
 }
@@ -616,6 +619,7 @@ void OrbitalThread::calcRadialPart()
         probabilityRadius = r;
     }*/
   }
+  updateList(coordsList, true);
 }
 
 ///// calcAngularPart /////////////////////////////////////////////////////////
@@ -692,13 +696,15 @@ void OrbitalThread::calcAngularPart()
       if(r > maximumRadius) maximumRadius = r;
     }
   }
+  updateList(coordsList, true);
 }
 
 ///// updateList //////////////////////////////////////////////////////////////
-void OrbitalThread::updateList(std::vector<Point3D<float> >& newCoords)
+void OrbitalThread::updateList(std::vector<Point3D<float> >& newCoords, bool final)
 /// Updates the shared coordinate list with a set of newly calculated points.
+/// If final is true, the update is forces, even if less than updateSize values are present.
 {
-  if(newCoords.size() >= updateSize)
+  if(newCoords.size() >= updateSize || (final && !newCoords.empty()))
   {
     mutex->lock();
     coords->insert(coords->end(), newCoords.begin(), newCoords.end());
