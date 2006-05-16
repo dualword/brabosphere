@@ -125,7 +125,8 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
       ProgressBar->setCenterIndicator(true);
       ProgressLayout->addWidget(TextLabelProgress);
       ProgressLayout->addWidget(ProgressBar);
-    MoleculeView->resize(MoleculeView->width(),MoleculeView->height()*6);
+    // default size is 400x400
+    MoleculeView->resize(MoleculeView->width(),350);
     MoleculeView->resetView();
 
   ///// Connections

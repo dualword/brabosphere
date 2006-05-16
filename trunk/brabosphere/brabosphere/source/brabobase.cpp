@@ -1394,7 +1394,7 @@ void BraboBase::readInputFile()
 /// Reads a Brabo input file into the widgets.  
 {
   // sometimes misused for building the atomic density basis set files.
-  buildAtdens();
+  //buildAtdens();
 
   ///// select an input file
   QString filename = QFileDialog::getOpenFileName(QString::null, "*.inp", this, 0, tr("Choose a BRABO input file"));
