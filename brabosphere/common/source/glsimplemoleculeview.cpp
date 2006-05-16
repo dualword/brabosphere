@@ -466,6 +466,9 @@ void GLSimpleMoleculeView::updateGLSettings()
 
   ///// update the regular parameters
   glLineWidth(moleculeParameters.sizeLines);
+
+  ///// transparency settings might have changed
+  reorderShapes();
 }
 
 ///// updateShapes ///////////////////////////////////////////////////////////
@@ -734,7 +737,7 @@ void GLSimpleMoleculeView::drawScene()
 /// The default state is lighting enabled. If certain routine need to disable lighting
 /// they are required to enable it again at the end.
 {
-  qDebug("starting drawScene for atoms->count() = %d", atoms->count());
+  //qDebug("starting drawScene for atoms->count() = %d", atoms->count());
   if(scaleFactor < 1.0f)
     glScalef(scaleFactor, scaleFactor, scaleFactor);
 
