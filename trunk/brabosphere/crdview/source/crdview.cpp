@@ -505,8 +505,13 @@ void CrdView::readSettings()
   QSettings settings;
   settings.setPath(Version::appCompany, Version::appName.lower(), QSettings::User);
 
+#ifdef Q_OS_WIN32
+  const QString unixPrefix = "/";
+#else
+  const QString unixPrefix = "/" + Version::appName.lower() + "/";
+#endif
   ///// Brabosphere settings //////////
-  QString prefix = "/preferences/";
+  QString prefix = unixPrefix + "preferences/";
 
   ///// Molecule
   GLBaseParameters glBaseParameters;
@@ -578,7 +583,7 @@ void CrdView::readSettings()
   GLSimpleMoleculeView::setParameters(glMoleculeParameters);
 
   ///// CrdView settings //////////////
-  prefix = "/crdview/";
+  prefix = unixPrefix + "crdview/";
 
   ///// geometry
   int x = settings.readNumEntry(prefix + "geometry/x", -1);
@@ -638,7 +643,12 @@ void CrdView::saveSettings()
   QSettings settings;
   settings.setPath(Version::appCompany, Version::appName.lower(), QSettings::User);
 
+#ifdef Q_OS_WIN32
   const QString prefix = "/crdview/";
+#else
+  const QString prefix = "/" + Version::appName.lower() + "/crdview/";
+#endif
+
   settings.writeEntry(prefix + "geometry/x", pos().x());
   settings.writeEntry(prefix + "geometry/y", pos().y());
   settings.writeEntry(prefix + "geometry/width", width());
