@@ -209,9 +209,11 @@ void NewAtomBase::addAtom()
     }
   }
   emit atomAdded();
+  /*
   qDebug("finished, coordinates of all atoms:");
   for(unsigned int i = 0; i < atoms->count(); i++)
     qDebug("atom i: %f %f %f",atoms->x(i), atoms->y(i), atoms->z(i));
+  */
   updateAtomLimits();
 }
 

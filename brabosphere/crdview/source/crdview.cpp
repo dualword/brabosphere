@@ -271,7 +271,7 @@ void CrdView::helpAbout()
 
   QMessageBox::about(this,tr("About..."),
                      tr("CrdView") + "\n" +
-                     tr("Version") + " " + Version::appVersion + " (" + tr("build") + " " + Version::appBuildC + ")\n" +
+                     tr("Version") + " " + Version::appVersion + " (" + tr("build") + " " + Version::appBuild + ")\n" +
                      tr("Part of") + " " + Version::appName + " " + Version::appVersion + "\n" +
                      tr("(c) 2006 by Ben Swerts\n")
                     );

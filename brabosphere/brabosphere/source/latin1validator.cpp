@@ -21,7 +21,7 @@
   \brief This class validates QString's so they only contain latin1 characters.
 
   It must be used for cases where strings are passed on to BRABO programs as
-  input. As these strings (at this point) never may contain spaces, this is
+  input. As these strings (at this point) may never contain spaces, this is
   checked too.
 */
 /// \file
@@ -52,7 +52,7 @@ Latin1Validator::~Latin1Validator()
 void Latin1Validator::fixup(QString& input) const
 /// Fixes the input string by removing all non-latin1 characters.
 {
-  qDebug("called fixup");
+  //qDebug("called fixup");
   for(unsigned int i = input.length(); i != 0; i--)
   {
     if(!input.at(i - 1).latin1() || input.at(i-1).isSpace())
@@ -64,7 +64,7 @@ void Latin1Validator::fixup(QString& input) const
 QValidator::State Latin1Validator::validate(QString& input, int& pos) const
 /// Returns whether the string is a valid latin1-only string.
 {
-  qDebug("called validate");
+  //qDebug("called validate");
   for(unsigned int i = 0; i < input.length(); i++)
   {
     if(!input.at(i).latin1() || input.at(i).isSpace())

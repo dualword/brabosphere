@@ -44,12 +44,10 @@
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
-#include <cmath>      // for 'sqrt' (not needed for GCC >= 3.0)
-#include <cassert>    // not needed for SuSE 8.1 (GCC 3.2), but needed for 
-                      // SuSE 9.0 (GCC 3.3.1) and Visual C++ .NET 2002
+#include <cmath>         
 
 // STL header files
-#include <algorithm>  // for 'find' (not needed for GCC >= 3.0)
+#include <algorithm>
 
 // Qt header files
 #include <qcolor.h>

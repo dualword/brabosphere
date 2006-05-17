@@ -31,7 +31,7 @@
 #include <qstring.h>
 
 // Xbrabo header files
-#include <paths.h>
+#include "paths.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Member Functions                                            /////

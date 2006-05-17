@@ -35,7 +35,6 @@ class Version
     static const QString appCompany;    //< The company
     static const QString appVersion;    //< The version of the application
     static const QString appBuild;      //< The build number of the application
-    static const QString appBuildC;     //< The build number of the CrdView application
 
   private:
     Version();                           // constructor

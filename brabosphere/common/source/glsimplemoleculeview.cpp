@@ -71,9 +71,9 @@ GLSimpleMoleculeView::GLSimpleMoleculeView(AtomSet* atomset, QWidget* parent, co
   reorderShapes();
   labelFont = QApplication::font();
 #ifndef WIN32
-  // Linux needs a non TTF font like Times
+  // Linux needs a non TTF font like Times (safest option)
   //labelFont = QFont("Times");
-  //labelFont = QFont(); //needed?
+  // less safe option (not very well tested): use a bitmap font (works with MESA GL)
   labelFont.setStyleHint(QFont::AnyStyle, QFont::PreferBitmap); // uses a bitmap font
   labelFont.setPointSize(QApplication::font().pointSize());
   //labelFont.setStyleStrategy(QFont::OpenGLCompatible); // doesn't work on SuSE 9.2 64bit thru Cygwin/X and not supported on Qt 3.1.2

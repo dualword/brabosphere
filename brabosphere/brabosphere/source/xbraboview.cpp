@@ -28,7 +28,7 @@
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
-#include <cmath>  // for 'fabs' (not needed for GCC >= 3.0)
+#include <cmath> 
 
 // Qt header files
 #include <qapplication.h>
@@ -39,7 +39,6 @@
 #include <qdom.h>
 #include <qlabel.h>
 #include <qlayout.h>
-//#include <qlistbox.h>
 #include <qlistview.h>
 #include <qmessagebox.h>
 #include <qpixmap.h>
