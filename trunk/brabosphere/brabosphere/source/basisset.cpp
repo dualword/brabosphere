@@ -30,6 +30,9 @@
 
 ///// Header files ////////////////////////////////////////////////////////////
 
+// C++ heqder files
+#include <cassert>
+
 // Qt header files
 #include <qstring.h>
 #include <qstringlist.h>
@@ -49,7 +52,7 @@ unsigned int Basisset::basisToNum(const QString& basis)
 {
   initBasissets(); // checks itself whether the call was needed
 
-  ASSERT(basToNum.find(basis) != basToNum.end());
+  assert(basToNum.find(basis) != basToNum.end());
   
   return basToNum[basis];
 }
@@ -61,7 +64,7 @@ QString Basisset::numToBasis(const unsigned int basis)
 {
   initBasissets(); // checks itself whether the call was needed
 
-  ASSERT(basis < numBasissets);
+  assert(basis < numBasissets);
   
   return numToBas[basis];
 }
@@ -73,7 +76,7 @@ QString Basisset::numToBasisDir(const unsigned int basis)
 {
   initBasissets(); // checks itself whether the call was needed
 
-  ASSERT(basis < numBasissets);
+  assert(basis < numBasissets);
 
   return numToDir[basis];
 }

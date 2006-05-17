@@ -25,7 +25,7 @@
 
 */
 /// \file
-/// Contains hte implementation of the class OrbitalViewerBase
+/// Contains the implementation of the class OrbitalViewerBase
 
 ///// Header files ////////////////////////////////////////////////////////////
 

@@ -95,10 +95,7 @@ int main(int argc, char *argv[])
   QApplication app(argc, argv);
 
   if (!QGLFormat::hasOpenGL())
-  {
-    qWarning("This system has no working OpenGL support. Exiting...");
-    return -1;
-  }
+    qFatal("This system has no working OpenGL support. Exiting...");
 
   ///// Check whether the splash screen should be shown
   bool showSplash = true;
@@ -138,7 +135,7 @@ int main(int argc, char *argv[])
   // the random number generator (needed for calculating hydrogen orbitals)
   srand(time(NULL));
 
-  Xbrabo *xbrabo=new Xbrabo();
+  Xbrabo* xbrabo = new Xbrabo();
   app.setMainWidget(xbrabo);
   if(showSplash)
   {

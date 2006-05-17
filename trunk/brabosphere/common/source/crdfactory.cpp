@@ -37,7 +37,7 @@ is defined, the openbabel library is not needed for compilation.
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
-#include <cmath> // needed if USE_OPENBABELX is not defined
+#include <cmath>
 #include <iostream>
 
 // Qt header files
