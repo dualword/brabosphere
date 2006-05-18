@@ -276,7 +276,7 @@ void PreferencesBase::loadSettings()
   data.fastRenderLimit   = settings.readNumEntry(prefix + "fast_render_limit", 1000);
   data.showElements      = settings.readBoolEntry(prefix + "show_elements", false);
   data.showNumbers       = settings.readBoolEntry(prefix + "show_numbers", true);
-  data.sizeLines         = settings.readNumEntry(prefix + "size_lines", static_cast<int>((3.0 < maxLineWidthGL ? 3.0 : maxLineWidthGL)/lineWidthGranularity)); // min(3.0, maxLineWidthGL)
+  data.sizeLines         = settings.readNumEntry(prefix + "size_lines", static_cast<int>((minLineWidthGL > 1.0f ? minLineWidthGL : 1.0f)/lineWidthGranularity)); // max(1.0, minLineWidthGL) 
   data.sizeBonds         = settings.readEntry(prefix + "size_bonds", QString::number(AtomSet::vanderWaals(1)/2.0));
   data.sizeForces        = settings.readEntry(prefix + "size_forces", QString::number(AtomSet::vanderWaals(1)/2.0*1.1));
   data.colorLabels       = settings.readNumEntry(prefix + "color_labels", QColor(0, 255, 0).rgb()); // green

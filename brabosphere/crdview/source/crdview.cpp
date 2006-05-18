@@ -501,6 +501,8 @@ void CrdView::readSettings()
   GLfloat lwgran[] = {0.0};
   glGetFloatv(GL_LINE_WIDTH_RANGE, lwrange);
   glGetFloatv(GL_LINE_WIDTH_GRANULARITY, lwgran);
+  const int defaultLineWidth = static_cast<int>((lwrange[0] > 1.0f ? lwrange[0] : 1.0f)/lwgran[0]);
+  qDebug("defaultLineWidth = %d", defaultLineWidth);
 
   QSettings settings;
   settings.setPath(Version::appCompany, Version::appName.lower(), QSettings::User);
@@ -521,7 +523,9 @@ void CrdView::readSettings()
   glMoleculeParameters.fastRenderLimit      = settings.readNumEntry(prefix + "fast_render_limit", 1000);
   glMoleculeParameters.showElements         = settings.readBoolEntry(prefix + "show_elements", false);
   glMoleculeParameters.showNumbers          = settings.readBoolEntry(prefix + "show_numbers", true);
-  glMoleculeParameters.sizeLines            = settings.readNumEntry(prefix + "size_lines", static_cast<int>((3.0 < lwrange[1] ? 3.0 : lwrange[1])/lwgran[0])); // min(3.0, maxLineWidthGL)
+  const int lineWidth                       = settings.readNumEntry(prefix + "size_lines", defaultLineWidth); 
+  glMoleculeParameters.sizeLines            = static_cast<GLfloat>(lineWidth)*lwgran[0];
+  qDebug("read sizeLines = %f",glMoleculeParameters.sizeLines);
   glMoleculeParameters.sizeBonds            = settings.readEntry(prefix + "size_bonds", QString::number(AtomSet::vanderWaals(1)/2.0)).toFloat()/2.0;
   glMoleculeParameters.sizeForces           = settings.readEntry(prefix + "size_forces", QString::number(AtomSet::vanderWaals(1)/2.0*1.1)).toFloat()/2.0;
   glMoleculeParameters.colorLabels          = settings.readNumEntry(prefix + "color_labels", QColor(0, 255, 0).rgb()); // green
