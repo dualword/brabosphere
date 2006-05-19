@@ -1046,7 +1046,7 @@ void Xbrabo::helpCredits()
 void Xbrabo::helpAbout()
 /// Shows an About box for Xbrabo.
 {  
-  statusBar()->message(tr("About the program..."));
+  statusBar()->message(tr("Showing info about") + " " + Version::appName + " " + Version::appVersion + " (build " + Version::appBuild + ")...");
 
   AboutBox about(this); 
   about.exec();
