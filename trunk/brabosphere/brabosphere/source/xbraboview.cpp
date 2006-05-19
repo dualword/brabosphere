@@ -83,9 +83,9 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
   globalSetup(0),
   braboSetup(0),
   relaxSetup(0),
+  mainWindow(mainWin),
   calcDate(QDateTime::currentDateTime(Qt::UTC).toString(Qt::ISODate)),
-  calculation(0),
-  mainWindow(mainWin)
+  calculation(0)
 /// The default constructor.
 /// \warning \c parent is not Xbrabo, but QextMdiChildArea or 0 (can dynamically change!).
 /// => pointer to Xbrabo passed using mainWin

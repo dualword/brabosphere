@@ -84,6 +84,8 @@ static void debugHandler(QtMsgType type, const char* message)
                        fprintf(stderr, "Please note the exact message when reporting this.\n");
                        fprintf(stderr, "The application will now shut down.\n");
                        abort();
+    default:           // needed in case QT_NO_DEBUG is not defined
+                       break;
   }
 }
 
@@ -108,7 +110,7 @@ int main(int argc, char *argv[])
     }
   }
   ///// Show a splash screen centered on the desktop
-  QWidget* splash;
+  QWidget* splash = NULL;
   if(showSplash)
   {
     //QTime timer;

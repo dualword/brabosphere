@@ -3,15 +3,13 @@
 ###########################
 include(../brabosphere.pri)
 release {
-  TARGET = ../bin/brabosphere 
-  CONFIG += warn_off        
+  TARGET = ../bin/brabosphere         
   MOC_DIR = ../output/brabosphere/moc/release
   OBJECTS_DIR = ../output/brabosphere/obj/release
   UI_DIR = ../output/brabosphere/ui/release
 }
 debug {
   TARGET = ../bin/brabosphere-debug
-  CONFIG += warn_on
   MOC_DIR = ../output/brabosphere/moc/debug
   OBJECTS_DIR = ../output/brabosphere/obj/debug
   UI_DIR = ../output/brabosphere/ui/debug

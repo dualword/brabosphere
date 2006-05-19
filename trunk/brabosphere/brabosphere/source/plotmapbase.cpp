@@ -73,9 +73,9 @@
 
 ///// constructor /////////////////////////////////////////////////////////////
 PlotMapBase::PlotMapBase(QWidget* parent, const char* name, bool modal, WFlags fl) : PlotMapWidget(parent, name, modal, fl),
+  loadInProgress(false),
   maxValue(1.0),
-  minValue(-1.0),
-  loadInProgress(false)
+  minValue(-1.0)
 /// The default constructor.
 {
   options = new PlotMapExtensionWidget(this);
@@ -2078,9 +2078,9 @@ QRect PlotMapBase::labelRect() const
   // aspect ratio correction
   const double aspectRatio = static_cast<double>(numPoints.x()) / numPoints.y();
   if(aspectRatio > static_cast<double>(rect.width()) / rect.height())
-    rect.setHeight(rect.width() / aspectRatio);
+    rect.setHeight(static_cast<int>(rect.width() / aspectRatio));
   else
-    rect.setWidth(rect.height() * aspectRatio);
+    rect.setWidth(static_cast<int>(rect.height() * aspectRatio));
 
   // the result
   return rect;

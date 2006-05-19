@@ -224,9 +224,9 @@ void PlotMapLabel::drawContents(QPainter* )
     QRect pixmapRect(drawRect);
     // define the rectangle to draw the pixmap in
     if(aspectRatio > static_cast<double>(drawRect.width()) / drawRect.height())
-      pixmapRect.setHeight(drawRect.width() / aspectRatio);
+      pixmapRect.setHeight(static_cast<int>(drawRect.width() / aspectRatio));
     else
-      pixmapRect.setWidth(drawRect.height() * aspectRatio);
+      pixmapRect.setWidth(static_cast<int>(drawRect.height() * aspectRatio));
     paint.drawPixmap(pixmapRect, *densityPixmap); // autoscaling
   }
   
