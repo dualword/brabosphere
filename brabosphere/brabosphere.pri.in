@@ -36,7 +36,7 @@
 # Non-changeable entries  #
 ###########################
 
-CONFIG += qt thread opengl exceptions rtti
+CONFIG += qt thread opengl exceptions rtti warn_on
 DEFINES += NO_KDE2
 COMMONDIR = ../common
 INCLUDEPATH += include $$COMMONDIR/include

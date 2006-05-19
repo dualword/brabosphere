@@ -3,15 +3,13 @@
 ###########################
 include(../brabosphere.pri)
 release {
-  TARGET = ../bin/crdview
-  CONFIG += warn_off        
+  TARGET = ../bin/crdview       
   MOC_DIR = ../output/crdview/moc/release
   OBJECTS_DIR = ../output/crdview/obj/release
   UI_DIR = ../output/crdview/ui/release
 }
 debug {
   TARGET = ../bin/crdview-debug
-  CONFIG += warn_on
   MOC_DIR = ../output/crdview/moc/debug
   OBJECTS_DIR = ../output/crdview/obj/debug
   UI_DIR = ../output/crdview/ui/debug

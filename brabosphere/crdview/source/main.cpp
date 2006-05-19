@@ -49,6 +49,7 @@ static void debugHandler(QtMsgType type, const char* message)
                        fprintf(stderr, "Please note the exact message when reporting this.\n");
                        fprintf(stderr, "The application will now shut down.\n");
                        abort();
+    default: break;
   }
 }
 

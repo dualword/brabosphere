@@ -733,13 +733,13 @@ void AtomSet::bonds(vector<unsigned int>*& first, vector<unsigned int>*& second)
         if(distance2 <= refdistance*refdistance)
         {
           numBonds++;
-          /*if(numBonds == bonds1.max_size())
+          if(numBonds == bonds1.max_size())
           {
             qDebug("AtomSet::bonds: the maximum number of bonds has been reached.");
             first = &bonds1;
             second = &bonds2;
             return;
-          }* /
+          }
           bonds1.push_back(i);
           bonds2.push_back(j);
         }
