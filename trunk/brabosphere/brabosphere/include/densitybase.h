@@ -27,7 +27,7 @@
 #include <vector>
 
 // Xbrabo forward class declarations
-class DensityLoadThread;
+class LoadDensityThread;
 class IsoSurface;
 
 // Xbrabo includes
@@ -87,6 +87,8 @@ class DensityBase : public DensityWidget
     ///// private member functions
     void makeConnections();             // sets up all connections
     void loadDensity(const bool densityA);        // loads a density for density A or B
+    void loadCubeHeader(QFile* file);   // processes the header of a cube file
+    void loadPLTHeader(QFile* file);    // processes the header of a PLT file
     void updateDensity();               // updates everything after loading has finished
     void updateProgress(const unsigned int progress);       // updates the progressbar for the current loading density
     unsigned int typeToNum(const QString& type);      // translates the type into a number
@@ -111,7 +113,7 @@ class DensityBase : public DensityWidget
     IsoSurface* isoSurface;             ///< A pointer to the IsoSurface.
     unsigned int idCounter;             ///< A counter for uniquely identifying defined surfaces.
     std::vector<SurfaceProperties> surfaceProperties;       ///< A list of the properties of each defined surface.
-    DensityLoadThread* loadingThread;   ///< A thread that does the actual reading of the density points from the cube file.
+    LoadDensityThread* loadingThread;   ///< A thread that does the actual reading of the density points from the grid file.
     std::vector<double> densityPointsA; ///< An array holding the density values for Density A.
     std::vector<double> densityPointsB; ///< An array holding the density values for Density B.
     bool loadingDensityA;               ///< Indicates which density is loading.

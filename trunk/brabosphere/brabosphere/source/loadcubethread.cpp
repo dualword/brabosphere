@@ -1,5 +1,5 @@
 /***************************************************************************
-                     densityloadthread.cpp  -  description
+                      loadcubethread.cpp  -  description
                              -------------------
     begin                : Thu Mar 24 2005
     copyright            : (C) 2005-2006 by Ben Swerts
@@ -16,11 +16,11 @@
  ***************************************************************************/
 ///// Comments ////////////////////////////////////////////////////////////////
 /*!
-  \class DensityLoadThread
-  \brief This class loads the density data for the class DensityBase.
+  \class LoadCubeThread
+  \brief This class loads the density data from a CUBE file.
 */
 /// \file
-/// Contains the implementation of the class DensityLoadThread.
+/// Contains the implementation of the class LoadCubeThread.
 
 ///// Header files ////////////////////////////////////////////////////////////
 
@@ -35,35 +35,24 @@
 
 // Xbrabo header files
 #include "densitybase.h"
-#include "densityloadthread.h"
+#include "loadcubethread.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// Constructor /////////////////////////////////////////////////////////////
-DensityLoadThread::DensityLoadThread(std::vector<double>* densityPoints, QTextStream* stream, DensityBase* densityDialog, const unsigned int numSkipValues, const unsigned int totalPoints) : QThread(), 
-  data(densityPoints), 
-  textStream(stream), 
-  numSkip(numSkipValues), 
-  numValues(totalPoints),
-  stopRequested(false),
-  parent(densityDialog) // according to GCC this one should be last to coincide with the declaration order
-                        // But now it doe'sn't anymore AFAICS
+LoadCubeThread::LoadCubeThread(std::vector<double>* densityPoints, QFile* file, DensityBase* densityDialog, const unsigned int totalPoints, const unsigned int numSkipValues) 
+  : LoadDensityThread(densityPoints, file, densityDialog, totalPoints), 
+  numSkip(numSkipValues)
 /// The default constructor.
-/// \param[out] densityPoints : the resulting density values read from file.
-/// \param[in] stream : the stream connected to an opened file.
-/// \param[in] densityDialog : the parent DensityBase widget were messages are sent to.
 /// \param[in] numSkipValues : the number of points to skip when reading from the stream.
-/// \param[in] totalPoints : the total number of points to read.
 {
-  assert(data != 0);
-  assert(textStream != 0);
-  assert(parent != 0);
+  assert(numSkipValues < totalPoints);
 }
 
 ///// Destructor //////////////////////////////////////////////////////////////
-DensityLoadThread::~DensityLoadThread()
+LoadCubeThread::~LoadCubeThread()
 /// The default destructor.
 {
 
@@ -75,9 +64,6 @@ void DensityLoadThread::run()
 /// have been set. It is run with a call to start().
 {  
   ///// get the QFile pointer from the stream
-  QFile* file = dynamic_cast<QFile*>(textStream->device());
-  assert(file != 0);
-
   if(numValues == 0)
   {
     delete textStream;
@@ -121,17 +107,5 @@ void DensityLoadThread::run()
   QApplication::postEvent(parent, e);
 }
 
-///// stop ////////////////////////////////////////////////////////////////////
-void DensityLoadThread::stop()
-/// Requests the thread to stop.
-{
-  stopRequested = true;
-}
 
-///// success /////////////////////////////////////////////////////////////////
-bool DensityLoadThread::success()
-/// Returns whether the desired number of points was succesfully read.  
-{
-  return data->size() == numValues;
-}
 

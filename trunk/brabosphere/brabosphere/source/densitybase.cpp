@@ -784,29 +784,50 @@ void DensityBase::loadDensity(const bool densityA)
   loadingDensityA = densityA;
 
   ///// get the filename of a cube file to open
-  QString dialogText = tr("Select a cube file for density ");
+  QString dialogText = tr("Select an electron density grid file for density ");
   if(densityA)
     dialogText += "A";
   else
     dialogText += "B";
-  QString filename = QFileDialog::getOpenFileName(QString::null, "Potdicht/Gaussian CUBE (*.cube)", this, 0, dialogText);
+  QString List filters = tr("All supported file types") + " (*.cube, *.cub, *.plt)";
+  filters += "Potdicht/Gaussian CUBE (*.cube, *.cub)";
+  filters += "gOpenMol PLT (*.plt)";
+  QString filename = QFileDialog::getOpenFileName(QString::null, filters.join(";;"), this, 0, dialogText);
   if(filename.isEmpty())
     return;
   QFile* file = new QFile(filename);
   if(!file->open(IO_ReadOnly))
   {
     delete file;
-    QMessageBox::warning(this, tr("Load Density"), tr("Unable to open the cube file"));
+    QMessageBox::warning(this, tr("Load Density"), tr("Unable to open the grid file"));
     return;
   }
+  ///// get the header information (MO to read, number of density points, origin and extents)
+  const QString extension = filename.section(".",-1).lower();
+  if(extension == "cube) || extension == "cub")
+  {
+    if(!loadCube(file))
+      return;
+  }
+  else 
+  {
+    if(!loadPLT(file))
+      return;
+  }
 
-  ///// load the cube file
+  enableWidgets(); 
+}
+
+///// loadCubeHeader //////////////////////////////////////////////////////////
+bool DensityBase::loadCubeHeader(QFile* file)
+/// Reads and processes the header of a Potdicht/Gaussian CUBE file.
+{
   const double AUTOANG = 1.0/1.889726342;
   QTextStream* stream = new QTextStream(file);
   stream->readLine(); // ignore the first line
   newDescription = stream->readLine(); // the description of the type of density 
   QString line = stream->readLine();
-  int numAtoms = line.mid(0,5).toInt();
+  const int numAtoms = line.mid(0,5).toInt();
   const float originX = line.mid(5,12).toFloat() * AUTOANG;
   const float originY = line.mid(17,12).toFloat() * AUTOANG;
   const float originZ = line.mid(29,12).toFloat() * AUTOANG;
@@ -819,6 +840,12 @@ void DensityBase::loadDensity(const bool densityA)
   line = stream->readLine();
   const unsigned int numPointsZ = line.mid(0,5).toUInt();
   const float deltaZ = line.mid(29,12).toFloat() * AUTOANG;
+  if(numPointsX == 0 || numPointsY == 0 || numPointsZ == 0)
+  {
+    delete file;
+    return;
+  }
+
   if(loadingDensityA)
   {
     numPointsA.setValues(numPointsX, numPointsY, numPointsZ);
@@ -854,7 +881,7 @@ void DensityBase::loadDensity(const bool densityA)
     QString result = QInputDialog::getItem(tr("Select the desired MO"), tr("The file contains multiple entries for\n")+newDescription+"\nSelect the desired molecular orbital", listMO,0,false,0,this);
     newDescription += QString(" for MO " + result);
     double skipValue;
-    for(QStringList::iterator it = listMO.begin(); it != listMO.end(); it++, numSkipValues++)
+    for(QStringList::iterator it = listMO.begin(); it != listMO.end(); ++it)
     {
       // exit if the right MO is found
       if(*it == result)
@@ -866,7 +893,7 @@ void DensityBase::loadDensity(const bool densityA)
   else if(listMO.size() == 1)
     newDescription += QString(" for MO " + listMO[0]);
 
-  ///// read all density points in a DensityLoadThread
+  ///// read all density points in a LoadCubeThread
   const unsigned int totalPoints = numPointsX * numPointsY * numPointsZ;
   if(loadingDensityA)
   { 
@@ -874,7 +901,7 @@ void DensityBase::loadDensity(const bool densityA)
     ProgressBarA->setProgress(0);
     ProgressBarA->show();
     LabelDensityA->hide();
-    loadingThread = new DensityLoadThread(&densityPointsA, stream, this, numSkipValues, totalPoints);
+    loadingThread = new LoadCubeThread(&densityPointsA, file, this, totalPoints, numSkipValues);
   }
   else
   { 
@@ -882,11 +909,9 @@ void DensityBase::loadDensity(const bool densityA)
     ProgressBarB->setProgress(0);
     ProgressBarB->show();
     LabelDensityB->hide();
-    loadingThread = new DensityLoadThread(&densityPointsB, stream, this, numSkipValues, totalPoints);
+    loadingThread = new LoadCubeThread(&densityPointsB, file, this totalPoints, numSkipValues,);
   }
   loadingThread->start(QThread::LowPriority);
-
-  enableWidgets(); 
 }
 
 ///// updateDensity ///////////////////////////////////////////////////////////
