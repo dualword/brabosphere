@@ -26,6 +26,9 @@
 // STL includes
 #include <vector>
 
+// Qt forward class declarations
+class QFile;
+
 // Xbrabo forward class declarations
 class LoadDensityThread;
 class IsoSurface;
@@ -87,8 +90,8 @@ class DensityBase : public DensityWidget
     ///// private member functions
     void makeConnections();             // sets up all connections
     void loadDensity(const bool densityA);        // loads a density for density A or B
-    void loadCubeHeader(QFile* file);   // processes the header of a cube file
-    void loadPLTHeader(QFile* file);    // processes the header of a PLT file
+    bool loadCube(QFile* file);         // reads a cube file
+    bool loadPLT(QFile* file);          // reads a PLT file
     void updateDensity();               // updates everything after loading has finished
     void updateProgress(const unsigned int progress);       // updates the progressbar for the current loading density
     unsigned int typeToNum(const QString& type);      // translates the type into a number

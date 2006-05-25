@@ -59,8 +59,9 @@
 // Xbrabo header files
 #include "colorbutton.h"
 #include "densitybase.h"
-#include "densityloadthread.h"
 #include "isosurface.h"
+#include "loadcubethread.h"
+#include "loadpltthread.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
@@ -789,8 +790,8 @@ void DensityBase::loadDensity(const bool densityA)
     dialogText += "A";
   else
     dialogText += "B";
-  QString List filters = tr("All supported file types") + " (*.cube, *.cub, *.plt)";
-  filters += "Potdicht/Gaussian CUBE (*.cube, *.cub)";
+  QStringList filters = tr("All supported file types") + " (*.cube *.cub *.plt)";
+  filters += "Potdicht/Gaussian CUBE (*.cube *.cub)";
   filters += "gOpenMol PLT (*.plt)";
   QString filename = QFileDialog::getOpenFileName(QString::null, filters.join(";;"), this, 0, dialogText);
   if(filename.isEmpty())
@@ -804,47 +805,52 @@ void DensityBase::loadDensity(const bool densityA)
   }
   ///// get the header information (MO to read, number of density points, origin and extents)
   const QString extension = filename.section(".",-1).lower();
-  if(extension == "cube) || extension == "cub")
+  if(extension == "cube" || extension == "cub")
   {
     if(!loadCube(file))
+    {
+      delete file;
+      QMessageBox::warning(this, tr("Load Density"), tr("An error occured reading the cube file"));
       return;
+    } // if loading is succesful, deletion of file is taken care of by loadCubeThread
   }
   else 
   {
     if(!loadPLT(file))
+    {
+      delete file;
+      QMessageBox::warning(this, tr("Load Density"), tr("An error occured reading the PLT file"));
       return;
+    } // if loading is succesful, deletion of file is taken care of by loadPLTThread
   }
 
   enableWidgets(); 
 }
 
-///// loadCubeHeader //////////////////////////////////////////////////////////
-bool DensityBase::loadCubeHeader(QFile* file)
-/// Reads and processes the header of a Potdicht/Gaussian CUBE file.
+///// loadCube ////////////////////////////////////////////////////////////////
+bool DensityBase::loadCube(QFile* file)
+/// Reads and processes a Potdicht/Gaussian CUBE file.
 {
   const double AUTOANG = 1.0/1.889726342;
-  QTextStream* stream = new QTextStream(file);
-  stream->readLine(); // ignore the first line
-  newDescription = stream->readLine(); // the description of the type of density 
-  QString line = stream->readLine();
+  QTextStream stream(file);
+  stream.readLine(); // ignore the first line
+  newDescription = stream.readLine(); // the description of the type of density 
+  QString line = stream.readLine();
   const int numAtoms = line.mid(0,5).toInt();
   const float originX = line.mid(5,12).toFloat() * AUTOANG;
   const float originY = line.mid(17,12).toFloat() * AUTOANG;
   const float originZ = line.mid(29,12).toFloat() * AUTOANG;
-  line = stream->readLine();
+  line = stream.readLine();
   const unsigned int numPointsX = line.mid(0,5).toUInt();
   const float deltaX = line.mid(5,12).toFloat() * AUTOANG;
-  line = stream->readLine();
+  line = stream.readLine();
   const unsigned int numPointsY = line.mid(0,5).toUInt();
   const float deltaY = line.mid(17,12).toFloat() * AUTOANG;
-  line = stream->readLine();
+  line = stream.readLine();
   const unsigned int numPointsZ = line.mid(0,5).toUInt();
   const float deltaZ = line.mid(29,12).toFloat() * AUTOANG;
-  if(numPointsX == 0 || numPointsY == 0 || numPointsZ == 0)
-  {
-    delete file;
-    return;
-  }
+  if(numPointsX == 0 || numPointsY == 0 || numPointsZ == 0 || stream.atEnd())
+    return false;
 
   if(loadingDensityA)
   {
@@ -860,20 +866,23 @@ bool DensityBase::loadCubeHeader(QFile* file)
   }
   ///// skip the lines containing the coordinates
   for(int i = 0; i < abs(numAtoms); i++)
-    stream->readLine();
+    stream.readLine();
   ///// read the list of MO's if numAtoms < 0
   QStringList listMO;
   if(numAtoms < 0)
   {
     unsigned int numMO, mo;
-    *stream >> numMO;
+    stream >> numMO;
     qDebug("number of MO's present: %d", numMO);
 	  for(unsigned int i = 0; i < numMO; i++)
     {
-	    *stream >> mo;
+	    stream >> mo;
       listMO << QString::number(mo);
     }
   }
+  if(stream.atEnd())
+    return false;
+
   ///// ask which MO should be read and skip the initial values
   unsigned int numSkipValues = 0;
   if(listMO.size() > 1) 
@@ -886,14 +895,14 @@ bool DensityBase::loadCubeHeader(QFile* file)
       // exit if the right MO is found
       if(*it == result)
         break;
-      *stream >> skipValue;
+      stream >> skipValue;
     }
     numSkipValues = listMO.size() - 1;
   }
   else if(listMO.size() == 1)
     newDescription += QString(" for MO " + listMO[0]);
 
-  ///// read all density points in a LoadCubeThread
+  ///// read all density points in a LoadCubeThread (this class takes ownership of the opened file pointer)
   const unsigned int totalPoints = numPointsX * numPointsY * numPointsZ;
   if(loadingDensityA)
   { 
@@ -909,11 +918,147 @@ bool DensityBase::loadCubeHeader(QFile* file)
     ProgressBarB->setProgress(0);
     ProgressBarB->show();
     LabelDensityB->hide();
-    loadingThread = new LoadCubeThread(&densityPointsB, file, this totalPoints, numSkipValues,);
+    loadingThread = new LoadCubeThread(&densityPointsB, file, this, totalPoints, numSkipValues);
   }
   loadingThread->start(QThread::LowPriority);
+  return true;
 }
 
+///// loadPLT /////////////////////////////////////////////////////////////////
+bool DensityBase::loadPLT(QFile* file)
+/// Reads and processes a gOpenMol PLT file.
+{
+  ///// Check the format of the PLT file (text, big endian binary or little endian binary)
+  ///// by reading the magic number (=3)
+  LoadPLTThread::Format pltFormat = LoadPLTThread::TextFormat;
+  
+  // first check whether it is in text format
+  QTextStream textStream(file);
+  QDataStream dataStream(file);
+  Q_UINT32 pltCode;
+  textStream >> pltCode;
+  if(pltCode != 3)
+  {
+    // check which type of binary mode it is in (big or little endian mode)
+    file->at(0);
+    QDataStream dataStream(file); // default mode is big endian
+    dataStream >> pltCode;
+    if(pltCode == 3)
+      pltFormat = LoadPLTThread::BigEndianFormat;
+    else
+    {
+      // check little endian mode
+      file->at(0);
+      dataStream.setByteOrder(QDataStream::LittleEndian);
+      dataStream >> pltCode;
+      if(pltCode == 3)
+        pltFormat = LoadPLTThread::LittleEndianFormat;
+      else
+        return false;
+    }
+  }
+  qDebug("format = %u (hex = %X)", pltFormat, pltFormat);
+  qDebug("header size in bytes: %d", file->at());
+
+  // at this point pltFormat is set and both textStream and dataStream are 
+  // positioned after the first value.
+
+  ///// read the rest of the header (mirrored functionality for both streams
+  ///// as they have no class relationship)
+  Q_UINT32 pltType;
+  Q_UINT32 numPointsX, numPointsY, numPointsZ;
+  float originX, originY, originZ, maxX, maxY, maxZ;
+
+  if(pltFormat == LoadPLTThread::TextFormat)
+  {
+    // read the surface type
+    textStream >> pltType;
+    // read the number of points in the x, y and z directions
+    textStream >> numPointsZ >> numPointsY >> numPointsX;
+    // read the minimum and maximum extents of the cube
+    textStream >> originZ >> maxZ >> originY >> maxY >> originX >> maxX;
+  }
+  else
+  {
+    if(pltFormat == LoadPLTThread::LittleEndianFormat)
+      dataStream.setByteOrder(QDataStream::LittleEndian); // needed, somehow forgot the setting?
+
+    // read the surface type
+    dataStream >> pltType;
+    qDebug("type = %u (hex = %X)", pltType, pltType);
+    // read the number of points in the x, y and z directions
+    dataStream >> numPointsZ >> numPointsY >> numPointsX;
+    qDebug("numPoints = (%u, %u, %u)", numPointsX, numPointsY, numPointsZ);
+    // read the minimum and maximum extents of the cube
+    dataStream >> originZ >> maxZ >> originY >> maxY >> originX >> maxX;
+    qDebug("origin = (%f, %f, %f)", originX, originY, originZ);
+    qDebug("max = (%f, %f, %f)", maxX, maxY, maxZ);
+  }
+
+  switch(pltType)
+  {
+    case 1  : newDescription = tr("VSS density");
+              break;
+    case 2  : newDescription = tr("Orbital density");
+              break;
+    case 3  : newDescription = tr("Probe density");
+              break;
+    case 100: newDescription = tr("OpenMol density");
+              break;
+    case 200: newDescription = tr("Gaussian density");
+              break;
+    case 201: newDescription = tr("Jaguar density");
+              break;
+    case 202: newDescription = tr("Gamess density");
+              break;
+    case 203: newDescription = tr("Autodock density");
+              break;
+    case 204: newDescription = tr("Delphi/Insight density");
+              break;
+    case 205: newDescription = tr("Grid density");
+              break;
+    default:  newDescription = tr("unspecified density");
+  }
+
+  ///// update the correct density parameters
+  if(loadingDensityA)
+  {
+    numPointsA.setValues(numPointsX, numPointsY, numPointsZ);
+    originA.setValues(originX, originY, originZ);
+    deltaA.setValues((maxX-originX)/(numPointsX-1), (maxY-originY)/(numPointsY-1), (maxZ-originZ)/(numPointsZ-1));
+  }
+  else
+  {
+    numPointsB.setValues(numPointsX, numPointsY, numPointsZ);
+    originB.setValues(originX, originY, originZ);
+    deltaB.setValues((maxX-originX)/(numPointsX-1), (maxY-originY)/(numPointsY-1), (maxZ-originZ)/(numPointsZ-1));
+  }
+
+  ///// read all density points in a LoadPLTThread (this class takes ownership of the opened file pointer)
+  const unsigned int totalPoints = numPointsX * numPointsY * numPointsZ;
+  QProgressBar* progress;
+  QLabel* label;
+  std::vector<double>* points;
+  if(loadingDensityA)
+  {
+    progress = ProgressBarA;
+    label = LabelDensityA;
+    points = &densityPointsA;
+  }
+  else
+  {
+    progress = ProgressBarB;
+    label = LabelDensityB;
+    points = &densityPointsB;
+  }
+  progress->setTotalSteps(totalPoints);
+  progress->setProgress(0);
+  progress->show();
+  label->hide();
+  loadingThread = new LoadPLTThread(points, file, this, totalPoints, numPointsX, numPointsY, numPointsZ, pltFormat);
+  loadingThread->start(QThread::LowPriority);
+  return true;
+}
 ///// updateDensity ///////////////////////////////////////////////////////////
 void DensityBase::updateDensity()
 /// Updates everything after a new density is loaded.

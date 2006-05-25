@@ -24,7 +24,6 @@ HEADERS += include/aboutbox.h \
            include/brabobase.h \
            include/calculation.h \
            include/densitybase.h \
-           include/densityloadthread.h \
            include/glmoleculeview.h \
            include/globalbase.h \
            include/glorbitalview.h \
@@ -32,6 +31,9 @@ HEADERS += include/aboutbox.h \
            include/iconsets.h \
            include/isosurface.h \
            include/latin1validator.h \
+           include/loadcubethread.h \
+           include/loaddensitythread.h \
+           include/loadpltthread.h \
            include/newatombase.h \
            include/orbitalthread.h \
            include/orbitalviewerbase.h \
@@ -50,13 +52,15 @@ SOURCES += source/aboutbox.cpp \
            source/brabobase.cpp \
            source/calculation.cpp \
            source/densitybase.cpp \
-           source/densityloadthread.cpp \
            source/glmoleculeview.cpp \
            source/globalbase.cpp \
            source/glorbitalview.cpp \
            source/iconsets.cpp \
            source/isosurface.cpp \
            source/latin1validator.cpp \
+           source/loadcubethread.cpp \
+           source/loaddensitythread.cpp \
+           source/loadpltthread.cpp \
            source/main.cpp \
            source/newatombase.cpp \
            source/orbitalthread.cpp \
