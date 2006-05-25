@@ -55,6 +55,7 @@ class CrdFactory
     static bool braboExtension(const QString filename);     // returns true if the extension is a Brabo format
     static bool xmolExtension(const QString filename);      // returns true if the extension is an Xmol format
     static bool gaussianExtension(const QString filename);  // returns true if the extension is a Gaussian format
+    static bool moldenExtension(const QString filename);    // returns true if the extension is a Molden format
 
     static unsigned int readBraboFile(AtomSet* atoms, const QString filename);  // reads a Brabo .crd/.c00
     static unsigned int writeBraboFile(AtomSet* atoms, const QString filename, const bool extendedFormat);    // reads a Brabo .crd/.c00
@@ -68,6 +69,7 @@ class CrdFactory
 
     static unsigned int readXmolFile(AtomSet* atoms, const QString filename);      // reads an Xmol .xyz file
     static unsigned int readGaussianFile(AtomSet* atoms, const QString filename);  // reads a Gaussian .fchk file
+    static unsigned int readMoldenFile(AtomSet* atoms, const QString filename);    // reads a Molden .molden file
 
 	  static const double AUTOANG;
 };
