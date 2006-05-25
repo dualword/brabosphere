@@ -108,8 +108,13 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
     QStringList filterList = supportedInputFormats();
     QString fileFilter = filterList.join(";;");
     QString fileTitle = QFileDialog::tr("Choose coordinates");
-    filename = QFileDialog::getOpenFileName(QString::null, fileFilter, 0, 0, fileTitle);
-    if(filename.isEmpty())
+    //filename = QFileDialog::getOpenFileName(QString::null, fileFilter, 0, 0, fileTitle);
+    QFileDialog* fd = new QFileDialog(0, 0, true);
+    fd->setFilters(filterList);
+    fd->setCaption(fileTitle);
+    if(fd->exec() == QDialog::Accepted)
+      filename = fd->selectedFile();
+    else
       return Cancelled; 
   }
 
@@ -132,6 +137,11 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
   {
     ///// Gaussian format
     return readGaussianFile(atoms, filename);
+  }
+  else if(moldenExtension(filename))
+  {
+    ///// Molden format
+    return readMoldenFile(atoms, filename);
   }
 #ifdef USE_OPENBABEL1
   else
@@ -322,9 +332,9 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
     return UnknownExtension;  
   
   //// determine which routine should be used  
-  if(braboExtension(inputFileName) || braboExtension(outputFileName) || xmolExtension(inputFileName))
+  if(braboExtension(inputFileName) || braboExtension(outputFileName) || xmolExtension(inputFileName) || moldenExtension(inputFileName))
   {
-    ///// one of the files is in Brabo format or the input file is in Xmol format, so no shortcuts can be taken
+    ///// one of the files is in Brabo format or the input file is in Xmol/Molden format, so no shortcuts can be taken
     
     // read the input file into the AtomSet
     AtomSet* atoms = new AtomSet();
@@ -443,8 +453,12 @@ QStringList CrdFactory::supportedInputFormats()
 /// Returns a QStringList containing the
 /// supported coordinate input formats, ready for use in a QFileDialog filter.
 {
-  QStringList result = "Brabo (*.crd *.c00)";
+  // Xbrabo filetypes
+  QStringList allTypes = "*.crd *.c00 *.ncr *.crdcrd *.fchk *.molden"; // all locally supported filetypes
+  QStringList result = "Brabo (*.crd *.c00 *.ncr *.crdcrd)";
   result += "Gaussian Checkpoint (*.fchk)";
+  result += "Molden (*.molden)";
+
 #ifdef USE_OPENBABEL1  
   for(unsigned int i = 0; i < extab.Count(); i++)
   {
@@ -456,10 +470,10 @@ QStringList CrdFactory::supportedInputFormats()
       inputFormat += extab.GetExtension(i);
       inputFormat += ")";
       result += inputFormat;
+      allTypes += "*." + extab.GetExtension(i);
     }  
   }
-#endif
-#ifdef USE_OPENBABEL2 
+#elif USE_OPENBABEL2 
   OBConversion conv; // here only because of initialisation bug in OBConversion::GetNextFormat (v2.0.0)
   //OBConversion::RegisterFormat("alc",this, "chemical/x-alchemy"); // test for initialisation of OBConversion
   
@@ -478,10 +492,18 @@ QStringList CrdFactory::supportedInputFormats()
       QString ext = QString(str);
       ext.truncate(ext.find(" "));
       // combined
-      result += QString(";;" + desc + " (*." + ext + ")");
+      result += QString(desc + " (*." + ext + ")");
+      allTypes += " *." + ext;
     }
   }
+#else
+  // no OpenBabel means the rewritten formats should be added manually
+  result += "XYZ cartesian coordinates (*.xyz)";
+  allTypes += "*.xyz";
 #endif
+
+  result.sort();
+  result.prepend("All supported file types (" + allTypes.join(" ") + ")");
   return result;
 }
 
@@ -504,8 +526,7 @@ QStringList CrdFactory::supportedOutputFormats()
       result += outputFormat;
     }
   }
-#endif  
-#ifdef USE_OPENBABEL2  
+#elif USE_OPENBABEL2  
   const char* str = NULL;
   Formatpos pos;
   OBFormat* format;
@@ -522,10 +543,14 @@ QStringList CrdFactory::supportedOutputFormats()
       QString ext = QString(str);
       ext.truncate(ext.find(" "));
       // combined
-      result += QString(";;" + desc + " (*." + ext + ")");
+      result += QString(desc + " (*." + ext + ")");
     }
   }
+#else
+  // no OpenBabel means the rewritten formats should be added manually
+  result += "XYZ cartesian coordinates (*.xyz)";
 #endif
+
   return result;
 }
 
@@ -533,8 +558,8 @@ QStringList CrdFactory::supportedOutputFormats()
 bool CrdFactory::validInputFormat(const QString filename)
 /// Returns true if the contents of the filename can be read.
 {
-  // check for Brabo formats
-  if(braboExtension(filename) || xmolExtension(filename) || gaussianExtension(filename))
+  // check for local formats
+  if(braboExtension(filename) || xmolExtension(filename) || gaussianExtension(filename) || moldenExtension(filename))
     return true;
 
 #ifdef USE_OPENBABEL1    
@@ -602,11 +627,8 @@ bool CrdFactory::braboExtension(const QString filename)
 /// given filename corresponds to a Brabo format.
 {
   QString extension = filename.section(".", -1).lower();
-  if(extension == "crd" || extension == "c00" || extension == "ncr" || extension == "crdcrd" ||
-     extension == "pun" || extension == "f00")
-    return true;
-
-  return false;
+  return extension == "crd" || extension == "c00" || extension == "ncr" || extension == "crdcrd" ||
+     extension == "pun" || extension == "f00";
 }
 
 ///// xmolExtension ///////////////////////////////////////////////////////////
@@ -614,11 +636,7 @@ bool CrdFactory::xmolExtension(const QString filename)
 /// Returns true if the extension of the 
 /// given filename corresponds to a Xmol format.
 {
-  QString extension = filename.section(".", -1).lower();
-  if(extension == "xyz")
-    return true;
-
-  return false;
+  return filename.section(".", -1).lower() == "xyz";
 }
 
 ///// gaussianExtension ///////////////////////////////////////////////////////
@@ -626,11 +644,15 @@ bool CrdFactory::gaussianExtension(const QString filename)
 /// Returns true if the extension of the 
 /// given filename corresponds to a Gaussian format.
 {
-  QString extension = filename.section(".", -1).lower();
-  if(extension == "fchk")
-    return true;
+  return filename.section(".", -1).lower() == "fchk";
+}
 
-  return false;
+///// moldenExtension //////////////////////////////////////////////////////////
+bool CrdFactory::moldenExtension(const QString filename)
+/// Returns true if the extension of the
+/// given filename corresponds to a Molden format.
+{
+  return filename.section(".", -1).lower() == "molden";
 }
 
 //// readBraboFile ////////////////////////////////////////////////////////////
@@ -676,7 +698,7 @@ unsigned int CrdFactory::readBraboFile(AtomSet* atoms, const QString filename)
   if(bonds1->empty() && atoms->count() > 1)
   {
     // rescale all coordinates
-    toAngstrom = 0.529177249;
+    toAngstrom = AUTOANG;
     for(unsigned int i = 0; i < atoms->count(); i++)
     {
       atoms->setX(i,atoms->x(i) * toAngstrom);
@@ -1106,13 +1128,55 @@ unsigned int CrdFactory::readGaussianFile(AtomSet* atoms, const QString filename
   for(unsigned int i = 0; i < natoms; i++)
   {
     stream >> x >> y >> z;
-	x *= AUTOANG;
-	y *= AUTOANG;
-	z *= AUTOANG;
-	atoms->addAtom(x, y, z, atomnums[i]);
+	  atoms->addAtom(x*AUTOANG, y*AUTOANG, z*AUTOANG, atomnums[i]);
   }
 
   return OK;
+}
+
+//// readMoldenFile ///////////////////////////////////////////////////////////
+unsigned int CrdFactory::readMoldenFile(AtomSet* atoms, const QString filename)
+/// Reads coordinates from a given Molden file.
+/// This function does not check the validity of the given filename.
+{
+  ///// open the file
+  QFile file(filename);
+  if(!file.open(IO_ReadOnly))
+    return ErrorOpen;
+
+  ///// check the first line -> should be [molden format]
+  QTextStream stream(&file);
+  if(!stream.readLine().contains("[MOLDEN FORMAT]", false))
+    return ErrorRead;
+
+  ///// locate the start of the coordinates and get the format
+  QString line = stream.readLine();
+  while(!line.contains("[ATOMS]", false) && !stream.atEnd())
+    line = stream.readLine();
+  if(stream.atEnd() || !(line.contains("(au)", false) || line.contains("(angs)", false)))
+    return ErrorRead;
+  bool auFormat = true;
+  if(line.contains("(angs)", false))
+    auFormat = false;
+
+  ///// read coordinates
+  atoms->clear();
+  line = stream.readLine();
+  double x, y, z;
+  while(!line.contains("[") && !stream.atEnd())
+  {
+    x = line.section(" ", 3, 3, QString::SectionSkipEmpty).toDouble();
+    y = line.section(" ", 4, 4, QString::SectionSkipEmpty).toDouble();
+    z = line.section(" ", 5, 5, QString::SectionSkipEmpty).toDouble();
+    if(auFormat)
+    {
+      x *= AUTOANG;
+      y *= AUTOANG;
+      z *= AUTOANG;
+    }
+    atoms->addAtom(x, y, z, line.section(" ", 2, 2, QString::SectionSkipEmpty).toUInt());
+    line = stream.readLine();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
