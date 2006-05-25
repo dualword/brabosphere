@@ -57,3 +57,5 @@ class LoadDensityThread : public QThread
     unsigned int progress;              ///< Used to transfer the progress to the parent dialog.
 
 };
+
+#endif

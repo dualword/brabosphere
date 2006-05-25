@@ -26,16 +26,13 @@
 // STL includes
 #include <vector>
 
-// Qt forward class declarations
-class QTextStream;
-
 // Xbrabo forward class declarations
 class DensityBase;
 
 // Base class header files
 #include "loaddensitythread.h"
 
-///// class DensityLoadThread /////////////////////////////////////////////////
+///// class LoadCubeThread ////////////////////////////////////////////////////
 class LoadCubeThread : public LoadDensityThread
 {
   public:

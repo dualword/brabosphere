@@ -18,6 +18,8 @@
 /*!
   \class LoadCubeThread
   \brief This class loads the density data from a CUBE file.
+
+  It is passed a QFile file pointer and takes ownership of this file.
 */
 /// \file
 /// Contains the implementation of the class LoadCubeThread.
@@ -59,27 +61,25 @@ LoadCubeThread::~LoadCubeThread()
 }
 
 ///// run /////////////////////////////////////////////////////////////////////
-void DensityLoadThread::run()
+void LoadCubeThread::run()
 /// Does the actual reading after the proper parameters
 /// have been set. It is run with a call to start().
 {  
-  ///// get the QFile pointer from the stream
-  if(numValues == 0)
-  {
-    delete textStream;
-    delete file;
-    return;
-  }
+  // create a text stream on the opened file (should be positioned right after the header
+  // read in DensityBase::loadCube)
+  QTextStream stream(gridFile);
 
+  // initialisation
   data->clear();
   data->reserve(numValues);
   const unsigned int updateFreq = numValues/100;
   double value = 0.0;
 
+  // read all grid points
   for(unsigned int i = 0; i < numValues; i++)
   {
     // read the next density point
-    *textStream >> value;
+    stream >> value;
 	  data->push_back(value);
     if(i % updateFreq == 0)
     {
@@ -89,8 +89,8 @@ void DensityLoadThread::run()
     }
     // skip the next numSkipValues density points from other MO's
     for(unsigned int skip = 0; skip < numSkip; skip++)
-      *textStream >> value;
-    if(stopRequested || textStream->atEnd())
+      stream >> value;
+    if(stopRequested || stream.atEnd())
       break;
   }
 
@@ -99,8 +99,7 @@ void DensityLoadThread::run()
     data->clear();
 
   // cleanup
-  delete textStream;
-  delete file;
+  delete gridFile;
 
   // notify the thread has ended
   QCustomEvent* e = new QCustomEvent(static_cast<QEvent::Type>(1002));

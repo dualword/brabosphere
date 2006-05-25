@@ -56,6 +56,13 @@ LoadDensityThread::LoadDensityThread(std::vector<double>* densityPoints, QFile* 
   assert(parent != 0);
 }
 
+///// Destructor //////////////////////////////////////////////////////////////
+LoadDensityThread::~LoadDensityThread()
+/// The default destructor.
+{
+
+}
+
 ///// stop ////////////////////////////////////////////////////////////////////
 void LoadDensityThread::stop()
 /// Requests the thread to stop.
