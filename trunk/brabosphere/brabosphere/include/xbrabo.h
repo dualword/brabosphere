@@ -28,6 +28,7 @@ class QAction;
 class QPopupMenu;
 
 // Xbrabo forward class declarations
+#include "commandhistory.h";
 #include "iconsets.h"
 class PreferencesBase;
 class XbraboView;
@@ -52,8 +53,14 @@ class Xbrabo : public QextMdiMainFrm
 
     ///// public members
     void init();                        // initializes everything
-    void fileOpen(const QString filename);        // opens a calculation with the specified name
+    XbraboView* createCalculation();    // creates a new calculation
+    XbraboView* openCalculation(const QString filename);    // opens an existing calculation with the specified name
+    bool closeCalculation(XbraboView* view);      // closes the specified calculation
+    bool changePreferences();           // changes the preferences
 
+  public slots:
+    void fileOpen(const QString filename = 0);    // opens an existing calculation
+    
   protected:
     bool event(QEvent* e);              // handles MDI child close events
     void resizeEvent(QResizeEvent* );   // fits the system menu button position to the menu position
@@ -62,12 +69,15 @@ class Xbrabo : public QextMdiMainFrm
   private slots:
     ///// file menu
     void fileNew();                     // creates a new calculation
-    void fileOpen();                    // opens an existing calculation and asks a filename (overloaded)
+    //void fileOpen();                    // opens an existing calculation and asks a filename (overloaded)
     void fileSave();                    // saves a calculation
     void fileSaveAs();                  // saves a calculation under a different name
     void fileClose();                   // closes the active calculation
 
     ///// edit menu
+    void editUndo();                    // reverts the last command
+    void editRedo();                    // executes the last reverted command
+    void editRepeat();                  // repeats the execution of the last command
     void editCut();                     // deletes the marked text and put it on the clipboard
     void editCopy();                    // puts the marked text on the clipboard
     void editPaste();                   // pastes the contents of the clipboard
@@ -136,6 +146,9 @@ class Xbrabo : public QextMdiMainFrm
     void fixToplevelModeHeight2();      // the actual worker function for the previously declared function
 
   private:
+    friend class CommandNewCalculation;
+    friend class CommandPreferences;
+
     ///// Private member functions 
     ///// initialization
     void loadGeometry();                // initialization needed for the first showing of the mainwindow
@@ -145,7 +158,7 @@ class Xbrabo : public QextMdiMainFrm
     //void initStatusBar();               // creates the statusbar
 
     ///// other
-    void updatePreferences();           // updates the preferences
+    //void updatePreferences();           // updates the preferences
     void updateToolbarsInfo();          // updates editPreferences with the toolbar info
     void restoreToolbars();             // restores the toolbars
     QString actionText(const QString title, const QString brief, const QString details = QString::null, const IconSets::IconSetID iconID = IconSets::LastIcon); // constructs a text for the What's This mode for actions
@@ -162,6 +175,9 @@ class Xbrabo : public QextMdiMainFrm
     QAction* actionFileSaveAs;          ///< Action that's connected to fileSaveAs().
     QAction* actionFileClose;           ///< Action that's connected to fileClose().
     QAction* actionFileQuit;            ///< Action that's connected to fileClose().
+    QAction* actionEditUndo;            ///< Action that's connected to editUndo().
+    QAction* actionEditRedo;            ///< Action that's connected to editRedo().
+    QAction* actionEditRepeat;          ///< Action that's connected to editRepeat().
     QAction* actionEditCut;             ///< Action that's connected to editCut().
     QAction* actionEditCopy;            ///< Action that's connected to editCopy().
     QAction* actionEditPaste;           ///< Action that's connected to editPaste().
@@ -207,8 +223,9 @@ class Xbrabo : public QextMdiMainFrm
     QAction* actionCredits;             ///< Action that's connected to helpCredits().
     QAction* actionAbout;               ///< Action that's connected to helpAbout().
     ///// dialogs
-    XbraboView* view;                   ///< Holds the active view.
     PreferencesBase* editPreferences;   ///< The Preferences dialog.
+    ///// other
+    CommandHistory commandHistory;      ///< Holds the undo/redo stack
 };
 
 #endif

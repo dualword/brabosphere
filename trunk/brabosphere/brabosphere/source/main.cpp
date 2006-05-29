@@ -159,6 +159,8 @@ int main(int argc, char *argv[])
   }
   if(showSplash)
     splash->deleteLater();
+  else
+    xbrabo->show();
   //qDebug("time needed to start the application: %d ms",timer.restart());
   return app.exec();
 }
