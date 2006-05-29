@@ -55,13 +55,14 @@ class PreferencesBase : public PreferencesWidget
     ~PreferencesBase();                 // destructor
 
     ///// public member functions for retrieving data               
-    unsigned int preferredBasisset() const;       // returns the preferred basisset
+    //unsigned int preferredBasisset() const;       // returns the preferred basisset
     bool useBinDirectory() const;                 // returns true if .11 files should be written to a special directory
     GLBaseParameters getGLBaseParameters() const; // returns a struct with the OpenGL base parameters
     GLMoleculeParameters getGLMoleculeParameters() const;   // returns a struct with the OpenGL molecule parameters
     QStringList getPVMHosts() const;              // returns a list of PVM hosts
     void setToolbarsInfo(const QString& info, const bool status);     // sets the info needed to restore the toolbars
     void getToolbarsInfo(bool& status, QString& info) const;// returns the toolbars info
+    void applyChanges();                // applies any changes to the widgets and updates everything as needed.
    
   signals:
     void newPVMHosts(const QStringList& hosts);   // is emitted when the PVM host list has changed
@@ -104,6 +105,8 @@ class PreferencesBase : public PreferencesWidget
     void changedPVM();                  // the PVM host list was changed
 
   private:
+    friend class CommandPreferences;
+
     ///// private enums
     enum{SettingsVersion = 100};        //< The current version for the settings file 
 

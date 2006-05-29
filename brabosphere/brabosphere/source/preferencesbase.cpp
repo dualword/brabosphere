@@ -71,7 +71,9 @@
 // Xbrabo header files
 #include "atomset.h"
 #include "basisset.h"
+#include "brabobase.h"
 #include "colorbutton.h"
+#include "glsimplemoleculeview.h"
 #include "iconsets.h"
 #include "latin1validator.h"
 #include "paths.h"
@@ -106,12 +108,14 @@ PreferencesBase::~PreferencesBase()
   saveSettings(); // needed for mainwindow geometry
 }
 
+/*
 ///// preferredBasisset ///////////////////////////////////////////////////////
 unsigned int PreferencesBase::preferredBasisset() const
 /// Returns the index of the basisset used as the preferred basisset.
 {  
   return ComboBoxBasis->currentItem();
 }
+*/
 
 ///// useBinDirectory /////////////////////////////////////////////////////////
 bool PreferencesBase::useBinDirectory() const
@@ -221,6 +225,31 @@ void PreferencesBase::getToolbarsInfo(bool& status, QString& info) const
   status = toolbarsStatus;
 }
 
+///// applyChanges ////////////////////////////////////////////////////////////
+void PreferencesBase::applyChanges()
+/// Applies any changes made to the widgets and updates everything as needed.
+{
+  if(widgetChanged) // only apply changes if something changed
+  {
+    ///// Internal state
+    widgetChanged = false;
+    saveWidgets();
+    saveSettings(); // so CrdView's can be updated without restarting Brabosphere
+    updatePaths();
+    ///// Check whether the pvm host list has changed
+    if(pvmHostsChanged == true)
+    {
+      pvmHostsChanged = false;
+      emit newPVMHosts(data.pvmHosts);
+    }
+    ///// Static structs to update all calculations
+    BraboBase::setPreferredBasisset(ComboBoxBasis->currentItem());
+    GLView::setParameters(getGLBaseParameters());
+    GLSimpleMoleculeView::setParameters(getGLMoleculeParameters());    
+    ///// Other visuals
+    updateVisuals();
+  }  
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Slots                                                        /////
@@ -316,8 +345,8 @@ void PreferencesBase::loadSettings()
   toolbarsStatus = settings.readBoolEntry(unixPrefix + "toolbars/statusbar", true);
 
   ///// save the settings if this is a first run
-  if(settingsVersion == 0)
-    saveSettings();
+  //if(settingsVersion == 0)
+  //  saveSettings();
 }
 
 ///// saveSettings ////////////////////////////////////////////////////////////
@@ -439,6 +468,8 @@ void PreferencesBase::accept()
 {  
   if(widgetChanged)
   {
+    applyChanges(); // this will reset widgetChanged
+    /*
     widgetChanged = false;
     saveWidgets();
     saveSettings(); // so CrdView's can be updated without restarting Brabosphere
@@ -449,6 +480,7 @@ void PreferencesBase::accept()
       pvmHostsChanged = false;
       emit newPVMHosts(data.pvmHosts);
     }
+    */
     PreferencesWidget::accept();
   }
   else
@@ -896,9 +928,10 @@ void PreferencesBase::init()
 
   resize(1,1); 
   changeExecutable();
-  updatePaths();
-  widgetChanged = false;
-  pvmHostsChanged = false;
+  // update everything
+  widgetChanged = true;
+  pvmHostsChanged = true;
+  applyChanges();
 }
 
 ///// initOpenGL //////////////////////////////////////////////////////////////
