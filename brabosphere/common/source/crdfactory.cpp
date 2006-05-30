@@ -21,17 +21,17 @@
   \class CrdFactory
   \brief Allows loading and saving of a number of coordinate file formats.
 
-  This class is a utility class providing a unified interface to loading and saving 
+  This class is a utility class providing a unified interface to loading and saving
 coordinates from/to Brabo .crd files and formats supported by the Open Babel
 library. This interface eases the use of this library in the Qt framework.
-It is a pure utility class, so no instances can be made (private 
+It is a pure utility class, so no instances can be made (private
 constructor) and only static functions are available.
 
 Defines 'USE_OPENBABEL1' and 'USE_OPENBABEL2' are made available. If neither
 is defined, the openbabel library is not needed for compilation.
 
 */
-/// \file 
+/// \file
 /// Contains the implementation of the class CrdFactory.
 
 ///// Header files ////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ CrdFactory::~CrdFactory()
 unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
 /// Reads the contents of a coordinate file
 /// \c filename and fills the AtomSet \c atoms. If the filename is empty, a dialog is
-/// shown allowing the choice of one. 
+/// shown allowing the choice of one.
 {
   // choose a filename if none was specified
   if(filename.isEmpty())
@@ -115,13 +115,13 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
     if(fd->exec() == QDialog::Accepted)
       filename = fd->selectedFile();
     else
-      return Cancelled; 
+      return Cancelled;
   }
 
   // validate the filename
-  if(!validInputFormat(filename))    
-    return UnknownExtension; 
-  
+  if(!validInputFormat(filename))
+    return UnknownExtension;
+
   // check whether the Xbrabo or Open Babel reading routines should be used
   if(braboExtension(filename))
   {
@@ -132,7 +132,7 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
   {
     ///// Xmol format
     return readXmolFile(atoms, filename);
-  } 
+  }
   else if(gaussianExtension(filename))
   {
     ///// Gaussian format
@@ -168,7 +168,7 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
     for(OBAtom* atom  = mol->BeginAtom(it); atom; atom = mol->NextAtom(it))
       atoms->addAtom(atom->GetX(), atom->GetY(), atom->GetZ(), static_cast<unsigned int>(atom->GetAtomicNum()));
     delete mol;
-  }  
+  }
 #endif
 #ifdef USE_OPENBABEL2
   else
@@ -196,7 +196,7 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
     for(OBMolAtomIter atom(mol); atom; atom++)
       atoms->addAtom(atom->x(), atom->y(), atom->z(), atom->GetAtomicNum());
     qDebug("time to fill the AtomSet: %f seconds", timer.restart()/1000.f);
-  }  
+  }
 #endif
   return OK;
 }
@@ -206,7 +206,7 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms)
 /// Reads the contents of a coordinate file
 /// filename and fills the AtomSet. Overloaded version allowing reading a
 /// coordinate file when the filename isn't needed by the calling routine.
-{  
+{
   QString emptyString;
   return readFromFile(atoms, QString::null);
 }
@@ -228,7 +228,7 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
     filename = QFileDialog::getSaveFileName(0, fileFilter, 0, 0, fileTitle, &selectedFilter);
     if(filename.isEmpty())
       return Cancelled;
-      
+
     // fix the extension
     QString selectedExtension = selectedFilter.section(".", -1).section(")",0);
     if(!filename.section(".", -1).contains(selectedExtension))
@@ -245,16 +245,16 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
       else if(QMessageBox::information(0, Version::appName,
                                      QMessageBox::tr("Do you want to save the coordinates in extended or normal format?"),
                                      QMessageBox::tr("Extended format"), QMessageBox::tr("Normal format")) == 0)
-        extendedFormat = true;  
-    }  
+        extendedFormat = true;
+    }
   }
   else
   {
     ///// a filename was specified
     // validate the filename
     if(!validOutputFormat(filename))
-      return UnknownExtension; 
-  }   
+      return UnknownExtension;
+  }
 
   // check whether the Xbrabo or Open Babel writing routines should be used
   if(braboExtension(filename))
@@ -262,14 +262,14 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
     ///// Brabo format
     return writeBraboFile(atoms, filename, extendedFormat);
   }
-#ifdef USE_OPENBABEL1  
+#ifdef USE_OPENBABEL1
   else
   {
     ///// Open Babel format
     // determine the Open Babel file type
     char* fn = qstrdup(filename.latin1()); // put the filename QString into a non-const char*
     io_type fileType = extab.FilenameToType(fn);
-    delete fn;   
+    delete fn;
     // construct an Open Babel molecule and fill it with the contents of the AtomSet
     OBMol* mol = new OBMol(fileType, fileType);
     OBAtom* atom;
@@ -278,7 +278,7 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
       atom = mol->NewAtom();
       atom->SetVector(atoms->x(i), atoms->y(i), atoms->z(i));
       atom->SetAtomicNum(atoms->atomicNumber(i));
-    }   
+    }
     // write the file
     std::ofstream outFileStream;
     outFileStream.open(filename.latin1());
@@ -288,11 +288,11 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
     {
       delete mol;
       return ErrorWrite;
-    }  
-    delete mol;      
+    }
+    delete mol;
   }
-#endif  
-#ifdef USE_OPENBABEL2  
+#endif
+#ifdef USE_OPENBABEL2
   else
   {
     ///// Open Babel format
@@ -313,9 +313,9 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
       atom = mol.NewAtom();
       atom->SetVector(atoms->x(i), atoms->y(i), atoms->z(i));
       atom->SetAtomicNum(atoms->atomicNumber(i));
-    }   
+    }
     if(!conv.Write(&mol, &outFileStream))
-      return ErrorWrite;  
+      return ErrorWrite;
   }
 #endif
   return OK;
@@ -329,13 +329,13 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
   if(!validInputFormat(inputFileName))
     return UnknownExtension;
   if(!validOutputFormat(outputFileName))
-    return UnknownExtension;  
-  
-  //// determine which routine should be used  
+    return UnknownExtension;
+
+  //// determine which routine should be used
   if(braboExtension(inputFileName) || braboExtension(outputFileName) || xmolExtension(inputFileName) || moldenExtension(inputFileName))
   {
     ///// one of the files is in Brabo format or the input file is in Xmol/Molden format, so no shortcuts can be taken
-    
+
     // read the input file into the AtomSet
     AtomSet* atoms = new AtomSet();
     QString tempInput = inputFileName;
@@ -345,15 +345,15 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
 
     // save the AtomSet to the output file
     return writeToFile(atoms, outputFileName, extendedFormat);
-       
+
   }
-#ifdef USE_OPENBABEL1  
+#ifdef USE_OPENBABEL1
   else
   {
     ///// both formats can be handled by Open Babel => shortcut
-    
+
     // determine the file types of the in- & output files
-    char* inFile = qstrdup(inputFileName.latin1()); 
+    char* inFile = qstrdup(inputFileName.latin1());
     io_type inFileType = extab.FilenameToType(inFile);
     delete inFile;
     char* outFile = qstrdup(outputFileName.latin1());
@@ -368,12 +368,12 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
     std::ofstream outFileStream;
     outFileStream.open(outputFileName.latin1());
     if(!outFileStream)
-      return ErrorOpen;      
-    
+      return ErrorOpen;
+
     // construct an OBMol object
     OBMol* mol = new OBMol(inFileType, outFileType);
 
-    // read the coordinates   
+    // read the coordinates
     if(!OBFileFormat::ReadMolecule(inFileStream, *mol)) // only read the first molecule
     {
       delete mol;
@@ -388,10 +388,10 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
     }
 
     // delete the OBMol object again
-    delete mol;        
+    delete mol;
   }
-#endif  
-#ifdef USE_OPENBABEL2 
+#endif
+#ifdef USE_OPENBABEL2
   else
   {
     ///// both formats can be handled by Open Babel => shortcut
@@ -403,7 +403,7 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
     std::ofstream outFileStream;
     outFileStream.open(outputFileName.latin1());
     if(!outFileStream)
-      return ErrorOpen;      
+      return ErrorOpen;
     // create a conversion object
     OBConversion conv(&inFileStream, &outFileStream);
     // set the filetypes
@@ -411,7 +411,7 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
     OBFormat* outFormat = conv.FormatFromExt(outputFileName.latin1());
     if(!inFormat || !outFormat || !conv.SetInAndOutFormats(inFormat, outFormat))
       return UnknownExtension;
-    conv.Convert(); 
+    conv.Convert();
   }
 #endif
   return OK;
@@ -421,7 +421,7 @@ unsigned int CrdFactory::convert(const QString inputFileName, const QString outp
 unsigned int CrdFactory::readForces(AtomSet* atoms, QString filename)
 /// Reads the contents of a forces file
 /// \c filename and fills the AtomSet \c atoms.
-{ 
+{
   // validate the filename
   if(!validForceInputFormat(filename))
     return UnknownExtension;
@@ -432,7 +432,7 @@ unsigned int CrdFactory::readForces(AtomSet* atoms, QString filename)
     ///// Brabo format
     return readBraboForces(atoms, filename);
   }
-   
+
   return OK;
 }
 
@@ -459,7 +459,7 @@ QStringList CrdFactory::supportedInputFormats()
   result += "Gaussian Checkpoint (*.fchk)";
   result += "Molden (*.molden)";
 
-#ifdef USE_OPENBABEL1  
+#ifdef USE_OPENBABEL1
   for(unsigned int i = 0; i < extab.Count(); i++)
   {
     if(extab.IsReadable(i))
@@ -471,12 +471,12 @@ QStringList CrdFactory::supportedInputFormats()
       inputFormat += ")";
       result += inputFormat;
       allTypes += "*." + extab.GetExtension(i);
-    }  
+    }
   }
-#elif USE_OPENBABEL2 
+#elif USE_OPENBABEL2
   OBConversion conv; // here only because of initialisation bug in OBConversion::GetNextFormat (v2.0.0)
   //OBConversion::RegisterFormat("alc",this, "chemical/x-alchemy"); // test for initialisation of OBConversion
-  
+
   const char* str = NULL;
   Formatpos pos;
   OBFormat* format;
@@ -513,7 +513,7 @@ QStringList CrdFactory::supportedOutputFormats()
 /// supported coordinate output formats, ready for use in a QFileDialog filter.
 {
   QStringList result = "Brabo (*.crd)";
-#ifdef USE_OPENBABEL1  
+#ifdef USE_OPENBABEL1
   for(unsigned int i = 0; i < extab.Count(); i++)
   {
     if(extab.IsWritable(i))
@@ -526,7 +526,7 @@ QStringList CrdFactory::supportedOutputFormats()
       result += outputFormat;
     }
   }
-#elif USE_OPENBABEL2  
+#elif USE_OPENBABEL2
   const char* str = NULL;
   Formatpos pos;
   OBFormat* format;
@@ -562,17 +562,17 @@ bool CrdFactory::validInputFormat(const QString filename)
   if(braboExtension(filename) || xmolExtension(filename) || gaussianExtension(filename) || moldenExtension(filename))
     return true;
 
-#ifdef USE_OPENBABEL1    
+#ifdef USE_OPENBABEL1
   // check for Open Babel formats
   char* fn = qstrdup(filename.latin1()); // put the filename QString into a non-const char*
   if(extab.CanReadExtension(fn))
   {
     delete fn;
     return true;
-  }  
+  }
   delete fn;
 #endif
-#ifdef USE_OPENBABEL2    
+#ifdef USE_OPENBABEL2
   // check for Open Babel formats
   OBConversion conv; // here only because of initialisation bug in OBConversion::FileFormat (called by FormatFromExt) (v2.0.0)
   OBFormat* format = OBConversion::FormatFromExt(filename.latin1());
@@ -596,7 +596,7 @@ bool CrdFactory::validForceInputFormat(const QString filename)
 ///// validOutputFormat ///////////////////////////////////////////////////////
 bool CrdFactory::validOutputFormat(const QString filename)
 /// Returns true if the filename can be written.
-{  
+{
   // check for Brabo formats
   if(braboExtension(filename))
     return true;
@@ -611,7 +611,7 @@ bool CrdFactory::validOutputFormat(const QString filename)
   }
   delete fn;
 #endif
-#ifdef USE_OPENBABEL2    
+#ifdef USE_OPENBABEL2
   // check for Open Babel formats
   OBConversion conv; // here only because of initialisation bug in OBConversion::FileFormat (called by FormatFromExt) (v2.0.0)
   OBFormat* format = OBConversion::FormatFromExt(filename.latin1());
@@ -623,7 +623,7 @@ bool CrdFactory::validOutputFormat(const QString filename)
 
 ///// braboExtension //////////////////////////////////////////////////////////
 bool CrdFactory::braboExtension(const QString filename)
-/// Returns true if the extension of the 
+/// Returns true if the extension of the
 /// given filename corresponds to a Brabo format.
 {
   QString extension = filename.section(".", -1).lower();
@@ -633,7 +633,7 @@ bool CrdFactory::braboExtension(const QString filename)
 
 ///// xmolExtension ///////////////////////////////////////////////////////////
 bool CrdFactory::xmolExtension(const QString filename)
-/// Returns true if the extension of the 
+/// Returns true if the extension of the
 /// given filename corresponds to a Xmol format.
 {
   return filename.section(".", -1).lower() == "xyz";
@@ -641,7 +641,7 @@ bool CrdFactory::xmolExtension(const QString filename)
 
 ///// gaussianExtension ///////////////////////////////////////////////////////
 bool CrdFactory::gaussianExtension(const QString filename)
-/// Returns true if the extension of the 
+/// Returns true if the extension of the
 /// given filename corresponds to a Gaussian format.
 {
   return filename.section(".", -1).lower() == "fchk";
@@ -683,7 +683,7 @@ unsigned int CrdFactory::readBraboFile(AtomSet* atoms, const QString filename)
   unsigned int format = determineCrdFormat(allLines);
   if(format == UnknownFormat) // format not determinable => error out or ask format
     return UnknownFormat;
-  
+
   ///// read the coordinates
   if(format == NormalFormat)
     readCrdAtoms(atoms, allLines, false); // using normal format
@@ -806,9 +806,9 @@ unsigned int CrdFactory::readBraboForces(AtomSet* atoms, const QString filename)
     if(line.left(8).lower() == "****forc")
       break;
   }
-  while(!stream.eof())    
+  while(!stream.eof())
   {
-    line = stream.readLine();  
+    line = stream.readLine();
     if(line.left(4) == "****")
       break;
     allLines += line;
@@ -880,9 +880,9 @@ void CrdFactory::readPunchForces(AtomSet* atoms, QStringList &lines, const bool 
   double dx, dy, dz;
   QString line;
   unsigned int index = 0;
-  
+
   for(QStringList::iterator it = lines.begin(); it != lines.end(); it++)
-  {    
+  {
     line = *it;
     if(!extendedFormat)
     {
@@ -896,13 +896,13 @@ void CrdFactory::readPunchForces(AtomSet* atoms, QStringList &lines, const bool 
       dy = line.mid(20,20).toDouble();
       dz = line.mid(40,20).toDouble();
     }
-    atoms->setForces(index++, dx, dy, dz);    
+    atoms->setForces(index++, dx, dy, dz);
   }
 }
 
 ///// determineCrdFormat //////////////////////////////////////////////////////
 unsigned int CrdFactory::determineCrdFormat(QStringList& lines)
-/// Tries to determine the format of the .crd file parsed in lines. 
+/// Tries to determine the format of the .crd file parsed in lines.
 /// Only check a maximum of 100 lines. Even as little as 10 could be sufficient though.
 {
   QString line;
@@ -1020,7 +1020,7 @@ bool CrdFactory::possiblyExtendedCrd(const QString line)
 
 //// readXmolFile /////////////////////////////////////////////////////////////
 unsigned int CrdFactory::readXmolFile(AtomSet* atoms, const QString filename)
-/// Reads coordinates from a given Xmol coordinate file. 
+/// Reads coordinates from a given Xmol coordinate file.
 /// This function does not check the validity of the given filename.
 {
   ///// open the file
@@ -1030,7 +1030,7 @@ unsigned int CrdFactory::readXmolFile(AtomSet* atoms, const QString filename)
 
   ///// read the first line: the number of atoms
   QTextStream stream(&file);
-  bool convOK;  
+  bool convOK;
   unsigned int natoms = stream.readLine().toUInt(&convOK);
   if(!convOK || natoms == 0)
     return ErrorRead;
@@ -1050,7 +1050,7 @@ unsigned int CrdFactory::readXmolFile(AtomSet* atoms, const QString filename)
     allLines += line;
   }
   file.close();
-  
+
   ///// check the number of sections in each line (should be 4 or 7, with or without forces)
   for(QStringList::iterator it = allLines.begin(); it != allLines.end(); it++)
   {
@@ -1073,14 +1073,14 @@ unsigned int CrdFactory::readXmolFile(AtomSet* atoms, const QString filename)
     double x = (*(++it2)).toDouble();
     double y = (*(++it2)).toDouble();
     double z = (*(++it2)).toDouble();
-    atoms->addAtom(x, y, z, atomnum);   
-  } 
+    atoms->addAtom(x, y, z, atomnum);
+  }
   return OK;
 }
 
 //// readGaussianFile /////////////////////////////////////////////////////////
 unsigned int CrdFactory::readGaussianFile(AtomSet* atoms, const QString filename)
-/// Reads coordinates from a given Gaussian formatted checkpoint file. 
+/// Reads coordinates from a given Gaussian formatted checkpoint file.
 /// This function does not check the validity of the given filename.
 {
   ///// open the file
@@ -1104,7 +1104,7 @@ unsigned int CrdFactory::readGaussianFile(AtomSet* atoms, const QString filename
   unsigned int natoms2 = line.mid(49,12).toUInt(&convOK);
   if(!convOK || natoms2 != natoms)
     return ErrorRead;
-  
+
   ///// read the atomic numbers => safe to read one by one
   vector<unsigned int> atomnums;
   unsigned int atomnum;
@@ -1120,7 +1120,7 @@ unsigned int CrdFactory::readGaussianFile(AtomSet* atoms, const QString filename
   unsigned int natoms3 = line.mid(49,12).toUInt(&convOK);
   if(!convOK || natoms3 != 3*natoms)
     return ErrorRead;
-  
+
   ///// read the coordinates (5E16.8) => safe to read one by one
   atoms->clear();
   atoms->reserve(natoms);
@@ -1177,6 +1177,7 @@ unsigned int CrdFactory::readMoldenFile(AtomSet* atoms, const QString filename)
     atoms->addAtom(x, y, z, line.section(" ", 2, 2, QString::SectionSkipEmpty).toUInt());
     line = stream.readLine();
   }
+  return OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
