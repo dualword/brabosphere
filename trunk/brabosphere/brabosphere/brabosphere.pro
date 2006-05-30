@@ -3,7 +3,7 @@
 ###########################
 include(../brabosphere.pri)
 release {
-  TARGET = ../bin/brabosphere         
+  TARGET = ../bin/brabosphere
   MOC_DIR = ../output/brabosphere/moc/release
   OBJECTS_DIR = ../output/brabosphere/obj/release
   UI_DIR = ../output/brabosphere/ui/release
@@ -23,6 +23,8 @@ HEADERS += include/aboutbox.h \
            include/basisset.h \
            include/brabobase.h \
            include/calculation.h \
+           include/command.h \
+           include/commandhistory.h \
            include/densitybase.h \
            include/glmoleculeview.h \
            include/globalbase.h \
@@ -51,6 +53,8 @@ SOURCES += source/aboutbox.cpp \
            source/basisset.cpp \
            source/brabobase.cpp \
            source/calculation.cpp \
+           source/command.cpp \
+           source/commandhistory.cpp \
            source/densitybase.cpp \
            source/glmoleculeview.cpp \
            source/globalbase.cpp \
@@ -84,7 +88,7 @@ FORMS +=   ui/brabowidget.ui \
            ui/plotmapwidget.ui \
            ui/plotmapextensionwidget.ui \
            ui/preferenceswidget.ui \
-           ui/relaxwidget.ui 
+           ui/relaxwidget.ui
 win32:RC_FILE = brabosphere.rc
 
 ###########################

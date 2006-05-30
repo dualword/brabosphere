@@ -28,7 +28,7 @@ class QAction;
 class QPopupMenu;
 
 // Xbrabo forward class declarations
-#include "commandhistory.h";
+#include "commandhistory.h"
 #include "iconsets.h"
 class PreferencesBase;
 class XbraboView;
@@ -45,7 +45,7 @@ class XbraboView;
 class Xbrabo : public QextMdiMainFrm
 {
   Q_OBJECT
-  
+
   public:
     ///// constructor/destructor
     Xbrabo();                           // constructor
@@ -60,7 +60,7 @@ class Xbrabo : public QextMdiMainFrm
 
   public slots:
     void fileOpen(const QString filename = 0);    // opens an existing calculation
-    
+
   protected:
     bool event(QEvent* e);              // handles MDI child close events
     void resizeEvent(QResizeEvent* );   // fits the system menu button position to the menu position
@@ -86,7 +86,7 @@ class Xbrabo : public QextMdiMainFrm
     ///// view menu
     void viewToolBarStandard();         // toggles the Standard toolbar
     void viewToolBarCalculation();      // toggles the Calculation toolbar
-    void viewToolBarCoordinates();      // toggles the Coordinates toolbar    
+    void viewToolBarCoordinates();      // toggles the Coordinates toolbar
     void viewStatusBar();               // toggles the statusbar
     void viewTaskBar();                 // toggles the taskbar
 
@@ -130,7 +130,7 @@ class Xbrabo : public QextMdiMainFrm
     ///// tools menu
     void toolsPlotMap();                // shows a 2D map from a .map.1 file
     void toolsOrbitals();               // shows a 3D representation of orbitals
-            
+
     ///// help menu
     void helpHelp();                    // shows some general help
     void helpWhatsThis();               // enters What's This mode
@@ -149,7 +149,7 @@ class Xbrabo : public QextMdiMainFrm
     friend class CommandNewCalculation;
     friend class CommandPreferences;
 
-    ///// Private member functions 
+    ///// Private member functions
     ///// initialization
     void loadGeometry();                // initialization needed for the first showing of the mainwindow
     void initActions();                 // creates the actions
@@ -162,8 +162,8 @@ class Xbrabo : public QextMdiMainFrm
     void updateToolbarsInfo();          // updates editPreferences with the toolbar info
     void restoreToolbars();             // restores the toolbars
     QString actionText(const QString title, const QString brief, const QString details = QString::null, const IconSets::IconSetID iconID = IconSets::LastIcon); // constructs a text for the What's This mode for actions
-    
-    ///// Private widgets 
+
+    ///// Private widgets
     ///// toolbars
     QToolBar* ToolBarStandard;          ///< The File & Edit toolbar.
     QToolBar* ToolBarCalculation;       ///< The Setup & Run toolbar.
