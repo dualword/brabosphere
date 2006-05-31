@@ -229,26 +229,20 @@ void PreferencesBase::getToolbarsInfo(bool& status, QString& info) const
 void PreferencesBase::applyChanges()
 /// Applies any changes made to the widgets and updates everything as needed.
 {
-  if(widgetChanged) // only apply changes if something changed
-  {
-    ///// Internal state
-    widgetChanged = false;
-    saveWidgets();
-    saveSettings(); // so CrdView's can be updated without restarting Brabosphere
-    updatePaths();
-    ///// Check whether the pvm host list has changed
-    if(pvmHostsChanged == true)
-    {
-      pvmHostsChanged = false;
-      emit newPVMHosts(data.pvmHosts);
-    }
-    ///// Static structs to update all calculations
-    BraboBase::setPreferredBasisset(ComboBoxBasis->currentItem());
-    GLView::setParameters(getGLBaseParameters());
-    GLSimpleMoleculeView::setParameters(getGLMoleculeParameters());    
-    ///// Other visuals
-    updateVisuals();
-  }  
+  ///// Internal state
+  QStringList oldPVMHostsList = data.pvmHosts; // save the old list
+  saveWidgets(); // update the data struct from the widgets
+  saveSettings(); // so CrdView's can be updated without restarting Brabosphere
+  ///// Check whether the pvm host list has changed
+  if(!(data.pvmHosts == oldPVMHostsList))
+    emit newPVMHosts(data.pvmHosts);
+  ///// Static structs to update all calculations
+  updatePaths();
+  BraboBase::setPreferredBasisset(ComboBoxBasis->currentItem());
+  GLView::setParameters(getGLBaseParameters());
+  GLSimpleMoleculeView::setParameters(getGLMoleculeParameters());    
+  ///// Other visuals
+  updateVisuals();  
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -468,19 +462,8 @@ void PreferencesBase::accept()
 {  
   if(widgetChanged)
   {
-    applyChanges(); // this will reset widgetChanged
-    /*
+    applyChanges(); 
     widgetChanged = false;
-    saveWidgets();
-    saveSettings(); // so CrdView's can be updated without restarting Brabosphere
-    updatePaths();
-    // Check whether the pvm host list has changed
-    if(pvmHostsChanged == true)
-    {
-      pvmHostsChanged = false;
-      emit newPVMHosts(data.pvmHosts);
-    }
-    */
     PreferencesWidget::accept();
   }
   else
@@ -755,19 +738,20 @@ void PreferencesBase::deletePVMHost()
   {
     delete ListViewPVMHosts->selectedItem();
     changed();
-    changedPVM();
+    //changedPVM();
     ListViewPVMHosts->setSelected(ListViewPVMHosts->firstChild(), true);
     changePVMHost();
   }
 }
 
+/*
 ///// changedPVM //////////////////////////////////////////////////////////////
 void PreferencesBase::changedPVM()
 /// Indicates that the PVM host list has changed.
 {
   pvmHostsChanged = true;
 }
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Member Functions                                            /////
@@ -855,9 +839,9 @@ void PreferencesBase::makeConnections()
   connect(ButtonGroupProjection, SIGNAL(clicked(int)), this, SLOT(changed()));
   ///// PVM
   connect(LineEditPVMHosts, SIGNAL(textChanged(const QString&)), this, SLOT(changed()));
-  connect(LineEditPVMHosts, SIGNAL(textChanged(const QString&)), this, SLOT(changedPVM()));
+  //connect(LineEditPVMHosts, SIGNAL(textChanged(const QString&)), this, SLOT(changedPVM()));
   connect(PushButtonPVMHostsNew, SIGNAL(clicked()), this, SLOT(changed()));
-  connect(PushButtonPVMHostsNew, SIGNAL(clicked()), this, SLOT(changedPVM()));
+  //connect(PushButtonPVMHostsNew, SIGNAL(clicked()), this, SLOT(changedPVM()));
 }
 
 ///// init ////////////////////////////////////////////////////////////////////
@@ -930,7 +914,7 @@ void PreferencesBase::init()
   changeExecutable();
   // update everything
   widgetChanged = true;
-  pvmHostsChanged = true;
+  //pvmHostsChanged = true;
   applyChanges();
 }
 

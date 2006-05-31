@@ -102,7 +102,7 @@ class PreferencesBase : public PreferencesWidget
     void updatePVMHost(const QString& text);      // keeps ListViewPVMHosts in sync with LineEditPVMHost
     void newPVMHost();                  // adds a PVM host
     void deletePVMHost();               // deletes a PVM host
-    void changedPVM();                  // the PVM host list was changed
+    //void changedPVM();                  // the PVM host list was changed
 
   private:
     friend class CommandPreferences;
@@ -178,7 +178,7 @@ class PreferencesBase : public PreferencesWidget
     // other
     WidgetData data;                    ///< Contains the status of all widgets.
     bool widgetChanged;                 ///< = true if any of the widgets have changed.
-    bool pvmHostsChanged;               ///< = true if the PVM host list has changed.
+    //bool pvmHostsChanged;               ///< = true if the PVM host list has changed.
     QString tempBondSizeBS;             ///< Contains the bond size for ball&stick.
     QString tempBondSizeL;              ///< Contains the bond size for lines.
     float minLineWidthGL;               ///< Contains the minimum possible linewidth for a glLineWidth call.
