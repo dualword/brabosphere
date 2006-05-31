@@ -148,6 +148,7 @@ class Xbrabo : public QextMdiMainFrm
   private:
     friend class CommandNewCalculation;
     friend class CommandPreferences;
+    friend class CommandStatusBar;
 
     ///// Private member functions
     ///// initialization

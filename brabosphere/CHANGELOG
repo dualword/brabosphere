@@ -6,7 +6,6 @@ Change log for Brabosphere
     - Added support for reading gOpenMol PLT files (density isosurfaces)
     - Added support for reading Molden coordinate files
     - Remodeled the coordinate reading interface
-    - Bugfix: application did not show up when using the '-nosplash' command line option 
 
 * Brabosphere 1.0.0 (19/05/2006)
 

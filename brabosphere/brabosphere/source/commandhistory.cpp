@@ -126,10 +126,6 @@ void CommandHistory::repeat()
 
   std::list<Command*>::iterator it = currentPosition;
   addCommand((*(--it))->clone()); // duplicate the desired command and add it to the list
-  /*
-  (*(--it))->execute();
-  emit changed();
-  */
 }
 
 ///// undoAvailable ///////////////////////////////////////////////////////////

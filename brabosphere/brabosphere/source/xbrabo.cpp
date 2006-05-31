@@ -115,15 +115,12 @@ void Xbrabo::init()
   initToolBars();
   //initStatusBar();
 
-  updateActions();
-
   ///// connections
   connect(this, SIGNAL(lastChildViewClosed()),this, SLOT(updateActions()));
   connect(&commandHistory, SIGNAL(changed()), this, SLOT(updateActions()));
 
-  //updatePreferences(); // update the static variables of XbraboView
-  //editPreferences->updateVisuals(); // update the visuals
   restoreToolbars(); // was being called in showevent
+  updateActions();
 }
 
 ///// createCalculation ///////////////////////////////////////////////////////
@@ -586,11 +583,7 @@ void Xbrabo::viewToolBarStandard()
 {  
   statusBar()->message(tr("Toggling Standard toolbar..."), 1000);
 
-  // turn toolbar on or off
-  if (ToolBarStandard->isVisible())
-    ToolBarStandard->hide();
-  else
-    ToolBarStandard->show();
+  commandHistory.addCommand(new CommandDockWindow(this, "Toggle Standard Toolbar", ToolBarStandard));
 }
 
 ///// viewToolBarCalculation //////////////////////////////////////////////////
@@ -599,11 +592,7 @@ void Xbrabo::viewToolBarCalculation()
 {
   statusBar()->message(tr("Toggling Calculation toolbar..."), 1000);
 
-  // turn toolbar on or off
-  if (ToolBarCalculation->isVisible())
-    ToolBarCalculation->hide();
-  else
-    ToolBarCalculation->show();
+  commandHistory.addCommand(new CommandDockWindow(this, "Toggle Calculation Toolbar", ToolBarCalculation));
 }
 
 ///// viewToolBarCoordinates //////////////////////////////////////////////////
@@ -612,11 +601,7 @@ void Xbrabo::viewToolBarCoordinates()
 {
   statusBar()->message(tr("Toggling Coordinates toolbar..."), 1000);
 
-  // turn toolbar on or off
-  if (ToolBarCoordinates->isVisible())
-    ToolBarCoordinates->hide();
-  else
-    ToolBarCoordinates->show();
+  commandHistory.addCommand(new CommandDockWindow(this, "Toggle Coordinates Toolbar", ToolBarCoordinates));
 }
 
 ///// viewStatusBar ///////////////////////////////////////////////////////////
@@ -625,12 +610,7 @@ void Xbrabo::viewStatusBar()
 {  
   statusBar()->message(tr("Toggling statusbar..."), 1000);
 
-  //turn statusbar on or off
-  if (statusBar()->isVisible())
-    statusBar()->hide();
-  else
-    statusBar()->show();
-  fixToplevelModeHeight();
+  commandHistory.addCommand(new CommandStatusBar(this, "Toggle Statusbar"));
 }
 
 ///// viewTaskBar /////////////////////////////////////////////////////////////
@@ -640,7 +620,7 @@ void Xbrabo::viewTaskBar()
   statusBar()->message(tr("Toggling taskbar..."), 1000);
 
   //turn taskbar on or off
-  if (m_pTaskBar->isVisible())
+  if (m_pTaskBar->isVisibleTo(this))
     hideViewTaskBar();
   else
     showViewTaskBar();
@@ -1198,6 +1178,12 @@ void Xbrabo::updateActions()
   actionEditRedo->setMenuText(tr("&Redo") + " " + commandHistory.redoText());
   actionEditRepeat->setEnabled(commandHistory.repeatAvailable());
   actionEditRepeat->setMenuText(tr("R&epeat") + " " + commandHistory.repeatText());
+  ///// view
+  actionViewToolBarStandard->setOn(ToolBarStandard->isVisibleTo(this));
+  actionViewToolBarCalculation->setOn(ToolBarCalculation->isVisibleTo(this));
+  actionViewToolBarCoordinates->setOn(ToolBarCoordinates->isVisibleTo(this));
+  actionViewStatusBar->setOn(statusBar()->isVisibleTo(this));
+  actionViewTaskBar->setOn(m_pTaskBar->isVisibleTo(this));
   ///// molecule
   actionMoleculeReadCoordinates->setEnabled(view != 0 && !view->isRunning());
   actionMoleculeSaveCoordinates->setEnabled(view != 0);
@@ -2048,6 +2034,13 @@ void Xbrabo::initToolBars()
   //connect(m_pTaskBar, SIGNAL(orientationChanged(Orientation)), this, SLOT(fixToplevelModeHeight()));
   connect(m_pTaskBar, SIGNAL(placeChanged(QDockWindow::Place)), this, SLOT(fixToplevelModeHeight()));
   connect(m_pTaskBar, SIGNAL(visibilityChanged(bool)), this, SLOT(fixToplevelModeHeight()));
+
+  ///// make sure to corresponding menu items are always toggled correclty even when changing the visibility
+  ///// with other means
+  connect(ToolBarStandard, SIGNAL(visibilityChanged(bool)), this, SLOT(updateActions()));
+  connect(ToolBarCalculation, SIGNAL(visibilityChanged(bool)), this, SLOT(updateActions()));
+  connect(ToolBarCoordinates, SIGNAL(visibilityChanged(bool)), this, SLOT(updateActions()));
+  connect(m_pTaskBar, SIGNAL(visibilityChanged(bool)), this, SLOT(updateActions()));
 }
 
 /*
@@ -2074,7 +2067,7 @@ void Xbrabo::updateToolbarsInfo()
   QString result;
   QTextStream stream(&result, IO_WriteOnly);
   stream << *this;
-  editPreferences->setToolbarsInfo(result, statusBar()->isVisible());
+  editPreferences->setToolbarsInfo(result, statusBar()->isVisibleTo(this));
 }
 
 ///// restoreToolbars /////////////////////////////////////////////////////////
@@ -2095,11 +2088,6 @@ void Xbrabo::restoreToolbars()
     else
       statusBar()->hide();    
   }
-  actionViewToolBarStandard->setOn(ToolBarStandard->isVisible());
-  actionViewToolBarCalculation->setOn(ToolBarCalculation->isVisible());
-  actionViewToolBarCoordinates->setOn(ToolBarCoordinates->isVisible());
-  actionViewStatusBar->setOn(statusBar()->isVisible());
-  actionViewTaskBar->setOn(m_pTaskBar->isVisible());
   fixToplevelModeHeight();
 }
 

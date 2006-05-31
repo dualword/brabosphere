@@ -30,6 +30,7 @@
 ///// Header files ////////////////////////////////////////////////////////////
 
 // Qt header files
+#include <qdockwindow.h>
 #include <qstatusbar.h>
 
 // Xbrabo header files
@@ -106,12 +107,6 @@ bool CommandNewCalculation::revert()
   return mainWindow->closeCalculation(view);
 }
 
-///// type ////////////////////////////////////////////////////////////////////
-Command::Type CommandNewCalculation::type() const
-/// Returns the type of command, in this case NewCalculation.
-{
-  return NewCalculation;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Class CommandOpenCalculation                                        /////
@@ -149,13 +144,6 @@ bool CommandOpenCalculation::revert()
   return mainWindow->closeCalculation(view);
 }
 
-///// type ////////////////////////////////////////////////////////////////////
-Command::Type CommandOpenCalculation::type() const
-/// Returns the type of command, in this case OpenCalculation.
-{
-  return OpenCalculation;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Class CommandPreferences                                            /////
@@ -185,8 +173,7 @@ bool CommandPreferences::execute(bool silent)
   {
     // re-apply new vales
     mainWindow->editPreferences->data = newData;
-    mainWindow->editPreferences->pvmHostsChanged = newPvmHostsChanged;
-    mainWindow->editPreferences->widgetChanged = true; // so applyChanges takes effect
+    mainWindow->editPreferences->restoreWidgets();
     mainWindow->editPreferences->applyChanges();   
     return true;
   }
@@ -194,7 +181,6 @@ bool CommandPreferences::execute(bool silent)
   {
     // backup old data
     oldData = mainWindow->editPreferences->data;
-    oldPvmHostsChanged = mainWindow->editPreferences->pvmHostsChanged;
     // show the dialog
     return mainWindow->changePreferences();
   }
@@ -206,18 +192,87 @@ bool CommandPreferences::revert()
 {
   // backup new data
   newData = mainWindow->editPreferences->data;
-  newPvmHostsChanged = mainWindow->editPreferences->pvmHostsChanged; 
   // revert to old data
   mainWindow->editPreferences->data = oldData;
-  mainWindow->editPreferences->pvmHostsChanged = oldPvmHostsChanged;
-  mainWindow->editPreferences->widgetChanged = true; // so applyChanges takes effect
-  mainWindow->editPreferences->applyChanges();
+  mainWindow->editPreferences->restoreWidgets(); // update the widgets from the data struct
+  mainWindow->editPreferences->applyChanges(); // update the data struct from the widgets and update everything
   return true;
 }
 
-///// type ////////////////////////////////////////////////////////////////////
-Command::Type CommandPreferences::type() const
-/// Returns the type of command, in this case Preferences.
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandDockWindow                                             /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandDockWindow::CommandDockWindow(Xbrabo* parent, const QString description, QDockWindow* dock) : Command(parent, description),
+  dockWindow(dock)
+/// The default constructor. 
 {
-  return Preferences;
+
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandDockWindow* CommandDockWindow::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandDockWindow(*this);
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandDockWindow::execute(bool silent)
+/// Toggles the visibility of the given QDockWindow. This is always a silent 
+/// operation.
+{
+  if(dockWindow->isVisibleTo(mainWindow))
+    dockWindow->hide();
+  else
+    dockWindow->show();
+  return true;
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandDockWindow::revert()
+/// Reverts the visibility.
+{
+  return execute();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandStatusBar                                              /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandStatusBar::CommandStatusBar(Xbrabo* parent, const QString description) : Command(parent, description)
+/// The default constructor. 
+{
+
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandStatusBar* CommandStatusBar::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandStatusBar(*this);
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandStatusBar::execute(bool silent)
+/// Toggles the visibility of the statusbar. This is always a silent 
+/// operation.
+{
+  if(mainWindow->statusBar()->isVisibleTo(mainWindow))
+    mainWindow->statusBar()->hide();
+  else
+    mainWindow->statusBar()->show();
+  mainWindow->fixToplevelModeHeight();
+  return true;
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandStatusBar::revert()
+/// Reverts the visibility.
+{
+  return execute();
 }

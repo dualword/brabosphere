@@ -23,7 +23,10 @@
 
 ///// Forward class declarations & header files ///////////////////////////////
 
-// Qt includes
+// Qt forward class declarations
+class QDockWindow;
+
+// Qt header files
 #include <qstring.h>
 
 // Xbrabo forward class declarations
@@ -42,14 +45,10 @@ class Command
     virtual ~Command();                 // Destructor
     virtual Command* clone() const = 0; // 'Virtual (copy) constructor'
 
-    ///// enums
-    enum Type{NewCalculation, OpenCalculation, Preferences};
-
     ///// public member functions
     QString description() const;        // Returns a description of the command.
     virtual bool execute(bool silent = false) = 0;// Executes the command
     virtual bool revert() = 0;          // Reverts the effects of executing the command.
-    virtual Type type() const = 0;      // Returns the type of command
     bool isRepeatable() const;          // Returns whether the command can be repeated
 
   protected:
@@ -73,7 +72,6 @@ class CommandNewCalculation : public Command
     ///// public member functions
     bool execute(bool silent = false);  // Executes the command
     bool revert();                      // Reverts the effects of executing the command.
-    Type type() const;                  // Returns the type of command
 
   private:
     ///// private member variables
@@ -91,7 +89,6 @@ class CommandOpenCalculation : public Command
     ///// public member functions
     bool execute(bool silent = false);  // Executes the command
     bool revert();                      // Reverts the effects of executing the command.
-    Type type() const;                  // Returns the type of command
 
   private:
     ///// private member variables
@@ -110,12 +107,40 @@ class CommandPreferences : public Command
     ///// public member functions
     bool execute(bool silent = false);  // Executes the command
     bool revert();                      // Reverts the effects of executing the command.
-    Type type() const;                  // Returns the type of command
 
   private:
     ///// private member variables
     PreferencesBase::WidgetData oldData, newData;   // PreferencesBase structs containing all information before and after
-    bool oldPvmHostsChanged, newPvmHostsChanged;    // Keeps track of any changes to the PVM host list.
+};
+
+///// class CommandDockWindow /////////////////////////////////////////////////
+class CommandDockWindow : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandDockWindow(Xbrabo* parent, const QString description, QDockWindow* dock);      // constructor
+    virtual CommandDockWindow* clone() const;    // virtual copy constructor
+
+    ///// public member functions
+    bool execute(bool silent = false);  // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+
+  private:
+    ///// private member variables
+    QDockWindow* dockWindow;            ///< A pointer to the actual QDockWindow of which the visibility is to be tracked
+};
+
+///// class CommandStatusBar //////////////////////////////////////////////////
+class CommandStatusBar : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandStatusBar(Xbrabo* parent, const QString description);      // constructor
+    virtual CommandStatusBar* clone() const;    // virtual copy constructor
+
+    ///// public member functions
+    bool execute(bool silent = false);  // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
 };
 
 #endif
