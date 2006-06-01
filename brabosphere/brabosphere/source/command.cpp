@@ -21,7 +21,7 @@
   \brief This class implements the Command design pattern for use as an
          Undo/Redo stack.
 
-  The Command class itself is an abstract base class for the subclasses also 
+  The Command class itself is an abstract base class for the subclasses also
   present in this file. The type of the command is given by the Type enum.
 */
 /// \file
@@ -47,7 +47,7 @@ Command::Command(Xbrabo* parent, const QString description) :
   mainWindow(parent),
   repeatable(false),
   desc(description)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -80,7 +80,7 @@ bool Command::isRepeatable() const
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandNewCalculation::CommandNewCalculation(Xbrabo* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -93,7 +93,7 @@ CommandNewCalculation* CommandNewCalculation::clone() const
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
-bool CommandNewCalculation::execute(bool silent)
+bool CommandNewCalculation::execute(bool)
 /// Creates a new calculation. This is always a silent operation.
 {
   view = mainWindow->createCalculation();
@@ -116,7 +116,7 @@ bool CommandNewCalculation::revert()
 CommandOpenCalculation::CommandOpenCalculation(Xbrabo* parent, const QString description, const QString filename) : Command(parent, description),
   view(0),
   fileName(filename)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -129,8 +129,8 @@ CommandOpenCalculation* CommandOpenCalculation::clone() const
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
-bool CommandOpenCalculation::execute(bool silent)
-/// Opens an existing calculation. This is always a silent operation because the 
+bool CommandOpenCalculation::execute(bool)
+/// Opens an existing calculation. This is always a silent operation because the
 /// filename is already given and never empty.
 {
   view = mainWindow->openCalculation(fileName);
@@ -151,7 +151,7 @@ bool CommandOpenCalculation::revert()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandPreferences::CommandPreferences(Xbrabo* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -166,7 +166,7 @@ CommandPreferences* CommandPreferences::clone() const
 ///// execute /////////////////////////////////////////////////////////////////
 bool CommandPreferences::execute(bool silent)
 /// Changes the program's preferences and keeps a copy of the previous state.
-/// In silent mode, the Preferences dialog is not shown, but data are restored 
+/// In silent mode, the Preferences dialog is not shown, but data are restored
 /// from a previous run of execute()
 {
   if(silent)
@@ -174,7 +174,7 @@ bool CommandPreferences::execute(bool silent)
     // re-apply new vales
     mainWindow->editPreferences->data = newData;
     mainWindow->editPreferences->restoreWidgets();
-    mainWindow->editPreferences->applyChanges();   
+    mainWindow->editPreferences->applyChanges();
     return true;
   }
   else
@@ -207,7 +207,7 @@ bool CommandPreferences::revert()
 ///// constructor /////////////////////////////////////////////////////////////
 CommandDockWindow::CommandDockWindow(Xbrabo* parent, const QString description, QDockWindow* dock) : Command(parent, description),
   dockWindow(dock)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -220,8 +220,8 @@ CommandDockWindow* CommandDockWindow::clone() const
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
-bool CommandDockWindow::execute(bool silent)
-/// Toggles the visibility of the given QDockWindow. This is always a silent 
+bool CommandDockWindow::execute(bool)
+/// Toggles the visibility of the given QDockWindow. This is always a silent
 /// operation.
 {
   if(dockWindow->isVisibleTo(mainWindow))
@@ -245,7 +245,7 @@ bool CommandDockWindow::revert()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandStatusBar::CommandStatusBar(Xbrabo* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -258,8 +258,8 @@ CommandStatusBar* CommandStatusBar::clone() const
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
-bool CommandStatusBar::execute(bool silent)
-/// Toggles the visibility of the statusbar. This is always a silent 
+bool CommandStatusBar::execute(bool)
+/// Toggles the visibility of the statusbar. This is always a silent
 /// operation.
 {
   if(mainWindow->statusBar()->isVisibleTo(mainWindow))

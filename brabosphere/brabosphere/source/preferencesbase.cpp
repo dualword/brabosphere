@@ -20,7 +20,7 @@
   \class PreferencesBase
   \brief This class allows setup of the preferences.
 
-  It is instantiation during startup of the program and then reads the settings 
+  It is instantiation during startup of the program and then reads the settings
   from an ini file or the registry, providing defaults if no settings can be found.
 
 */
@@ -88,7 +88,7 @@
 ///// constructor /////////////////////////////////////////////////////////////
 PreferencesBase::PreferencesBase(QWidget* parent, const char* name, bool modal, WFlags fl) : PreferencesWidget(parent,name, modal, fl)
 /// The default constructor.
-{      
+{
   mainWindow = dynamic_cast<QextMdiMainFrm*>(parent); // save the pointer to Xbrabo (main window)
   makeConnections();
   init();
@@ -112,7 +112,7 @@ PreferencesBase::~PreferencesBase()
 ///// preferredBasisset ///////////////////////////////////////////////////////
 unsigned int PreferencesBase::preferredBasisset() const
 /// Returns the index of the basisset used as the preferred basisset.
-{  
+{
   return ComboBoxBasis->currentItem();
 }
 */
@@ -121,14 +121,14 @@ unsigned int PreferencesBase::preferredBasisset() const
 bool PreferencesBase::useBinDirectory() const
 /// Returns true if the .11 should be written to
 /// a special directory (different from the calculation directory).
-{  
+{
   return RadioButtonBin2->isChecked();
 }
 
 ///// getGLBaseParameters /////////////////////////////////////////////////////
 GLBaseParameters PreferencesBase::getGLBaseParameters() const
 /// Returns a struct containing all OpenGL parameters used in GLView.
-{  
+{
   GLBaseParameters result;
   switch(data.lightPosition)
   {
@@ -158,7 +158,7 @@ GLBaseParameters PreferencesBase::getGLBaseParameters() const
             break;
     case 8: result.lightPositionX =  1.0;
             result.lightPositionY = -1.0;
-            break;            
+            break;
   }
   result.lightPositionZ = 1.0;
   result.lightColor = data.lightColor;
@@ -169,14 +169,14 @@ GLBaseParameters PreferencesBase::getGLBaseParameters() const
   result.smoothShading = data.smoothShading;
   result.depthCue = data.depthCue;
   result.perspectiveProjection = data.perspectiveProjection;
-    
+
   return result;
 }
 
 ///// getGLMoleculeParameters /////////////////////////////////////////////////
 GLMoleculeParameters PreferencesBase::getGLMoleculeParameters() const
 /// Returns a struct containing all OpenGL parameters used in GLSimpleMoleculeView.
-{  
+{
   GLMoleculeParameters result;
 
   if(data.quality < 11)
@@ -205,7 +205,7 @@ GLMoleculeParameters PreferencesBase::getGLMoleculeParameters() const
 ///// getPVMHosts /////////////////////////////////////////////////////////////
 QStringList PreferencesBase::getPVMHosts() const
 /// Returns the list of available PVM hosts.
-{  
+{
   return data.pvmHosts;
 }
 
@@ -240,9 +240,9 @@ void PreferencesBase::applyChanges()
   updatePaths();
   BraboBase::setPreferredBasisset(ComboBoxBasis->currentItem());
   GLView::setParameters(getGLBaseParameters());
-  GLSimpleMoleculeView::setParameters(getGLMoleculeParameters());    
+  GLSimpleMoleculeView::setParameters(getGLMoleculeParameters());
   ///// Other visuals
-  updateVisuals();  
+  updateVisuals();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ void PreferencesBase::applyChanges()
 ///// loadSettings ////////////////////////////////////////////////////////////
 void PreferencesBase::loadSettings()
 /// Loads the program settings from file. On linux, this file
-/// is $HOME/.qt/brabosphererc while on Windows they are read from the registry. 
+/// is $HOME/.qt/brabosphererc while on Windows they are read from the registry.
 /// It also sets up the geometry of the widgets.
 {
 #ifdef Q_OS_WIN32
@@ -268,7 +268,7 @@ void PreferencesBase::loadSettings()
   const QString binDir = "/tmp";
   const QString unixPrefix = "/" + Version::appName.lower() + "/";
 #endif
-      
+
   QSettings settings;
   settings.setPath(Version::appCompany, Version::appName.lower(), QSettings::User);
 
@@ -276,7 +276,9 @@ void PreferencesBase::loadSettings()
 
   ///// Preferences entries ///////////
   unsigned int settingsVersion = settings.readNumEntry(unixPrefix + "version", 0);
-  
+  if(settingsVersion > SettingsVersion)
+    qWarning("the seetings file was written with a newer version of " + Version::appName);
+
   ///// Paths
   data.path              = settings.readEntry(prefix + "path", appDirBrabo + QDir::separator());
   data.extension         = settings.readEntry(prefix + "extension", defaultExtension);
@@ -288,7 +290,7 @@ void PreferencesBase::loadSettings()
     LineEditExtension->setText(data.extension);
     updateAllExecutables(); // fills ListViewExecutables with values generated from data.path and data.extension
     saveWidgets(); // saves these values to data.executables
-  }                         
+  }
   data.binDir            = settings.readEntry(prefix + "bin_dir", binDir);
   data.binInCalcDir      = settings.readBoolEntry(prefix + "bin_in_calc_dir", true);
   data.basissetDir       = settings.readEntry(prefix + "basisset_dir", basisDir);
@@ -299,7 +301,7 @@ void PreferencesBase::loadSettings()
   data.fastRenderLimit   = settings.readNumEntry(prefix + "fast_render_limit", 1000);
   data.showElements      = settings.readBoolEntry(prefix + "show_elements", false);
   data.showNumbers       = settings.readBoolEntry(prefix + "show_numbers", true);
-  data.sizeLines         = settings.readNumEntry(prefix + "size_lines", static_cast<int>((minLineWidthGL > 1.0f ? minLineWidthGL : 1.0f)/lineWidthGranularity)); // max(1.0, minLineWidthGL) 
+  data.sizeLines         = settings.readNumEntry(prefix + "size_lines", static_cast<int>((minLineWidthGL > 1.0f ? minLineWidthGL : 1.0f)/lineWidthGranularity)); // max(1.0, minLineWidthGL)
   data.sizeBonds         = settings.readEntry(prefix + "size_bonds", QString::number(AtomSet::vanderWaals(1)/2.0));
   data.sizeForces        = settings.readEntry(prefix + "size_forces", QString::number(AtomSet::vanderWaals(1)/2.0*1.1));
   data.colorLabels       = settings.readNumEntry(prefix + "color_labels", QColor(0, 255, 0).rgb()); // green
@@ -316,7 +318,7 @@ void PreferencesBase::loadSettings()
   data.backgroundImage   = settings.readEntry(prefix + "background_image", QString::null);
   data.backgroundColor   = settings.readNumEntry(prefix + "background_color", QColor(224, 224, 224).rgb()); // Light grey
   data.styleApplication  = settings.readNumEntry(prefix + "style", 0); // Startup style
-  
+
   ///// OpenGL
   data.lightPosition     = settings.readNumEntry(prefix + "light_position", 2);
   data.lightColor        = settings.readNumEntry(prefix + "light_color", QColor(255,255,255).rgb());
@@ -346,7 +348,7 @@ void PreferencesBase::loadSettings()
 ///// saveSettings ////////////////////////////////////////////////////////////
 void PreferencesBase::saveSettings()
 /// Saves the program settings to file. ATM only called from
-/// the destructor, but possibly useful as a public slot.  
+/// the destructor, but possibly useful as a public slot.
 /// The following stuff is or should be saved:
 /// \arg all PreferencesBase widgets
 /// \arg mainwindow geometry/mdimode/recent file list/
@@ -376,8 +378,8 @@ void PreferencesBase::saveSettings()
   settings.writeEntry(prefix + "basisset_dir", data.basissetDir);
   settings.writeEntry(prefix + "basisset", static_cast<int>(data.basisset));
   ///// Molecule
-  settings.writeEntry(prefix + "style_molecule", static_cast<int>(data.styleMolecule)); 
-  settings.writeEntry(prefix + "style_forces", static_cast<int>(data.styleForces)); 
+  settings.writeEntry(prefix + "style_molecule", static_cast<int>(data.styleMolecule));
+  settings.writeEntry(prefix + "style_forces", static_cast<int>(data.styleForces));
   settings.writeEntry(prefix + "fast_render_limit", data.fastRenderLimit);
   settings.writeEntry(prefix + "show_elements", data.showElements);
   settings.writeEntry(prefix + "show_numbers", data.showNumbers);
@@ -406,10 +408,10 @@ void PreferencesBase::saveSettings()
   settings.writeEntry(prefix + "smooth_shading", data.smoothShading);
   settings.writeEntry(prefix + "depth_cue", data.depthCue);
   settings.writeEntry(prefix + "quality", static_cast<int>(data.quality));
-  settings.writeEntry(prefix + "perspective_projection", data.perspectiveProjection); 
+  settings.writeEntry(prefix + "perspective_projection", data.perspectiveProjection);
   ///// PVM
   settings.writeEntry(prefix + "pvm_hosts", data.pvmHosts);
-    
+
   ///// Xbrabo entries ////////////////
   prefix = unixPrefix + "geometry/";
   settings.writeEntry(prefix + "x", mainWindow->pos().x());
@@ -426,7 +428,7 @@ void PreferencesBase::saveSettings()
 ///// updateVisuals ///////////////////////////////////////////////////////////
 void PreferencesBase::updateVisuals()
 /// Updates the background image & color of the mainwindow and sets the style.
-{ 
+{
   switch(data.backgroundType)
   {
     case 0: // default
@@ -445,7 +447,7 @@ void PreferencesBase::updateVisuals()
             mainWindow->setBackgroundColor(data.backgroundColor);
   }
 
-  ///// style      
+  ///// style
   updateStyle();
 }
 
@@ -459,10 +461,10 @@ void PreferencesBase::accept()
 /// Overridden version of PreferencesWidget::accept().
 /// Sets the accept/reject status of the widget depending on whether
 /// any actual changes have been made.
-{  
+{
   if(widgetChanged)
   {
-    applyChanges(); 
+    applyChanges();
     widgetChanged = false;
     PreferencesWidget::accept();
   }
@@ -474,7 +476,7 @@ void PreferencesBase::accept()
 void PreferencesBase::reject()
 /// Overridden version of PreferencesWidget::reject().
 /// Rejects any possible changes made.
-{  
+{
   if(widgetChanged)
   {
     widgetChanged = false;
@@ -491,14 +493,14 @@ void PreferencesBase::reject()
 ///// changed /////////////////////////////////////////////////////////////////
 void PreferencesBase::changed()
 /// Sets the 'changed' status of PreferencesBase.
-{  
+{
   widgetChanged = true;
 }
 
 ///// selectWidget ////////////////////////////////////////////////////////////
 void PreferencesBase::selectWidget(QIconViewItem* item)
 /// Shows a widget from WidgetStackCategory depending on the iconview item.
-{  
+{
   if(item->text() == tr("BRABO"))
     WidgetStackCategory->raiseWidget(0);
   else if(item->text() == tr("Visuals"))
@@ -515,7 +517,7 @@ void PreferencesBase::selectWidget(QIconViewItem* item)
 void PreferencesBase::changeExecutable()
 /// Updates LabelProgram & LineEditExecutable with the
 /// currently selected item in ListViewExecutables.
-{  
+{
   QListViewItem* item = ListViewExecutables->selectedItem();
   if(item == 0)
     return;
@@ -529,7 +531,7 @@ void PreferencesBase::changeExecutable()
 ///// updateExecutable ////////////////////////////////////////////////////////
 void PreferencesBase::updateExecutable(const QString& text)
 /// Updates the current item of ListViewExecutables with \c text.
-{  
+{
   QListViewItem* item = ListViewExecutables->selectedItem();
   if(item == 0)
     return;
@@ -541,7 +543,7 @@ void PreferencesBase::updateExecutable(const QString& text)
 void PreferencesBase::updateAllExecutables()
 /// Renames all items of ListViewExecutables according to the
 /// pattern path+name+extension.
-{  
+{
   ListViewExecutables->findItem("ABC",0)->setText(1,LineEditPath->text()+"abc"+LineEditExtension->text());
   ListViewExecutables->findItem("Achar",0)->setText(1,LineEditPath->text()+"achar"+LineEditExtension->text());
   ListViewExecutables->findItem("AtomSCF",0)->setText(1,LineEditPath->text()+"atomscf"+LineEditExtension->text());
@@ -581,14 +583,14 @@ void PreferencesBase::updateAllExecutables()
   ListViewExecutables->findItem("Symm",0)->setText(1,LineEditPath->text()+"symm"+LineEditExtension->text());
   ListViewExecutables->findItem("Table",0)->setText(1,LineEditPath->text()+"table"+LineEditExtension->text());
   ListViewExecutables->findItem("Xyz2crd",0)->setText(1,LineEditPath->text()+"xyz2crd"+LineEditExtension->text());
-  
+
   changeExecutable(); //update LabelProgram & LineEditExecutable
 }
 
 ///// selectBinDir ////////////////////////////////////////////////////////////
 void PreferencesBase::selectBinDir()
 /// Selects a new directory for LineEditBin using a standard filedialog.
-{  
+{
   QString dirname = QFileDialog::getExistingDirectory(LineEditBin->text(),this, 0, tr("Choose a directory"));
   if(!dirname.isNull())
     LineEditBin->setText(QDir::convertSeparators(dirname));
@@ -597,7 +599,7 @@ void PreferencesBase::selectBinDir()
 ///// selectExecutable ////////////////////////////////////////////////////////
 void PreferencesBase::selectExecutable()
 /// Selects an executable for LineEditExecutable using a standard filedialog.
-{  
+{
   QString filename = QFileDialog::getOpenFileName(LineEditExecutable->text(), QString::null, this, 0, tr("Choose an executable"));
   if(!filename.isNull())
     LineEditExecutable->setText(QDir::convertSeparators(filename));
@@ -606,7 +608,7 @@ void PreferencesBase::selectExecutable()
 ///// selectBasisDir //////////////////////////////////////////////////////////
 void PreferencesBase::selectBasisDir()
 /// Selects a new directory for LineEditBasis using a standard filedialog.
-{  
+{
   QString dirname = QFileDialog::getExistingDirectory(LineEditBasis->text(),this, 0, tr("Choose a directory"));
   if(!dirname.isNull())
     LineEditBasis->setText(QDir::convertSeparators(dirname));
@@ -631,7 +633,7 @@ void PreferencesBase::updateLineEditBondSizeLines()
 ///// updateLineEditBondSizeTubes /////////////////////////////////////////////
 void PreferencesBase::updateLineEditBondSizeTubes()
 /// Updates LineEditBondSizeTubes according to SliderBondSizeTubes.
-{  
+{
   LineEditBondSizeTubes->blockSignals(true);
   LineEditBondSizeTubes->setText(QString::number(SliderBondSizeTubes->value()*0.01));
   LineEditBondSizeTubes->blockSignals(false);
@@ -640,7 +642,7 @@ void PreferencesBase::updateLineEditBondSizeTubes()
 ///// updateSliderBondSizeTubes ///////////////////////////////////////////////
 void PreferencesBase::updateSliderBondSizeTubes()
 /// Updates SliderBondSizeTubes according to LineEditBondSizeTubes.
-{  
+{
   SliderBondSizeTubes->blockSignals(true);
   SliderBondSizeTubes->setValue(static_cast<int>(LineEditBondSizeTubes->text().toFloat()/0.01));
   SliderBondSizeTubes->blockSignals(false);
@@ -649,7 +651,7 @@ void PreferencesBase::updateSliderBondSizeTubes()
 ///// updateLineEditForceSizeTubes ////////////////////////////////////////////
 void PreferencesBase::updateLineEditForceSizeTubes()
 /// Updates LineEditForceSizeTubes according to SliderForceSizeTubes.
-{  
+{
   LineEditForceSizeTubes->blockSignals(true);
   LineEditForceSizeTubes->setText(QString::number(SliderForceSizeTubes->value()*0.01));
   LineEditForceSizeTubes->blockSignals(false);
@@ -658,7 +660,7 @@ void PreferencesBase::updateLineEditForceSizeTubes()
 ///// updateSliderForceSizeTubes //////////////////////////////////////////////
 void PreferencesBase::updateSliderForceSizeTubes()
 /// Updates SliderForceSizeTubes according to LineEditForceSizeTubes.
-{  
+{
   SliderForceSizeTubes->blockSignals(true);
   SliderForceSizeTubes->setValue(static_cast<int>(LineEditForceSizeTubes->text().toFloat()/0.01));
   SliderForceSizeTubes->blockSignals(false);
@@ -667,7 +669,7 @@ void PreferencesBase::updateSliderForceSizeTubes()
 ///// updateOpacitySelection //////////////////////////////////////////////////
 void PreferencesBase::updateOpacitySelection()
 /// Updates TextLabelSelection according to SliderSelectionOpacity.
-{  
+{
   if(SliderSelectionOpacity->value() == 100)
     TextLabelSelection->setText(QString::number(SliderSelectionOpacity->value()) + " %");
   else
@@ -677,7 +679,7 @@ void PreferencesBase::updateOpacitySelection()
 ///// updateOpacityForces /////////////////////////////////////////////////////
 void PreferencesBase::updateOpacityForces()
 /// Updates TextLabelForces according to SliderForcesOpacity.
-{  
+{
   if(SliderForceOpacity->value() == 100)
     TextLabelForce->setText(QString::number(SliderForceOpacity->value()) + " %");
   else
@@ -687,14 +689,14 @@ void PreferencesBase::updateOpacityForces()
 ///// updateColorButtonForce //////////////////////////////////////////////////
 void PreferencesBase::updateColorButtonForce()
 /// Enables/disables ColorButtonForce according to the selected colring type.
-{  
+{
   ColorButtonForce->setEnabled(ComboBoxForceColor->currentItem() == 1);
 }
 
 ///// changePVMHost ///////////////////////////////////////////////////////////
 void PreferencesBase::changePVMHost()
 /// Updates LineEditPVMHost with the selected item in ListViewPVMHosts.
-{  
+{
   LineEditPVMHosts->blockSignals(true); // so setting the text doesn't change the listview
   if(ListViewPVMHosts->selectedItem() != 0)
   {
@@ -714,7 +716,7 @@ void PreferencesBase::changePVMHost()
 ///// updatePVMHost ///////////////////////////////////////////////////////////
 void PreferencesBase::updatePVMHost(const QString& text)
 /// Updates the current item of ListViewPVMHosts with text.
-{  
+{
   if(ListViewPVMHosts->selectedItem() != 0)
   {
     ListViewPVMHosts->selectedItem()->setText(0, text);
@@ -725,7 +727,7 @@ void PreferencesBase::updatePVMHost(const QString& text)
 ///// newPVMHost //////////////////////////////////////////////////////////////
 void PreferencesBase::newPVMHost()
 /// Adds a new host to ListViewPVMHosts with the name 'new host'.
-{  
+{
   QListViewItem* item =  new QListViewItem(ListViewPVMHosts,tr("host.domain"));
   ListViewPVMHosts->setSelected(item, true);
 }
@@ -733,7 +735,7 @@ void PreferencesBase::newPVMHost()
 ///// deletePVMHost ///////////////////////////////////////////////////////////
 void PreferencesBase::deletePVMHost()
 /// Removes the currently selected host of ListViewPVMHosts.
-{  
+{
   if(ListViewPVMHosts->selectedItem() != 0)
   {
     delete ListViewPVMHosts->selectedItem();
@@ -760,14 +762,14 @@ void PreferencesBase::changedPVM()
 ///// makeConnections /////////////////////////////////////////////////////////
 void PreferencesBase::makeConnections()
 /// Sets up all permanent coonections.
-{  
+{
   ///// Connections for IconView-WidgetStack /////
   connect(IconViewCategory, SIGNAL(selectionChanged(QIconViewItem*)), this, SLOT(selectWidget(QIconViewItem*)));
-  
+
   ///// connections for buttons /////
   connect(ButtonOK, SIGNAL(clicked()), this, SLOT(accept()));
   connect(ButtonCancel, SIGNAL(clicked()), this, SLOT(reject()));
-  
+
   ///// connections for other widgets /////
   ///// Paths
   connect(ListViewExecutables, SIGNAL(selectionChanged()), this, SLOT(changeExecutable()));
@@ -792,7 +794,7 @@ void PreferencesBase::makeConnections()
   connect(LineEditPVMHosts, SIGNAL(textChanged(const QString&)), this, SLOT(updatePVMHost(const QString&)));
   connect(PushButtonPVMHostsNew, SIGNAL(clicked()), this, SLOT(newPVMHost()));
   connect(PushButtonPVMHostsDelete, SIGNAL(clicked()), this, SLOT(deletePVMHost()));
-  
+
   ///// connections for changes ///////
   ///// Paths
   connect(LineEditExecutable, SIGNAL(textChanged(const QString&)), this, SLOT(changed())); // no appropiate signal for ListViewExecutable
@@ -847,9 +849,9 @@ void PreferencesBase::makeConnections()
 ///// init ////////////////////////////////////////////////////////////////////
 void PreferencesBase::init()
 /// Initializes the widget. Called once from the constructor.
-{  
+{
   ///// select the first icon in the iconview
-  IconViewCategory->setSelected(IconViewCategory->firstItem(), true);  
+  IconViewCategory->setSelected(IconViewCategory->firstItem(), true);
   ///// select the first item in the listview
   ListViewExecutables->setSelected(ListViewExecutables->firstChild(), true);
   ///// fill ComboBoxBasis with the available basissets
@@ -876,8 +878,8 @@ void PreferencesBase::init()
   SliderBondSizeLines->setMinValue(static_cast<int>(minLineWidthGL/lineWidthGranularity));
   SliderBondSizeLines->setMaxValue(static_cast<int>(maxLineWidthGL/lineWidthGranularity));
   SliderBondSizeTubes->setMaxValue(static_cast<int>(AtomSet::vanderWaals(1)/0.01)); // maxsize is H-diameter
-  SliderForceSizeTubes->setMaxValue(static_cast<int>(AtomSet::vanderWaals(1)/0.01)); 
-  
+  SliderForceSizeTubes->setMaxValue(static_cast<int>(AtomSet::vanderWaals(1)/0.01));
+
   ///// set a validator on the PVM hosts input
   QRegExp rx("[-a-zA-Z0-9\\.]+");
   LineEditPVMHosts->setValidator(new QRegExpValidator(rx, this));
@@ -910,7 +912,7 @@ void PreferencesBase::init()
   ToolButtonBasis->setIconSet(IconSets::getIconSet(IconSets::Open));
   ToolButtonBackground->setIconSet(IconSets::getIconSet(IconSets::Open));
 
-  resize(1,1); 
+  resize(1,1);
   changeExecutable();
   // update everything
   widgetChanged = true;
@@ -943,7 +945,7 @@ void PreferencesBase::initOpenGL()
   qDebug("Vendor: %s",(const char*)glGetString(GL_VENDOR));
   qDebug("Version: %s",(const char*)glGetString(GL_VERSION));
   qDebug("Extensions: %s",(const char*)glGetString(GL_EXTENSIONS));
-  //*/   
+  //*/
 
   ///// destroy the OpenGL widget
   delete testOpenGL;
@@ -968,7 +970,7 @@ void PreferencesBase::saveWidgets()
   data.binDir = LineEditBin->text();
   data.basissetDir = LineEditBasis->text();
   data.basisset = ComboBoxBasis->currentItem();
-  
+
   ///// Molecule
   data.styleMolecule = ComboBoxMolecule->currentItem();
   data.styleForces = ComboBoxForces->currentItem();
@@ -1026,7 +1028,7 @@ void PreferencesBase::saveWidgets()
 ///// restoreWidgets //////////////////////////////////////////////////////////
 void PreferencesBase::restoreWidgets()
 /// Restores the status of the widgets from the contents of the struct data.
-{  
+{
   ///// Paths
   QListViewItem* item = ListViewExecutables->firstChild();
   {
@@ -1036,7 +1038,7 @@ void PreferencesBase::restoreWidgets()
         break;  // more values than ListViewItems
       item->setText(1,*it);
       item = item->nextSibling();
-    }  
+    }
   }
   LineEditPath->setText(data.path);
   LineEditExtension->setText(data.extension);
@@ -1045,7 +1047,7 @@ void PreferencesBase::restoreWidgets()
   LineEditBin->setText(data.binDir);
   LineEditBasis->setText(data.basissetDir);
   ComboBoxBasis->setCurrentItem(data.basisset);
-  
+
   ///// Molecule
   ComboBoxMolecule->setCurrentItem(data.styleMolecule);
   ComboBoxForces->setCurrentItem(data.styleForces);
@@ -1089,7 +1091,7 @@ void PreferencesBase::restoreWidgets()
   { for(QStringList::Iterator it = data.pvmHosts.begin(); it != data.pvmHosts.end(); it++)
       new QListViewItem(ListViewPVMHosts, *it); }
   if(!data.pvmHosts.isEmpty())
-    ListViewPVMHosts->setSelected(ListViewPVMHosts->firstChild(), true);  
+    ListViewPVMHosts->setSelected(ListViewPVMHosts->firstChild(), true);
   changePVMHost();
 }
 
@@ -1097,14 +1099,14 @@ void PreferencesBase::restoreWidgets()
 void PreferencesBase::updateStyle()
 /// Updates the style of the application according
 /// to the current item of ComboBoxStyle.
-{  
+{
   qDebug("Calling PreferencesBase::updateStyle");
-  qDebug("currentStyle = " + QString(QApplication::style().name()));    
+  qDebug("currentStyle = " + QString(QApplication::style().name()));
   if(ComboBoxStyle->currentItem() == 0)
   {
     if(QString(QApplication::style().name()).lower() != startupStyleName.lower())
     {
-      qDebug("About to revert to the startup style");      
+      qDebug("About to revert to the startup style");
       QApplication::setStyle(startupStyleName);
     }
   }
@@ -1162,7 +1164,7 @@ void PreferencesBase::updatePaths()
   if(RadioButtonBin2->isChecked())
     Paths::bin = LineEditBin->text();
   else
-    Paths::bin = QString::null;  
+    Paths::bin = QString::null;
   Paths::basisset = LineEditBasis->text();
 
   ///// further process the directories to simplify them as much as possible
