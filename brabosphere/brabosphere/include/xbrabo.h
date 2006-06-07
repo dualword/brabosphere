@@ -28,7 +28,6 @@ class QAction;
 class QPopupMenu;
 
 // Xbrabo forward class declarations
-#include "commandhistory.h"
 #include "iconsets.h"
 class PreferencesBase;
 class XbraboView;
@@ -146,10 +145,6 @@ class Xbrabo : public QextMdiMainFrm
     void fixToplevelModeHeight2();      // the actual worker function for the previously declared function
 
   private:
-    friend class CommandNewCalculation;
-    friend class CommandPreferences;
-    friend class CommandStatusBar;
-
     ///// Private member functions
     ///// initialization
     void loadGeometry();                // initialization needed for the first showing of the mainwindow
@@ -225,8 +220,6 @@ class Xbrabo : public QextMdiMainFrm
     QAction* actionAbout;               ///< Action that's connected to helpAbout().
     ///// dialogs
     PreferencesBase* editPreferences;   ///< The Preferences dialog.
-    ///// other
-    CommandHistory commandHistory;      ///< Holds the undo/redo stack
 };
 
 #endif

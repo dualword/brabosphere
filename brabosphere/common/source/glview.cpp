@@ -238,7 +238,7 @@ void GLView::resetView(const bool update)
 {
   centerView(false);
   resetOrientation(false);
-  zoomFit(); // calls setModified()
+  zoomFit(false); // calls setModified()
   if(update)
     updateGL();
 }
@@ -314,7 +314,7 @@ void GLView::initializeGL()
   GLfloat lightDiffuse[] = {0.5f, 0.5f, 0.5f, 0.0f};
   GLfloat lightSpecular[] = {1.0f, 1.0f, 1.0f, 0.0f};
 
-  updateGLSettings();
+  //updateGLSettings();
 
   ///// lighting
   ///// lighting model
@@ -456,9 +456,9 @@ void GLView::mouseMoveEvent(QMouseEvent* e)
       ///// left/right movement: z-rotation
       ///// decoupled
       if(abs(newPosition.y() - mousePosition.y()) > abs(newPosition.x() - mousePosition.x()))
-        translateZ(newPosition.y() - mousePosition.y());
+        translateCommand(0, 0, newPosition.y() - mousePosition.y());
       else
-        zRot = -180.0f * static_cast<float>(newPosition.x() - mousePosition.x()) / static_cast<float>(width()); // z-rotation of entire system
+        rotateCommand(0.0f, 0.0f, -180.0f * static_cast<float>(newPosition.x() - mousePosition.x()) / static_cast<float>(width())); // z-rotation of entire system
     }
     else if(e->state() & Qt::ControlButton)
     {
@@ -466,15 +466,16 @@ void GLView::mouseMoveEvent(QMouseEvent* e)
       ///// up/down movement: y-translation
       ///// left/right movement: x-translation
       ///// coupled
-      translateXY(newPosition.x() - mousePosition.x(), newPosition.y() - mousePosition.y());
+      translateCommand(newPosition.x() - mousePosition.x(), newPosition.y() - mousePosition.y(), 0);
     }
     else
     {
       ///// LEFTBUTTON ONLY
       ///// up/down movement: x-rotation
       ///// left/right movement: y-rotation
-      yRot = 180.0f * static_cast<float>(newPosition.x() - mousePosition.x()) / static_cast<float>(width());
-      xRot = 180.0f * static_cast<float>(newPosition.y() - mousePosition.y()) / static_cast<float>(height());
+      rotateCommand(180.0f * static_cast<float>(newPosition.y() - mousePosition.y()) / static_cast<float>(height()),
+                    180.0f * static_cast<float>(newPosition.x() - mousePosition.x()) / static_cast<float>(width()),
+                    0.0f);
     }
     setModified();
     mousePosition = newPosition;
@@ -517,41 +518,39 @@ void GLView::keyPressEvent(QKeyEvent* e)
 /// \arg <ctrl>+<right> : translate right
 /// \arg <ctrl>+<up>    : translate up
 /// \arg <ctrl>+<down>  : translate down
-/// \arg <ctrl>+<shift>+<left>: change internal coordinate of selection (smaller). Implementation in GLMoleculeView.
-/// \arg <ctrl>+<shift>+<right>: change internal coordinate of selection (larger). Implementation in GLMoleculeView.
 {
   switch(e->key())
   {
     case Qt::Key_Left :   if(e->state() & Qt::ShiftButton)
-                            zRot = 5.0f; // rotate counterclockwise
+                            rotateCommand(0.0f, 0.0f, 5.0f); // rotate counterclockwise
                           else if(e->state() & Qt::ControlButton)
-                            translateXY(-5, 0);
+                            translateCommand(-5, 0, 0);
                           else
-                            yRot = -5.0f; // rotate left
+                            rotateCommand(0.0f, -5.0f, 0.0f); // rotate left
                           break;
 
     case Qt::Key_Up     : if(e->state() & Qt::ShiftButton)
-                            translateZ(-5);
+                            translateCommand(0, 0, -5);
                           else if(e->state() & Qt::ControlButton)
-                            translateXY(0, -5);
+                            translateCommand(0, -5, 0);
                           else
-                             xRot = -5.0f; // rotate up
+                             rotateCommand(-5.0f, 0.0f, 0.0f); // rotate up
                           break;
 
     case Qt::Key_Right  : if(e->state() & Qt::ShiftButton)
-                            zRot = -5.0f; // rotate clockwise
+                            rotateCommand(0.0f, 0.0f, -5.0f); // rotate clockwise
                           else if(e->state() & Qt::ControlButton)
-                            translateXY(5, 0);
+                            translateCommand(5, 0, 0);
                           else
-                            yRot =  5.0f; // rotate right
+                            rotateCommand(0.0f, 5.0f, 0.0f); // rotate right
                           break;
 
     case Qt::Key_Down   : if(e->state() & Qt::ShiftButton)
-                            translateZ(5);
+                            translateCommand(0, 0, 5);
                           else if(e->state() & Qt::ControlButton)
-                            translateXY(0, 5);
+                            translateCommand(0, 5, 0);
                           else
-                            xRot = 5.0f; // rotate down
+                            rotateCommand(5.0f, 0.0f, 0.0f); // rotate down
                           break;
 
     default:              e->ignore();
@@ -566,10 +565,21 @@ void GLView::wheelEvent(QWheelEvent* e)
 /// Overridden from QGlWidget::wheelEvent. Handles scrolls with the scrollwheel
 /// of the mouse. It provides an alternative way of zooming.
 {
-  translateZ(-e->delta()/4); // abs(e->delta()) is always WHEELDELTA == 120
+  translateCommand(0, 0, -e->delta()/4); // abs(e->delta()) is always WHEELDELTA == 120
   setModified();
   updateGL();
   e->accept();
+}
+
+///// translateCommand ////////////////////////////////////////////////////////
+void GLView::translateCommand(const int amountX, const int amountY, const int amountZ)
+/// Calls translateZ or translateXY. Can be overridden in a subclass to create
+/// Commands.
+{
+  if(amountZ != 0)
+    translateZ(amountZ);
+  else
+    translateXY(amountX, amountY);
 }
 
 ///// translateZ //////////////////////////////////////////////////////////////
@@ -601,6 +611,22 @@ void GLView::translateXY(const int amountX, const int amountY)
     xPos += amountX < 0 ? -0.1f : 0.1f;
   if(amountY != 0)
     yPos += amountY > 0 ? -0.1f : 0.1f;
+}
+
+///// rotateCommand ///////////////////////////////////////////////////////////
+void GLView::rotateCommand(const float amountX, const float amountY, const float amountZ)
+/// Calls rotate. Can be overridden in a subclass to create a Command
+{
+  rotate(amountX, amountY, amountZ);
+}
+
+///// rotate //////////////////////////////////////////////////////////////////
+void GLView::rotate(const float amountX, const float amountY, const float amountZ)
+/// Sets the step-rotation for the next call to paintGL.
+{
+  xRot = amountX;
+  yRot = amountY;
+  zRot = amountZ;
 }
 
 ///// clicked /////////////////////////////////////////////////////////////////
@@ -665,9 +691,6 @@ void GLView::updateGLSettings()
     glDisable(GL_FOG);
 
   updateProjection(); // pure virtual which takes care of a change in projection
-
-  ///// update the projection
-  resizeGL(width(), height());
 }
 
 ///// updateFog ///////////////////////////////////////////////////////////////
@@ -691,7 +714,7 @@ void GLView::updateProjection()
     return;
 
   resizeGL(width(), height());
-  zoomFit();
+  zoomFit(false);
 
   currentPerspectiveProjection = baseParameters.perspectiveProjection;
 }

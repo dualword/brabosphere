@@ -88,6 +88,9 @@ class GLSimpleMoleculeView : public GLView
     virtual float boundingSphereRadius();         // calculates the radius of the bounding sphere
     void clicked(const QPoint& position);         // handles click events
     virtual void updateShapes();        // updates the shapes vector
+    unsigned int getSelectionType() const;        // Returns the selection type depending on the number of selected atoms.
+    virtual void processSelectionCommand(const unsigned int id);      // directly calls processSelection
+    void processSelection(const unsigned int id); // updates the selection according to the change in selection of the ID
 
     ///// protected structs
     struct ShapeProperties             
@@ -104,10 +107,11 @@ class GLSimpleMoleculeView : public GLView
     };  
 
     ///// protected member data
+    AtomSet* atoms;                     ///< The list of atoms.
     GLfloat centerX;                    ///< X-offset needed to center the molecule.
     GLfloat centerY;                    ///< Y-offset needed to center the moelcule.
     GLfloat centerZ;                    ///< Z-offset needed to center the molecule.
-    unsigned int selectionType;         ///< Keeps track of the type of selection.
+    //unsigned int selectionType;         ///< Keeps track of the type of selection.
     std::list<unsigned int> selectionList;        ///< List that holds the selected atoms and their order.
     std::vector<ShapeProperties> shapes;///< the list of shapes ordered by opacity.
 
@@ -120,10 +124,9 @@ class GLSimpleMoleculeView : public GLView
     enum StartIndices{START_ATOMS = 100, START_BONDS = 1, START_FORCES = 2, START_SELECTEDATOMS = 3, START_SELECTEDBONDS = 4}; ///< Indices for the selection of entities
  
     ///// private member functions
-    GLuint makeObjects(const int numSlices);      // generates the atom and bond shapes
+    void makeObjects();                 // generates the atom and bond shapes
     void changeObjects(const GLuint startList, const int numSlices);  // changes the atom and bond shapes
     void selectEntity(const QPoint position);     // selects the entity at the position
-    void processSelection(const unsigned int id); // updates the selection according to the change in selection of the ID
     void centerMolecule();              // calculates the translations needed to have the molecule centered
     void drawScene();                   // does the actual repainting of the OpenGL scene
     void drawAtoms();                   // draws the atoms in the OpenGL scene
@@ -143,7 +146,6 @@ class GLSimpleMoleculeView : public GLView
     bool showElements;                  ///< Is true if elements should be shown.
     bool showNumbers;                   ///< Is true if atom numbers should be shown
     unsigned int chargeType;            ///< Determines the type of charges to be shown
-    AtomSet* atoms;                     ///< The list of atoms.
     GLfloat selectionLineWidth;         ///< The linewidth for drawing selected bonds. 
     GLfloat selectionPointSize;         ///< The pointsize for drawing selected atoms.
     float scaleFactor;                  ///< scalefactor for scenes exceeding 50A in radius

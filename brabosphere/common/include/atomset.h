@@ -44,6 +44,7 @@ class AtomSet
   public:
     AtomSet();                          // constructor
     ~AtomSet();                         // destructor
+    AtomSet(const AtomSet* atoms);      // copy constructor
 
     ///// public enums
     enum ChargeType{None, Mulliken, Stockholder};///< The type of charge that is stored

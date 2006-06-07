@@ -484,6 +484,16 @@ void Calculation::setContinuable(const bool status)
   calcContinuable = status;
 }
 
+///// setAtomSet //////////////////////////////////////////////////////////////
+void Calculation::setAtomSet(AtomSet* atomSet)
+/// Updates the current AtomSet from a pointer.
+{
+  if(atomSet == NULL)
+    return;
+  atoms = atomSet;
+  setContinuable(false);
+}
+
 ///// isRunning ///////////////////////////////////////////////////////////////
 bool Calculation::isRunning() const
 /// Returns whether or not the calculation is running.

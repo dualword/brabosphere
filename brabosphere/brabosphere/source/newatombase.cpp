@@ -42,8 +42,11 @@
 
 // Xbrabo header files
 #include "atomset.h"
+#include "command.h"
+#include "commandhistory.h"
 #include "newatombase.h"
 #include "point3d.h"
+#include "xbraboview.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
@@ -75,9 +78,95 @@ NewAtomBase::~NewAtomBase()
 {
 }
 
+///// setAtomSet //////////////////////////////////////////////////////////////
+void NewAtomBase::setAtomSet(AtomSet* atomSet)
+/// Sets a new AtomSet to add to created atoms to.
+{
+  if(atomSet == NULL)
+    return;
+
+  atoms = atomSet;
+  updateAtomLimits();
+}
+
+///// addAtom /////////////////////////////////////////////////////////////////
+void NewAtomBase::addAtom()
+/// Adds an atom based on the status of the widgets. This function does the actual 
+/// work and is only called from CommandAddAtoms.
+{
+  unsigned int selectedAtomType = ButtonGroupType->selectedId();
+  if(RadioButtonCartesian->isOn())
+  {
+    ///// Add the atom by absolute or relative cartesian coordinates
+    if(RadioButtonAbsolute->isOn())
+      // absolute
+      atoms->addAtom(LineEditX->text().toDouble(), LineEditY->text().toDouble(), LineEditZ->text().toDouble(), selectedAtomType);
+    else
+      // relative      
+      atoms->addAtom(LineEditX->text().toDouble() + atoms->x(SpinBoxRelative->value() - 1), LineEditY->text().toDouble() + atoms->y(SpinBoxRelative->value() - 1), LineEditZ->text().toDouble() + atoms->z(SpinBoxRelative->value() - 1), selectedAtomType);
+  }
+  else
+  {
+    ///// Add the atom by internal coordinates
+    // get some indices
+    const unsigned int newIndex = atoms->count();
+    const unsigned int refIndex1 = SpinBoxReference1->value() - 1;
+    const unsigned int refIndex2 = SpinBoxReference2->value() - 1;
+    const unsigned int refIndex3 = SpinBoxReference3->value() - 1;
+    // add the atom with the correct bond distance from the first reference atom (along the X-axis)
+    atoms->addAtom(atoms->x(refIndex1) + LineEditBond->text().toDouble(), atoms->y(refIndex1), atoms->z(refIndex1), selectedAtomType);
+    if(newIndex > 1)
+    {
+      // only set the angle when more than one atom is present 
+      // get the current angle
+      double angle = atoms->angle(newIndex, refIndex1, refIndex2);
+      if(fabs(angle) < Point3D<double>::TOLERANCE || fabs(angle - 180) < Point3D<double>::TOLERANCE || fabs(angle + 180) < Point3D<double>::TOLERANCE)
+      {
+        qDebug("current angle is %f when using X-axis, so changing to Y-axis", angle); 
+        // bad initial axis chosen, try the Y-axis
+        atoms->setX(newIndex, atoms->x(refIndex1));
+        atoms->setY(newIndex, atoms->y(refIndex1) + LineEditBond->text().toDouble());
+        angle = atoms->angle(newIndex, refIndex1, refIndex2);
+        /*if(abs(angle) < Point3D<double>::TOLERANCE)
+        {
+          // again bad initial axis chosen, try the Z-axis, last chance
+          atoms->setY(newIndex, atoms->y(refIndex1));
+          atoms->setZ(newIndex, atoms->z(refIndex1) + LineEditBond->text().toDouble());
+          angle = atoms->angle(newIndex, refIndex1, refIndex2);
+        }*/
+      }
+      // change it to the desired value
+      atoms->changeAngle(LineEditAngle->text().toDouble() - angle, newIndex, refIndex1, refIndex2, false);
+      if(newIndex > 2)
+      {
+        // only set the torsion when more than 2 atoms were present
+        // get the current torsion
+        const double torsion = atoms->torsion(newIndex, refIndex1, refIndex2, refIndex3);
+        // change it to the desired value
+        atoms->changeTorsion(torsion - LineEditTorsion->text().toDouble(), newIndex, refIndex1, refIndex2, refIndex3, false);
+      }
+    }
+  }
+  emit atomAdded();
+  /*
+  qDebug("finished, coordinates of all atoms:");
+  for(unsigned int i = 0; i < atoms->count(); i++)
+    qDebug("atom i: %f %f %f",atoms->x(i), atoms->y(i), atoms->z(i));
+  */
+  updateAtomLimits();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Slots                                                        /////
 ///////////////////////////////////////////////////////////////////////////////
+
+///// addAtomCommand //////////////////////////////////////////////////////////
+void NewAtomBase::addAtomCommand()
+/// Adds an atom based on the status of the widgets
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget()->parentWidget()); // as ugly as it can get... NewAtomBase(GLMoleculeView(Splitter(XbraboView)))
+  view->getCommandHistory()->addCommand(new CommandAddAtoms(view, "Add Atoms", this));  // calls createAtom
+}
 
 ///// updateAtomLimits ////////////////////////////////////////////////////////
 void NewAtomBase::updateAtomLimits()
@@ -150,72 +239,6 @@ void NewAtomBase::showEvent(QShowEvent* e)
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Slots                                                       /////
 ///////////////////////////////////////////////////////////////////////////////
-
-///// addAtom /////////////////////////////////////////////////////////////////
-void NewAtomBase::addAtom()
-/// Adds an atom based on the status of the widgets
-{
-  unsigned int selectedAtomType = ButtonGroupType->selectedId();
-  if(RadioButtonCartesian->isOn())
-  {
-    ///// Add the atom by absolute or relative cartesian coordinates
-    if(RadioButtonAbsolute->isOn())
-      // absolute
-      atoms->addAtom(LineEditX->text().toDouble(), LineEditY->text().toDouble(), LineEditZ->text().toDouble(), selectedAtomType);
-    else
-      // relative      
-      atoms->addAtom(LineEditX->text().toDouble() + atoms->x(SpinBoxRelative->value() - 1), LineEditY->text().toDouble() + atoms->y(SpinBoxRelative->value() - 1), LineEditZ->text().toDouble() + atoms->z(SpinBoxRelative->value() - 1), selectedAtomType);
-  }
-  else
-  {
-    ///// Add the atom by internal coordinates
-    // get some indices
-    const unsigned int newIndex = atoms->count();
-    const unsigned int refIndex1 = SpinBoxReference1->value() - 1;
-    const unsigned int refIndex2 = SpinBoxReference2->value() - 1;
-    const unsigned int refIndex3 = SpinBoxReference3->value() - 1;
-    // add the atom with the correct bond distance from the first reference atom (along the X-axis)
-    atoms->addAtom(atoms->x(refIndex1) + LineEditBond->text().toDouble(), atoms->y(refIndex1), atoms->z(refIndex1), selectedAtomType);
-    if(newIndex > 1)
-    {
-      // only set the angle when more than one atom is present 
-      // get the current angle
-      double angle = atoms->angle(newIndex, refIndex1, refIndex2);
-      if(fabs(angle) < Point3D<double>::TOLERANCE || fabs(angle - 180) < Point3D<double>::TOLERANCE || fabs(angle + 180) < Point3D<double>::TOLERANCE)
-      {
-        qDebug("current angle is %f when using X-axis, so changing to Y-axis", angle); 
-        // bad initial axis chosen, try the Y-axis
-        atoms->setX(newIndex, atoms->x(refIndex1));
-        atoms->setY(newIndex, atoms->y(refIndex1) + LineEditBond->text().toDouble());
-        angle = atoms->angle(newIndex, refIndex1, refIndex2);
-        /*if(abs(angle) < Point3D<double>::TOLERANCE)
-        {
-          // again bad initial axis chosen, try the Z-axis, last chance
-          atoms->setY(newIndex, atoms->y(refIndex1));
-          atoms->setZ(newIndex, atoms->z(refIndex1) + LineEditBond->text().toDouble());
-          angle = atoms->angle(newIndex, refIndex1, refIndex2);
-        }*/
-      }
-      // change it to the desired value
-      atoms->changeAngle(LineEditAngle->text().toDouble() - angle, newIndex, refIndex1, refIndex2, false);
-      if(newIndex > 2)
-      {
-        // only set the torsion when more than 2 atoms were present
-        // get the current torsion
-        const double torsion = atoms->torsion(newIndex, refIndex1, refIndex2, refIndex3);
-        // change it to the desired value
-        atoms->changeTorsion(torsion - LineEditTorsion->text().toDouble(), newIndex, refIndex1, refIndex2, refIndex3, false);
-      }
-    }
-  }
-  emit atomAdded();
-  /*
-  qDebug("finished, coordinates of all atoms:");
-  for(unsigned int i = 0; i < atoms->count(); i++)
-    qDebug("atom i: %f %f %f",atoms->x(i), atoms->y(i), atoms->z(i));
-  */
-  updateAtomLimits();
-}
 
 ///// updateICAtoms ///////////////////////////////////////////////////////////
 void NewAtomBase::updateICAtoms()

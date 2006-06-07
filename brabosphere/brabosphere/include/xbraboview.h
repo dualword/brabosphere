@@ -44,6 +44,9 @@ class GlobalBase;
 class RelaxBase;
 class StatusText;
 
+///// Xbrabo header files
+#include "commandhistory.h"
+
 ///// Base class header file
 #if defined(USE_KMDI) || defined(USE_KMDI_DLL)
 #  include<kmdichildview.h>
@@ -65,28 +68,33 @@ class XbraboView : public QextMdiChildView
     unsigned int calculationType() const;         // returns the type of the calculation
     unsigned int buurType() const;      // returns the type of crystal environment
     bool isModified() const;            // returns true if the calculation has been modified
-    //bool isAnimating() const;           // returns true if the molecule is animating
     QString name() const;               // returns the name of the calculation
     QString fileName() const;           // returns the name the calculation was opened under
     QString directory() const;          // returns the calculation directory
     bool isRunning() const;             // returns true if the calculation is running
     bool isPaused() const;              // returns true if the calculation is paused
-    //bool hasSelection() const;          // returns true if atoms are selected
     void cut();                         // implements a cut operation
     void copy();                        // implements a copy operation
     void paste();                       // implements a paste operation
     GLMoleculeView* moleculeView() const;         // returns a pointer to the GLMoleculeView widget
+    AtomSet* currentAtomSet() const;    // return a pointer to the currently active AtomSet
+    void setAtomSet(AtomSet* atomSet);  // sets a new pointer for the active AtomSet
 
     bool loadCML(const QDomDocument* doc);        // loads all data from a QDomDocument
     QDomDocument* saveCML();            // saves all data to a QDomDocument
     void setFileName(const QString filename);     // sets the name the calculation should be saved under
+
+    CommandHistory* getCommandHistory();// returns a pointer to the local undo/redo stack
+    bool moleculeReadCoordinates();     // reads coordinates
+    bool showProperties();              // changes which properties are shown in the OpenGL window.
 
   signals:
     void changed();                     // is emitted when the calculation has changed or when it recieves focus
     
   public slots:
     void setModified(bool state = true);// sets the 'modified' property of the calculation
-    void moleculeReadCoordinates();     // reads coordinates
+    void moleculeReadCoordinatesCommand();        // creates a Command to read new coordinates
+    void showPropertiesCommand();       // creates a Command to change the display mode of the properties.
     void moleculeSaveCoordinates();     // saves coordinates
     void moleculeFPS();                 // calculates the FPS for the current parameters
     void setupGlobal();                 // sets up global options
@@ -101,7 +109,6 @@ class XbraboView : public QextMdiChildView
     void cleanCalculation();            // cleans the calculation directory
     void viewOutput();                  // shows the output files
     void updatePVMHosts(const QStringList& hosts);// updates the PVM host list in braboSetup
-    void showProperties();              // changes which properties are shown in the OpenGL window.
 
   protected:
     void keyPressEvent(QKeyEvent* e);   // event which takes place when a key is pressed
@@ -157,6 +164,7 @@ class XbraboView : public QextMdiChildView
     unsigned int lastProgress;          ///< The progress from the last brabo calculation.
     Calculation* calculation;           ///< The calculation class
     QStringList hostListPVM;            ///< A temporary copy of the PVM host list in case braboSetup is not initialized yet
+    CommandHistory commandHistory;      ///< The local undo/redo stack class
 
     static unsigned int calcCounter;    ///< A counter that holds the number of new calculations for the current session.
 };

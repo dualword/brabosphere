@@ -38,19 +38,24 @@ class NewAtomBase : public NewAtomWidget
     NewAtomBase(AtomSet* atomset, QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);        // constructor
     ~NewAtomBase();                     // destructor
 
+    void setAtomSet(AtomSet* atomSet);  // sets a new AtomSet to add atoms to
+
+    ///// Command related
+    void addAtom();                     // creates an atom based on the status of the widgets
+    
   signals:
     void atomAdded();                   //< Is fired when an atom has been added
 
   public slots:
+    void addAtomCommand();              // creates a Command which adds an atom
     void updateAtomLimits();            // updates all widgets pertaining to the AtomSet
 
   protected:
     void showEvent(QShowEvent* e);      // updates everything when the dialog is shown
 
   private slots:
-    void addAtom();                     // adds an atom depending on the status of the widgets
     void updateICAtoms();               // updates the IC labels from the reference atoms
-    void updateSelectedAtom(int number);// updates the proerties of the selected atom type
+    void updateSelectedAtom(int number);// updates the properties of the selected atom type
     void checkAdd();                    // check whether an atom can be added with the current status of the widgets
 
   private:

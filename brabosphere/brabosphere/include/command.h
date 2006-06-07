@@ -23,37 +23,39 @@
 
 ///// Forward class declarations & header files ///////////////////////////////
 
-// Qt forward class declarations
-class QDockWindow;
+// STL header files
+#include <list>
 
 // Qt header files
 #include <qstring.h>
 
 // Xbrabo forward class declarations
-class Xbrabo;
+class AtomSet;
+class NewAtomBase;
 class XbraboView;
 
 // Xbrabo header files
-#include "preferencesbase.h"
+#include "quaternion.h"
 
 ///// class Command ///////////////////////////////////////////////////////////
 class Command
 {
   public:
     ///// constructor/destructor
-    Command(Xbrabo* parent, const QString description);    // constructor
+    Command(XbraboView* parent, const QString description);    // constructor
     virtual ~Command();                 // Destructor
     virtual Command* clone() const = 0; // 'Virtual (copy) constructor'
 
     ///// public member functions
     QString description() const;        // Returns a description of the command.
-    virtual bool execute(bool silent = false) = 0;// Executes the command
+    virtual bool execute(bool fromBackup = false) = 0;      // Executes the command
     virtual bool revert() = 0;          // Reverts the effects of executing the command.
+    virtual bool combine(Command* command);       // Combines the command with another one
     bool isRepeatable() const;          // Returns whether the command can be repeated
 
   protected:
     ///// protected member variables
-    Xbrabo* mainWindow;                 // Contains a pointer to the Xbrabo class where the commands are executed.
+    XbraboView* view;                   // Contains a pointer to the XbraboView class where the commands are executed.
     bool repeatable;                    // Contains the Repeatable property
 
   private:
@@ -61,6 +63,7 @@ class Command
     QString desc;                       // Contains the command's description
 };
 
+/*
 ///// class CommandNewCalculation /////////////////////////////////////////////
 class CommandNewCalculation : public Command
 {
@@ -70,7 +73,7 @@ class CommandNewCalculation : public Command
     virtual CommandNewCalculation* clone() const; // virtual copy constructor
 
     ///// public member functions
-    bool execute(bool silent = false);  // Executes the command
+    bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.
 
   private:
@@ -87,7 +90,7 @@ class CommandOpenCalculation : public Command
     virtual CommandOpenCalculation* clone() const;// virtual copy constructor
 
     ///// public member functions
-    bool execute(bool silent = false);  // Executes the command
+    bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.
 
   private:
@@ -105,7 +108,7 @@ class CommandPreferences : public Command
     virtual CommandPreferences* clone() const;    // virtual copy constructor
 
     ///// public member functions
-    bool execute(bool silent = false);  // Executes the command
+    bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.
 
   private:
@@ -119,10 +122,10 @@ class CommandDockWindow : public Command
   public:
     ///// constructor/destructor
     CommandDockWindow(Xbrabo* parent, const QString description, QDockWindow* dock);      // constructor
-    virtual CommandDockWindow* clone() const;    // virtual copy constructor
+    virtual CommandDockWindow* clone() const;     // virtual copy constructor
 
     ///// public member functions
-    bool execute(bool silent = false);  // Executes the command
+    bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.    
 
   private:
@@ -136,11 +139,300 @@ class CommandStatusBar : public Command
   public:
     ///// constructor/destructor
     CommandStatusBar(Xbrabo* parent, const QString description);      // constructor
-    virtual CommandStatusBar* clone() const;    // virtual copy constructor
+    virtual CommandStatusBar* clone() const;      // virtual copy constructor
 
     ///// public member functions
-    bool execute(bool silent = false);  // Executes the command
+    bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.    
+};
+*/
+
+///// class CommandCoordinates ////////////////////////////////////////////////
+class CommandCoordinates : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandCoordinates(XbraboView* parent, const QString description);  // constructor
+    virtual ~CommandCoordinates();  // destructor
+    
+    ///// public member functions
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+    virtual bool combine(Command* command);       // Combines the command with another one.
+    virtual bool initialRun() = 0;      // Gets called in execute when fromBackup == false by subclasses
+
+  protected:
+    ///// protected member variables
+    AtomSet* oldAtoms, * newAtoms;      ///< Backups of the coordinates
+    std::list<unsigned int> oldSelectionList, newSelectionList;       ///< List that holds the selected atoms and their order for the old and new set of atoms.
+};
+
+///// class CommandReadCoordinates ////////////////////////////////////////////
+class CommandReadCoordinates : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandReadCoordinates(XbraboView* parent, const QString description);  // constructor
+    virtual CommandReadCoordinates* clone() const;// virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Reads coordinates using a file selection dialog
+};
+
+///// class CommandAddAtoms ///////////////////////////////////////////////////
+class CommandAddAtoms : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandAddAtoms(XbraboView* parent, const QString description, NewAtomBase* newAtomDialog);     // constructor
+    virtual CommandAddAtoms* clone() const;        // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Adds atoms to the molecular system
+
+  private:
+    ///// private member variables
+    NewAtomBase* newAtomBase;           ///< The dialog providing an interface to adding new atoms.
+};
+
+///// class CommandDeleteAtoms ////////////////////////////////////////////////
+class CommandDeleteAtoms : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandDeleteAtoms(XbraboView* parent, const QString description);     // constructor
+    virtual CommandDeleteAtoms* clone() const;    // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Deletes selected atoms from the molecular system
+};
+
+///// class CommandAlterCartesian /////////////////////////////////////////////
+class CommandAlterCartesian : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandAlterCartesian(XbraboView* parent, const QString description);       // constructor
+    virtual CommandAlterCartesian* clone() const; // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Changes the cartesian coordinates of the selected atoms
+    virtual bool combine(Command* command);       // combines with another command
+};
+
+///// class CommandAlterInternal //////////////////////////////////////////////
+class CommandAlterInternal : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandAlterInternal(XbraboView* parent, const QString description);        // constructor
+    virtual CommandAlterInternal* clone() const;  // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Changes the internal coordinate of the selection.
+    virtual bool combine(Command* command);       // combines with another command
+};
+
+///// class CommandSelection //////////////////////////////////////////////////
+class CommandSelection : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandSelection(XbraboView* parent, const QString description);  // constructor
+    
+    ///// public member functions
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+    virtual bool initialRun() = 0;      // Gets called in execute when fromBackup == false by subclasses
+
+  private:
+    ///// private member variables
+    std::list<unsigned int> oldSelectionList, newSelectionList;       ///< List that holds the selected atoms and their order for the old and new set of atoms.
+};
+
+///// class CommandSelectAll //////////////////////////////////////////////////
+class CommandSelectAll : public CommandSelection
+{
+  public:
+    ///// constructor/destructor
+    CommandSelectAll(XbraboView* parent, const QString description);  // constructor
+    virtual CommandSelectAll* clone() const;  // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Selects all atoms
+};
+
+///// class CommandSelectNone //////////////////////////////////////////////////
+class CommandSelectNone : public CommandSelection
+{
+  public:
+    ///// constructor/destructor
+    CommandSelectNone(XbraboView* parent, const QString description); // constructor
+    virtual CommandSelectNone* clone() const;  // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Selects all atoms
+};
+
+///// class CommandSelectEntity ///////////////////////////////////////////////
+class CommandSelectEntity : public CommandSelection
+{
+  public:
+    ///// constructor/destructor
+    CommandSelectEntity(XbraboView* parent, const QString description, const unsigned int id); // constructor
+    virtual CommandSelectEntity* clone() const;  // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Selects the entity with the given ID
+
+  private:
+    unsigned int glID;                  // The selection ID as produced by a call to GLSimpleMoleculeView::selectEntity. Needed for the call to initialRun.
+};
+
+///// class CommandDisplayMode ////////////////////////////////////////////////
+class CommandDisplayMode : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandDisplayMode(XbraboView* parent, const QString description); // constructor
+    virtual CommandDisplayMode* clone() const;  // virtual copy constructor
+
+    ///// public member functions
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+
+  private:
+    ///// private member variables
+    unsigned int oldStyleMolecule, newStyleMolecule;        // Holds the display style of the molecule
+    unsigned int oldStyleForces, newStyleForces;            // Holds the display style of the forces
+    bool oldShowElements, newShowElements;        // Holds whether elements are shown
+    bool oldShowNumbers, newShowNumbers;          // Holds whether atomic numbers are shown
+    unsigned int oldChargeType, newChargeType;    // Holds whether no/Mulliken/stockholder charges are shown
+};
+
+///// class CommandTranslateXY ////////////////////////////////////////////////
+class CommandTranslateXY : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandTranslateXY(XbraboView* parent, const QString description, const int amountX, const int amountY);  // constructor
+    virtual CommandTranslateXY* clone() const;    // virtual copy constructor
+
+    ///// public member functions
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+    bool combine(Command* command);     // combines with another translation
+  
+  private:
+    ///// private member variables
+    int incX, incY;                       // amount of translation from input
+    float oldX, newX, oldY, newY;         // values of the translation vector
+};
+
+///// class CommandTranslateZ /////////////////////////////////////////////////
+class CommandTranslateZ : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandTranslateZ(XbraboView* parent, const QString description, const int amount);   // constructor
+    virtual CommandTranslateZ* clone() const;    // virtual copy constructor
+
+    ///// public member functions
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+    bool combine(Command* command);     // combines with another translation
+
+  private:
+    ///// private member variables
+    int incZ;                           // amount of translation from input
+    float oldZ, newZ;                   // value of the translation vector
+};
+
+///// class CommandRotate /////////////////////////////////////////////////////
+class CommandRotate : public Command
+{
+  public:
+    ///// constructor/destructor
+    CommandRotate(XbraboView* parent, const QString description, const float amountX, const float amountY, const float amountZ);   // constructor
+    virtual CommandRotate* clone() const;    // virtual copy constructor
+
+    ///// public member functions
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+    bool combine(Command* command);     // combines with another translation
+
+  private:
+    ///// private member variables
+    float incX, incY, incZ;              // amount of rotation from input
+    Quaternion<float> oldRotation, newRotation;   // value of the rotation quaternion
+};
+
+///// class CommandTranslateSelectionXY ///////////////////////////////////////
+class CommandTranslateSelectionXY : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandTranslateSelectionXY(XbraboView* parent, const QString description, const int amountX, const int amountY);   // constructor
+    virtual CommandTranslateSelectionXY* clone() const;  // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Changes the internal coordinate of the selection.
+    virtual bool combine(Command* command);       // combines with another command
+
+  private:
+    ///// private member variables
+    int incX, incY;                     // hold copies of the constructor's arguments
+};
+
+///// class CommandTranslateSelectionZ ////////////////////////////////////////
+class CommandTranslateSelectionZ : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandTranslateSelectionZ(XbraboView* parent, const QString description, const int amountZ);   // constructor
+    virtual CommandTranslateSelectionZ* clone() const;      // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Changes the internal coordinate of the selection.
+    virtual bool combine(Command* command);       // combines with another command
+
+  private:
+    ///// private member variables
+    int incZ;                           // holds a copy of the constructor's argument
+};
+
+///// class CommandRotateSelection ////////////////////////////////////////////
+class CommandRotateSelection : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandRotateSelection(XbraboView* parent, const QString description, const double amountX, const double amountY, const double amountZ);   // constructor
+    virtual CommandRotateSelection* clone() const;// virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Changes the internal coordinate of the selection.
+    virtual bool combine(Command* command);       // combines with another command
+
+  private:
+    ///// private member variables
+    double incX, incY, incZ;            // hold copies of the constructor's arguments
+};
+
+///// class CommandChangeIC ///////////////////////////////////////////////////
+class CommandChangeIC : public CommandCoordinates
+{
+  public:
+    ///// constructor/destructor
+    CommandChangeIC(XbraboView* parent, const QString description, const int range);      // constructor
+    virtual CommandChangeIC* clone() const;       // virtual copy constructor
+
+    ///// public member functions
+    virtual bool initialRun();          // Changes the internal coordinate of the selection.
+    virtual bool combine(Command* command);       // combines with another command
+
+  private:
+    ///// private member variables
+    int amount;                         // holds a copy of the constructor's argument
 };
 
 #endif

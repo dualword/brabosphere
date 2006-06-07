@@ -66,6 +66,7 @@ class Calculation : public QObject
     void setParameters(const QString name, const QString dir, const bool format);         // Some more needed parameters
     void setBackup(const unsigned int freq, const bool brabo = false, const bool stock = false, const bool relax = false, const bool aff = false, const bool crd = false);// Sets the backup options
     void setContinuable(const bool status);       // Sets whether an optimization can be continued after having it stopped.
+    void setAtomSet(AtomSet* atomSet);  // updates the AtomSet pointer to a new set.
 
     // public member functions for returning data
     bool isRunning() const;             // returns whether the calculation is running

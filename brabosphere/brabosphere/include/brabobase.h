@@ -53,6 +53,7 @@ class BraboBase : public BraboWidget
     enum Programs{BRABO, STOCK};
 
     ///// public member functions for changing data
+    void setAtomSet(AtomSet* atomSet);  // updates the AtomSet pointer to a new set.
     void setForces(const bool state);   // sets whether forces are to be calculated
     void setDescription(const QString description);         // sets the description
     void setName(const QString name);   // sets the name (filename prefix)

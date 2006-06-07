@@ -66,7 +66,7 @@ GLSimpleMoleculeView::GLSimpleMoleculeView(AtomSet* atomset, QWidget* parent, co
   forcesStyle = moleculeParameters.defaultForcesStyle;
   showElements = moleculeParameters.showElements;
   showNumbers = moleculeParameters.showNumbers;
-  assert(atomset != 0);
+  assert(atomset != NULL);
   centerMolecule(); // just sets centerX|Y|Z to zero when no atoms are present
   reorderShapes();
   labelFont = QApplication::font();
@@ -258,42 +258,6 @@ void GLSimpleMoleculeView::updateAtomSet(const bool reset)
   {
     resetView(false);
     unselectAll(false);
-
-
-    /*qDebug("selecting all atoms 9+ Angstrom away from atom 16");
-    unsigned int center = 15;
-    double distance = 9.0;
-    distance *= distance;
-    for(unsigned int i = 0; i < atoms->count(); i++)
-    {
-      if(  (atoms->x(i) - atoms->x(center))*(atoms->x(i) - atoms->x(center))
-         + (atoms->y(i) - atoms->y(center))*(atoms->y(i) - atoms->y(center))
-         + (atoms->z(i) - atoms->z(center))*(atoms->z(i) - atoms->z(center)) >= distance)
-        selectionList.push_back(i);
-    }
-    */
-    /*qDebug("selecting first 32 atoms");
-    if(atoms->count() >= 32)
-    {
-      for(unsigned int i = 0; i < 32; i++)
-        selectionList.push_back(i);
-    }
-    */
-    switch(selectionList.size())
-    {
-      case 0: selectionType = SELECTION_NONE;
-              break;
-      case 1: selectionType = SELECTION_ATOM;
-              break;
-      case 2: selectionType = SELECTION_BOND;
-              break;
-      case 3: selectionType = SELECTION_ANGLE;
-              break;
-      case 4: selectionType = SELECTION_TORSION;
-              break;
-      default: selectionType = SELECTION_GROUP;
-    }
-
   }
   updateGL();
 }
@@ -305,20 +269,6 @@ void GLSimpleMoleculeView::selectAll(const bool update)
   unselectAll(false);
   for(unsigned int i = 0; i < atoms->count(); i++)
     selectionList.push_back(i);
-  switch(selectionList.size())
-  {
-    case 0: selectionType = SELECTION_NONE;
-            break;
-    case 1: selectionType = SELECTION_ATOM;
-            break;
-    case 2: selectionType = SELECTION_BOND;
-            break;
-    case 3: selectionType = SELECTION_ANGLE;
-            break;
-    case 4: selectionType = SELECTION_TORSION;
-            break;
-    default: selectionType = SELECTION_GROUP;
-  }
   if(update)
     updateGL();
   emit changed();
@@ -329,7 +279,6 @@ void GLSimpleMoleculeView::unselectAll(const bool update)
 /// Unselects all atoms.
 {
   selectionList.clear();
-  selectionType = SELECTION_NONE;
 
   if(update)
     updateGL();
@@ -377,14 +326,8 @@ void GLSimpleMoleculeView::keyPressEvent(QKeyEvent* e)
 void GLSimpleMoleculeView::initializeGL()
 /// Overridden from QGLWidget::initializeGL(). Initializes the OpenGL window.
 {
-  int numSlices = static_cast<int>(pow(2.0,static_cast<double>(moleculeParameters.quality)));
-  atomObject = makeObjects(numSlices);
-  bondObject = atomObject + 1;
-  forceObjectLines = atomObject + 2;
-  forceObjectTubes = atomObject + 3;
-  updateGLSettings();
-
   GLView::initializeGL();
+  makeObjects();
 }
 
 ///// boundingSphereRadius ////////////////////////////////////////////////////
@@ -510,17 +453,74 @@ void GLSimpleMoleculeView::updateShapes()
   shapes.push_back(prop);
 }
 
+///// getSelectionType ////////////////////////////////////////////////////////
+unsigned int GLSimpleMoleculeView::getSelectionType() const
+/// Returns the selection type depending on the number of selected atoms.
+{
+  switch(selectionList.size())
+  {
+    case 0: return SELECTION_NONE;
+    case 1: return SELECTION_ATOM;
+    case 2: return SELECTION_BOND;
+    case 3: return SELECTION_ANGLE;
+    case 4: return SELECTION_TORSION;
+    default: return SELECTION_GROUP;
+  }
+}
+
+///// processSelectionCommand /////////////////////////////////////////////////
+void GLSimpleMoleculeView::processSelectionCommand(const unsigned int id)
+/// Simply calls processSelection directly. When overridden in a subclass,
+/// A Command can be created.
+{
+  processSelection(id);
+}
+
+///// processSelection ////////////////////////////////////////////////////////
+void GLSimpleMoleculeView::processSelection(const unsigned int id)
+/// Changes the selection according to the change in
+/// selection of the entity with an ID id.
+{
+  switch(id)
+  {
+    case START_BONDS:  selectionList.clear();
+                       //selectionType = SELECTION_BONDS;
+                       break;
+    case START_FORCES: selectionList.clear();
+                       //selectionType = SELECTION_FORCES;
+                       break;
+    default: if(id >= START_ATOMS)
+    {
+      unsigned int selectedAtom = id - START_ATOMS;
+
+      ///// check whether the atom is already selected
+      std::list<unsigned int>::iterator it = std::find(selectionList.begin(), selectionList.end(), selectedAtom);
+      if(it == selectionList.end())
+      {
+        ///// atom is not selected -> add it
+        selectionList.push_back(selectedAtom);
+      }
+      else
+      {
+        ///// atom is selected -> remove it
+        selectionList.erase(it);
+      }
+    }
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Member Functions                                            /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// makeObjects /////////////////////////////////////////////////////////////
-GLuint GLSimpleMoleculeView::makeObjects(const int numSlices)
+void GLSimpleMoleculeView::makeObjects()
 /// Generates the shapes for the atoms and the bonds.
 {
-  GLuint startList = glGenLists(4);
-  changeObjects(startList, numSlices);
-  return startList;
+  atomObject = glGenLists(4);
+  bondObject = atomObject + 1;
+  forceObjectLines = atomObject + 2;
+  forceObjectTubes = atomObject + 3;
 }
 
 ///// changeObjects ///////////////////////////////////////////////////////////
@@ -634,59 +634,10 @@ void GLSimpleMoleculeView::selectEntity(const QPoint position)
     GLuint id = *pBuffer; // the id of the first selection
     //qDebug("Number of selections: %d", count);
     //qDebug("ID of first selection: %d", id);
-    processSelection(id);
+    processSelectionCommand(id);
     updateGL();
   }
   emit changed();
-}
-
-///// processSelection ////////////////////////////////////////////////////////
-void GLSimpleMoleculeView::processSelection(const unsigned int id)
-/// Changes the selection according to the change in
-/// selection of the entity with an ID id.
-{
-  switch(id)
-  {
-    case START_BONDS:  selectionList.clear();
-                       selectionType = SELECTION_BONDS;
-                       break;
-    case START_FORCES: selectionList.clear();
-                       selectionType = SELECTION_FORCES;
-                       break;
-    default: if(id >= START_ATOMS)
-    {
-      unsigned int selectedAtom = id - START_ATOMS;
-
-      ///// check whether the atom is already selected
-      std::list<unsigned int>::iterator it = std::find(selectionList.begin(), selectionList.end(), selectedAtom);
-      if(it == selectionList.end())
-      {
-        ///// atom is not selected -> add it
-        selectionList.push_back(selectedAtom);
-      }
-      else
-      {
-        ///// atom is selected -> remove it
-        selectionList.erase(it);
-      }
-
-      ///// update the selection type
-      switch(selectionList.size())
-      {
-        case 0: selectionType = SELECTION_NONE;
-                break;
-        case 1: selectionType = SELECTION_ATOM;
-                break;
-        case 2: selectionType = SELECTION_BOND;
-                break;
-        case 3: selectionType = SELECTION_ANGLE;
-                break;
-        case 4: selectionType = SELECTION_TORSION;
-                break;
-        default: selectionType = SELECTION_GROUP;
-      }
-    }
-  }
 }
 
 ///// centerMolecule //////////////////////////////////////////////////////////
@@ -1111,9 +1062,9 @@ void GLSimpleMoleculeView::drawICValue()
   qglColor(moleculeParameters.colorICs);
 
   std::list<unsigned int>::iterator it = selectionList.begin();
-  switch(selectionList.size())
+  switch(getSelectionType())
   {
-    case 2: ///// bond
+    case SELECTION_BOND: ///// bond
     {
       // the atoms
       unsigned int atom1 = *it++;
@@ -1150,7 +1101,7 @@ void GLSimpleMoleculeView::drawICValue()
       renderText(static_cast<int>(xwin), height() - static_cast<int>(ywin), QString::number(distance, 'f', 4), labelFont);
       break;
     }
-    case 3: ///// angle
+    case SELECTION_ANGLE: ///// angle
     {
       // the atoms
       unsigned int atom1 = *it++;
@@ -1192,7 +1143,7 @@ void GLSimpleMoleculeView::drawICValue()
       renderText(static_cast<int>(xwin), height() - static_cast<int>(ywin), QString::number(localAngle, 'f', 2), labelFont);
       break;
     }
-    case 4: ///// torsion
+    case SELECTION_TORSION: ///// torsion
     {
       // the atoms
       unsigned int atom1 = *it++;
