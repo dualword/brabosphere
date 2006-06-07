@@ -76,8 +76,11 @@ class GLView : public QGLWidget
     void keyPressEvent(QKeyEvent* e);   // event which takes place when a key was pressed
     void wheelEvent(QWheelEvent* e);    // event which takes place when the scrollwheel of the mouse is used
     virtual void drawScene() = 0;       // should contain the actual OpenGL drawing code for the scene
+    virtual void translateCommand(const int amountX, const int amountY, const int amountZ);         // calls translateXY or translateZ
     void translateZ(const int amount);    // handles Z-direction translations
     void translateXY(const int amountX, const int amountY);   // handles X- and Y-direction translations
+    virtual void rotateCommand(const float amountX, const float amountY, const float amountZ);    // calls rotate
+    void rotate(const float amountX, const float amountY, const float amountZ); // handles rotations
     virtual void clicked(const QPoint&);// handles left-mouse clicks at position
     virtual void updateGLSettings();    // updates the GL View according to parameters
     virtual float boundingSphereRadius() = 0;     // calculates the radius of the bounding sphere needed for zoomFit

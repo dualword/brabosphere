@@ -93,7 +93,7 @@ static void debugHandler(QtMsgType type, const char* message)
 int main(int argc, char *argv[])
 /// The starting point of the application.
 {
-  qInstallMsgHandler(debugHandler); // enables to inhibit all debug messages by a single ifdef
+  //qInstallMsgHandler(debugHandler); // enables to inhibit all debug messages by a single ifdef
   QApplication app(argc, argv);
 
   if (!QGLFormat::hasOpenGL())

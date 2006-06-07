@@ -44,6 +44,7 @@
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
+#include <cassert>
 #include <cmath>         
 
 // STL header files
@@ -69,9 +70,9 @@
 ///// Constructor /////////////////////////////////////////////////////////////
 AtomSet::AtomSet() :
   numAtoms(0),
-  forces(0),
-  chargesMulliken(0),
-  chargesStockholder(0),
+  forces(NULL),
+  chargesMulliken(NULL),
+  chargesStockholder(NULL),
   boxMax(new Point3D<double>()),
   boxMin(new Point3D<double>()),
   dirtyBox(true)
@@ -87,6 +88,54 @@ AtomSet::~AtomSet()
   clearProperties(); // releases all allocated memory
   delete boxMax;
   delete boxMin;
+}
+
+///// Copy constructor ////////////////////////////////////////////////////////
+AtomSet::AtomSet(const AtomSet* atoms)
+/// The copy constructor
+{
+  assert(atoms != NULL);
+  // these are not set to NULL automatically because the constructor is not called.
+  forces = NULL;
+  chargesMulliken = NULL;
+  chargesStockholder = NULL;
+
+  clear();
+  numAtoms = atoms->numAtoms;
+  changed = atoms->changed;
+  coords.reserve(numAtoms);
+  coords.assign(atoms->coords.begin(), atoms->coords.end());
+  colors.reserve(numAtoms);
+  colors.assign(atoms->colors.begin(), atoms->colors.end());
+  if(atoms->forces != NULL)
+  { 
+    forces = new vector<Point3D<double> >();
+    forces->reserve(numAtoms);
+    forces->assign(atoms->forces->begin(), atoms->forces->end());
+  }
+  bonds1.reserve(atoms->bonds1.size());
+  bonds1.assign(atoms->bonds1.begin(), atoms->bonds1.end());
+  bonds2.reserve(atoms->bonds2.size());
+  bonds2.assign(atoms->bonds2.begin(), atoms->bonds2.end());  
+  if(atoms->chargesMulliken != NULL)
+  {
+    chargesMulliken = new vector<double >();
+    chargesMulliken->reserve(numAtoms);
+    chargesMulliken->assign(atoms->chargesMulliken->begin(), atoms->chargesMulliken->end());
+  }
+  if(atoms->chargesStockholder != NULL)
+  { 
+    chargesStockholder = new vector<double >();
+    chargesStockholder->reserve(numAtoms);
+    chargesStockholder->assign(atoms->chargesStockholder->begin(), atoms->chargesStockholder->end());
+  }
+  chargesMullikenSCF = atoms->chargesMullikenSCF;
+  chargesMullikenDensity = atoms->chargesMullikenDensity;
+  chargesStockholderSCF = atoms->chargesStockholderSCF;
+  chargesStockholderDensity = atoms->chargesStockholderDensity;
+  boxMax = new Point3D<double>(*(atoms->boxMax)); // using the auto-generated copy constructor
+  boxMin = new Point3D<double>(*(atoms->boxMin));
+  dirtyBox = atoms->dirtyBox;
 }
 
 ///// clear ///////////////////////////////////////////////////////////////////
@@ -111,11 +160,11 @@ void AtomSet::reserve(const unsigned int size)
 
   coords.reserve(size);
   colors.reserve(size);
-  if(forces != 0)
+  if(forces != NULL)
     forces->reserve(size);
-  if(chargesMulliken != 0)
+  if(chargesMulliken != NULL)
     chargesMulliken->reserve(size);
-  if(chargesStockholder != 0)
+  if(chargesStockholder != NULL)
     chargesStockholder->reserve(size);
 }
 
@@ -275,7 +324,7 @@ void AtomSet::setCharges(const vector<double>& charges, const ChargeType type, c
   if(type == Mulliken)
   {
     ///// Mulliken charges
-    if(chargesMulliken == 0)
+    if(chargesMulliken == NULL)
     {
       chargesMulliken = new vector<double>();
       chargesMulliken->reserve(numAtoms);
@@ -287,7 +336,7 @@ void AtomSet::setCharges(const vector<double>& charges, const ChargeType type, c
   else
   {
     ///// stockholder charges
-    if(chargesStockholder == 0)
+    if(chargesStockholder == NULL)
     {
       chargesStockholder = new vector<double>();
       chargesStockholder->reserve(numAtoms);
@@ -307,17 +356,17 @@ void AtomSet::clearCharges(const ChargeType type)
     return;
   else if(type == Mulliken)
   {
-    if(chargesMulliken == 0)
+    if(chargesMulliken == NULL)
       return;
     delete chargesMulliken;
-    chargesMulliken = 0;
+    chargesMulliken = NULL;
   }
   else
   {
-    if(chargesStockholder == 0)
+    if(chargesStockholder == NULL)
       return;
     delete chargesStockholder;
-    chargesStockholder = 0;
+    chargesStockholder = NULL;
   }
   setChanged();
 }
@@ -329,7 +378,7 @@ void AtomSet::setForces(const unsigned int index, const double dx, const double 
   if(index >= numAtoms)
     return;
 
-  if(forces == 0)
+  if(forces == NULL)
     forces = new vector<Point3D<double> >(numAtoms);
   
   forces->operator[](index) = Point3D<double>(dx, dy, dz);
@@ -825,7 +874,7 @@ double AtomSet::dx(const unsigned int index) const
 /// Returns the x-component of the force on the atom
 /// at position index.
 {
-  if(forces == 0 || index >= numAtoms)
+  if(forces == NULL || index >= numAtoms)
     return 0.0;
   
   return forces->operator[](index).x();
@@ -836,7 +885,7 @@ double AtomSet::dy(const unsigned int index) const
 /// Returns the y-component of the force on the atom
 /// at position index.
 {
-  if(forces == 0 || index >= numAtoms)
+  if(forces == NULL || index >= numAtoms)
     return 0.0;
   
   return forces->operator[](index).y();
@@ -847,7 +896,7 @@ double AtomSet::dz(const unsigned int index) const
 /// Returns the z-component of the force on the atom
 /// at position index.
 {
-  if(forces == 0 || index >= numAtoms)
+  if(forces == NULL || index >= numAtoms)
     return 0.0;
   
   return forces->operator[](index).z();
@@ -889,14 +938,14 @@ double AtomSet::charge(const ChargeType type, const unsigned int index) const
 
   if(type == Mulliken)
   {
-    if(chargesMulliken == 0)
+    if(chargesMulliken == NULL)
       return 0.0;
 
     return chargesMulliken->operator[](index);
   }
   else
   {
-    if(chargesStockholder == 0)
+    if(chargesStockholder == NULL)
       return 0.0;
 
     return chargesStockholder->operator[](index);
@@ -907,8 +956,8 @@ double AtomSet::charge(const ChargeType type, const unsigned int index) const
 bool AtomSet::hasCharges(const ChargeType type) const
 /// Returns whether charges of the specified type are present.
 {
-  if((type == Mulliken && chargesMulliken != 0) || 
-     (type == Stockholder && chargesStockholder != 0))
+  if((type == Mulliken && chargesMulliken != NULL) || 
+     (type == Stockholder && chargesStockholder != NULL))
     return true;
 
   return false;
@@ -919,9 +968,9 @@ QString AtomSet::chargesSCF(const ChargeType type) const
 /// Returns the SCF method used to determine the charges. If no charges of the
 /// specified type are available an empty string is returned.
 {
-  if(type == Mulliken && chargesMulliken != 0)
+  if(type == Mulliken && chargesMulliken != NULL)
       return chargesMullikenSCF;
-  else if(type == Stockholder && chargesStockholder != 0)
+  else if(type == Stockholder && chargesStockholder != NULL)
       return chargesStockholderSCF;
   
   return QString::null;
@@ -932,9 +981,9 @@ QString AtomSet::chargesDensity(const ChargeType type) const
 /// Returns the density used to determine the charges. If no charges of the
 /// specified type are available an empty string is returned.
 {
-  if(type == Mulliken && chargesMulliken != 0)
+  if(type == Mulliken && chargesMulliken != NULL)
       return chargesMullikenDensity;
-  else if(type == Stockholder && chargesStockholder != 0)
+  else if(type == Stockholder && chargesStockholder != NULL)
       return chargesStockholderDensity;
   
   return QString::null;
@@ -944,7 +993,7 @@ QString AtomSet::chargesDensity(const ChargeType type) const
 bool AtomSet::hasForces() const
 /// Returns whether forces are present
 {
-  return forces != 0;
+  return forces != NULL;
 }
 
 //// rotationCenter ///////////////////////////////////////////////////////////
@@ -1083,7 +1132,7 @@ void AtomSet::saveCML(QDomElement* root)
     textNode = root->ownerDocument().createTextNode(color(i).name());
     grandChildNode.appendChild(textNode);
     ///// charges
-    if(chargesMulliken != 0)
+    if(chargesMulliken != NULL)
     {
       grandChildNode = root->ownerDocument().createElement("scalar");
       //grandChildNode.setAttribute("title", "Mulliken charge");
@@ -1094,7 +1143,7 @@ void AtomSet::saveCML(QDomElement* root)
       textNode = root->ownerDocument().createTextNode(QString::number(chargesMulliken->operator[](i)));
       grandChildNode.appendChild(textNode);
     }
-    if(chargesStockholder != 0)
+    if(chargesStockholder != NULL)
     {
       grandChildNode = root->ownerDocument().createElement("scalar");
       //grandChildNode.setAttribute("title", "stockholder charge");
@@ -1106,7 +1155,7 @@ void AtomSet::saveCML(QDomElement* root)
       grandChildNode.appendChild(textNode);
     }
     ///// forces
-    if(forces != 0)
+    if(forces != NULL)
     {
       grandChildNode = root->ownerDocument().createElement("vector3");
       grandChildNode.setAttribute("dictRef", DomUtils::nsCMLM + ":dcart");
@@ -1500,20 +1549,20 @@ bool AtomSet::addBondList(const unsigned int callingAtom, const unsigned int sta
 void AtomSet::clearProperties()
 /// Deletes all properties. This includes the forces and charges.
 {
-  if(forces != 0)
+  if(forces != NULL)
   {
     delete forces;
-    forces = 0;
+    forces = NULL;
   }
-  if(chargesMulliken != 0)
+  if(chargesMulliken != NULL)
   {
     delete chargesMulliken;
-    chargesMulliken = 0;
+    chargesMulliken = NULL;
   }
-  if(chargesStockholder != 0)
+  if(chargesStockholder != NULL)
   {
     delete chargesStockholder;
-    chargesStockholder = 0;
+    chargesStockholder = NULL;
   }
   chargesMullikenSCF = QString::null;
   chargesMullikenDensity = QString::null;

@@ -92,6 +92,15 @@ BraboBase::~BraboBase()
 
 }
 
+///// setAtomSet //////////////////////////////////////////////////////////////
+void BraboBase::setAtomSet(AtomSet* atomSet)
+/// Updates the current AtomSet from a pointer.
+{
+  if(atomSet == NULL)
+    return;
+  atoms = atomSet;
+}
+
 ///// setForces ///////////////////////////////////////////////////////////////
 void BraboBase::setForces(const bool state)
 /// Sets whether forces should be calculated and

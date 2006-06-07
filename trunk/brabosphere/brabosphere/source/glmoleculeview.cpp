@@ -44,6 +44,8 @@
 
 // Xbrabo header files
 #include "atomset.h"
+#include "command.h"
+#include "commandhistory.h"
 #include "coordinateswidget.h"
 #include "densitybase.h"
 #include "glmoleculeview.h"
@@ -52,6 +54,7 @@
 #include "point3d.h"
 #include "quaternion.h"
 #include "vector3d.h"
+#include "xbraboview.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
@@ -59,10 +62,8 @@
 
 ///// constructor /////////////////////////////////////////////////////////////
 GLMoleculeView::GLMoleculeView(AtomSet* atomset, QWidget* parent, const char* name) : GLSimpleMoleculeView(atomset, parent, name),
-  atoms(atomset),
   densityDialog(NULL),
-  newAtomDialog(NULL),
-  manipulateSelection(false)
+  newAtomDialog(NULL)
 /// The default constructor.
 {
   isoSurface = new IsoSurface();
@@ -78,18 +79,33 @@ GLMoleculeView::~GLMoleculeView()
   delete isoSurface;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///// Public Slots                                                        /////
-///////////////////////////////////////////////////////////////////////////////
+///// setAtomSet //////////////////////////////////////////////////////////////
+void GLMoleculeView::setAtomSet(AtomSet* atomSet)
+/// Updates the current AtomSet from a pointer.
+{
+  if(atomSet == NULL)
+    return;
+
+  qDebug("entering GLMoleculeView::setAtomSet with atomSet->count() = %d, atoms->count() = %d", atomSet->count(), atoms->count());
+
+  atoms = atomSet;
+
+  qDebug(" after assignment atomSet->count() = %d, atoms->count() = %d", atomSet->count(), atoms->count());
+  if(newAtomDialog != NULL)
+    newAtomDialog->setAtomSet(atomSet);
+  updateAtomSet(false); // don't reset the view or the selected atoms but do call updateGL
+
+  qDebug(" after updateAtomSet atomSet->count() = %d, atoms->count() = %d", atomSet->count(), atoms->count());
+}
 
 ///// alterCartesian //////////////////////////////////////////////////////////
-void GLMoleculeView::alterCartesian()
+bool GLMoleculeView::alterCartesian()
 /// Changes the cartesian coordinates of the selection.
 /// If one atom is selected, the absolute coordinates can be changed
 /// If multiple atoms are selected, only relative changes can be given.
 {
   if(selectionList.size() == 0)
-    return;
+    return false;
 
   ///// setup the dialog
   CoordinatesWidget* coords = new CoordinatesWidget(this, 0, true);
@@ -156,19 +172,25 @@ void GLMoleculeView::alterCartesian()
         it++;
       }
     }
+    setModified();
+    updateAtomSet();
+    delete coords;
+    return true;
   }
-  delete coords;
-  setModified();
-  updateAtomSet();
+  else
+  {
+    delete coords;
+    return false;
+  }
 }
 
 ///// alterInternal ///////////////////////////////////////////////////////////
-void GLMoleculeView::alterInternal()
+bool GLMoleculeView::alterInternal()
 /// Changes the cartesian coordinates of the selection.
 /// If one atom is selected, the absolute coordinates can be changed
 /// If multiple atoms are selected, only relative changes can be given
 {
-  switch(selectionType)
+  switch(getSelectionType())
   {
     case SELECTION_BOND:
     {
@@ -185,7 +207,7 @@ void GLMoleculeView::alterInternal()
       if(ok && fabs(newLength - bondLength) > 0.00001)
         atoms->changeBond(newLength - bondLength, atom1, atom2, true);
       else
-        return; // no new value was entered
+        return false; // no new value was entered
       break;
     }
 
@@ -204,7 +226,7 @@ void GLMoleculeView::alterInternal()
       if(ok && fabs(newAngle - angle) > 0.001)
         atoms->changeAngle(newAngle - angle, atom1, atom2, atom3, true);
       else
-        return; // no new value was entered
+        return false; // no new value was entered
       break;
     }
 
@@ -225,13 +247,96 @@ void GLMoleculeView::alterInternal()
       if(ok && fabs(newTorsion - torsion) > 0.001)
         atoms->changeTorsion(torsion - newTorsion, atom1, atom2, atom3, atom4, true);
       else
-        return; // no new value was entered
+        return false; // no new value was entered
       break;
     }
-    default: return;
+    default: return false;
   }
   setModified();
   updateAtomSet();
+  return true;
+}
+
+///// deleteSelectedAtoms /////////////////////////////////////////////////////
+bool GLMoleculeView::deleteSelectedAtoms()
+/// Deletes all selected atoms. This function does the actual work and is called 
+/// only from CommandDeleteAtoms.
+{
+  if(selectionList.empty())
+    return false;
+
+  ///// delete the atoms from largest to smallest index
+  // make a copy
+  std::vector<unsigned int> sortedList;
+  sortedList.reserve(selectionList.size());
+  sortedList.assign(selectionList.begin(), selectionList.end());
+  // sort it from largest to smallest
+  std::sort(sortedList.begin(), sortedList.end(), std::greater<unsigned int>());
+  // delete the atoms
+  for(unsigned int i = 0; i < sortedList.size(); i++)
+    atoms->removeAtom(sortedList[i]);
+  // clear the selection
+  unselectAll();
+  if(newAtomDialog != 0)
+    newAtomDialog->updateAtomLimits();
+  updateAtomSet();
+  setModified();
+  emit atomsetChanged();
+  return true;
+}
+
+///// toggleSelectionMode /////////////////////////////////////////////////////
+void GLMoleculeView::toggleSelectionMode()
+/// Toggles between manipulating the selected atoms and the entire system.
+{
+  manipulateSelection = !manipulateSelection;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///// Public Slots                                                        /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// alterCartesianCommand ///////////////////////////////////////////////////
+void GLMoleculeView::alterCartesianCommand()
+/// Creates a Command to alter the cartesian coordinates of the selected atoms.
+/// This Command will call alterCartesian.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandAlterCartesian(view, "Alter Cartesian Coordinates"));
+}
+
+///// alterInternalCommand ////////////////////////////////////////////////////
+void GLMoleculeView::alterInternalCommand()
+/// Creates a Command to alter the internal coordinate formed by the selected 
+/// atoms. This Command will call alterInternal.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandAlterInternal(view, "Alter Internal Coordinates"));
+}
+
+///// deleteSelectedAtomsCommand //////////////////////////////////////////////
+void GLMoleculeView::deleteSelectedAtomsCommand()
+/// Creates a Command to delete all selected atoms. This Command will call 
+/// deleteSelectedAtoms.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandDeleteAtoms(view, "Delete Selection"));
+}
+
+///// selectAllCommand ////////////////////////////////////////////////////////
+void GLMoleculeView::selectAllCommand()
+/// Creates a Command to select all atoms. This Command will call selectAll.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandSelectAll(view, "Select All Atoms"));
+}
+
+///// unselectAllCommand //////////////////////////////////////////////////////
+void GLMoleculeView::unselectAllCommand()
+/// Creates a Command to deselect all atoms. This Command will call unselectAll.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandSelectNone(view, "Deselect All Atoms"));
 }
 
 ///// showDensity /////////////////////////////////////////////////////////////
@@ -265,38 +370,6 @@ void GLMoleculeView::addAtoms()
   newAtomDialog->show();
 }
 
-///// deleteSelectedAtoms /////////////////////////////////////////////////////
-void GLMoleculeView::deleteSelectedAtoms()
-/// Deletes all selected atoms.
-{
-  if(selectionList.empty())
-    return;
-
-  ///// delete the atoms from largest to smallest index
-  // make a copy
-  std::vector<unsigned int> sortedList;
-  sortedList.reserve(selectionList.size());
-  sortedList.assign(selectionList.begin(), selectionList.end());
-  // sort it from largest to smallest
-  std::sort(sortedList.begin(), sortedList.end(), std::greater<unsigned int>());
-  // delete the atoms
-  for(unsigned int i = 0; i < sortedList.size(); i++)
-    atoms->removeAtom(sortedList[i]);
-  // clear the selection
-  unselectAll();
-  if(newAtomDialog != 0)
-    newAtomDialog->updateAtomLimits();
-  updateAtomSet();
-  setModified();
-  emit atomsetChanged();
-}
-
-///// toggleSelection /////////////////////////////////////////////////////////
-void GLMoleculeView::toggleSelection()
-/// Toggles between manipulating the selected atoms and the entire system.
-{
-  manipulateSelection = !manipulateSelection;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Protected Member Functions                                          /////
@@ -375,6 +448,7 @@ void GLMoleculeView::mouseMoveEvent(QMouseEvent* e)
 /// Handles left mouse button drags.
 {
   QPoint newPosition = e->pos();
+  unsigned int selectionType = getSelectionType();
   if(selectionType != SELECTION_NONE && e->state() & Qt::LeftButton && (manipulateSelection || e->state() & Qt::AltButton) && !(e->state() & Qt::ShiftButton && e->state() & Qt::ControlButton))
   {
     ///// leftbutton mousemoves for manipulation of the selected atoms
@@ -383,23 +457,23 @@ void GLMoleculeView::mouseMoveEvent(QMouseEvent* e)
       ///// up/down movement: zooming (z-translation)
       ///// left/right movement: z-rotation
       if(abs(newPosition.y() - mousePosition.y()) > abs(newPosition.x() - mousePosition.x()))
-        translateSelection(0, 0, newPosition.y() - mousePosition.y());
+        translateSelectionCommand(0, 0, newPosition.y() - mousePosition.y());
       else if(newPosition.x() != mousePosition.x())
-        rotateSelection(0.0, 0.0, 180.0 * static_cast<double>(newPosition.x() - mousePosition.x()) / static_cast<double>(width()));
+        rotateSelectionCommand(0.0, 0.0, 180.0 * static_cast<double>(newPosition.x() - mousePosition.x()) / static_cast<double>(width()));
     }
     else if(e->state() & Qt::ControlButton)
       ///// up/down movement: y-translation
       ///// left/right movement: x-translation
-      translateSelection(newPosition.x() - mousePosition.x(), newPosition.y() - mousePosition.y(), 0);
+      translateSelectionCommand(newPosition.x() - mousePosition.x(), newPosition.y() - mousePosition.y(), 0);
     else
       ///// up/down movement: x-rotation
       ///// left/right movement: y-rotation
-      rotateSelection(-180.0 * static_cast<double>(newPosition.y() - mousePosition.y()) / static_cast<double>(height()),
+      rotateSelectionCommand(-180.0 * static_cast<double>(newPosition.y() - mousePosition.y()) / static_cast<double>(height()),
                       -180.0 * static_cast<double>(newPosition.x() - mousePosition.x()) / static_cast<double>(width()), 0.0);
   }
   else if(selectionType >= SELECTION_BOND && selectionType <= SELECTION_TORSION && e->state() & Qt::LeftButton && e->state() & Qt::ShiftButton && e->state() & Qt::ControlButton)
     ///// LEFTBUTTON + SHIFT + CONTROL + horizontal movement: change selected internal coordinate
-    changeSelectedIC(e->pos().x() - mousePosition.x());
+    changeSelectedICCommand(e->pos().x() - mousePosition.x());
   else
     GLView::mouseMoveEvent(e); // normal manipulation of entire system
 
@@ -410,41 +484,44 @@ void GLMoleculeView::mouseMoveEvent(QMouseEvent* e)
 void GLMoleculeView::keyPressEvent(QKeyEvent* e)
 /// Overridden from GLSimpleMoleculeView::keyPressEvent. Handles key presses for manipulating
 /// selections.
+/// \arg <ctrl>+<shift>+<left>: change internal coordinate of selection (smaller). 
+/// \arg <ctrl>+<shift>+<right>: change internal coordinate of selection (larger). 
 {
+  unsigned int selectionType = getSelectionType();
   if(selectionType != SELECTION_NONE && (manipulateSelection || e->state() & Qt::AltButton) && !(e->state() & Qt::ShiftButton && e->state() & Qt::ControlButton))
   {
     switch(e->key())
     {
       case Qt::Key_Left : if(e->state() & Qt::ShiftButton)
-                            rotateSelection(0.0, 0.0, -5.0);
+                            rotateSelectionCommand(0.0, 0.0, -5.0);
                           else if(e->state() & Qt::ControlButton)
-                            translateSelection(-5, 0, 0);
+                            translateSelectionCommand(-5, 0, 0);
                           else
-                            rotateSelection(0.0, 5.0, 0.0);
+                            rotateSelectionCommand(0.0, 5.0, 0.0);
                           break;
 
       case Qt::Key_Up   : if(e->state() & Qt::ShiftButton)
-                            translateSelection(0, 0, -5);
+                            translateSelectionCommand(0, 0, -5);
                           else if(e->state() & Qt::ControlButton)
-                            translateSelection(0, -5, 0);
+                            translateSelectionCommand(0, -5, 0);
                           else
-                            rotateSelection(5.0, 0.0, 0.0);
+                            rotateSelectionCommand(5.0, 0.0, 0.0);
                           break;
 
       case Qt::Key_Right: if(e->state() & Qt::ShiftButton)
-                            rotateSelection(0.0, 0.0, 5.0);
+                            rotateSelectionCommand(0.0, 0.0, 5.0);
                           else if(e->state() & Qt::ControlButton)
-                            translateSelection(5, 0, 0);
+                            translateSelectionCommand(5, 0, 0);
                           else
-                            rotateSelection(0.0, -5.0, 0.0);
+                            rotateSelectionCommand(0.0, -5.0, 0.0);
                           break;
 
       case Qt::Key_Down : if(e->state() & Qt::ShiftButton)
-                            translateSelection(0, 0, 5);
+                            translateSelectionCommand(0, 0, 5);
                           else if(e->state() & Qt::ControlButton)
-                            translateSelection(0, 5, 0);
+                            translateSelectionCommand(0, 5, 0);
                           else
-                            rotateSelection(-5.0, 0.0, 0.0);
+                            rotateSelectionCommand(-5.0, 0.0, 0.0);
                           break;
 
       //default:            e->ignore();
@@ -455,9 +532,9 @@ void GLMoleculeView::keyPressEvent(QKeyEvent* e)
   {
     switch(e->key())
     {
-      case Qt::Key_Left : changeSelectedIC(-1);
+      case Qt::Key_Left : changeSelectedICCommand(-1);
                           break;
-      case Qt::Key_Right: changeSelectedIC(1);
+      case Qt::Key_Right: changeSelectedICCommand(1);
                           break;
       //default:            e->ignore();
       //                    return;
@@ -488,6 +565,64 @@ void GLMoleculeView::updateShapes()
     shapes.push_back(prop);
   }
 }
+
+///// processSelectionCommand /////////////////////////////////////////////////
+void GLMoleculeView::processSelectionCommand(const unsigned int id)
+/// Creates a Command to call processSelection. Overridden from
+/// GLSimpleMoleculeView::processSelectionCommand.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandSelectEntity(view, "Change selection", id));
+}
+
+///// translateCommand ////////////////////////////////////////////////////////
+void GLMoleculeView::translateCommand(const int amountX, const int amountY, const int amountZ)
+/// Creates a Command to translate the scene in the X, Y or Z direction. 
+/// Overridden from GLView::translateCommand.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  if(amountZ != 0)
+    view->getCommandHistory()->addCommand(new CommandTranslateZ(view, "Zoom", amountZ));    
+  else
+    view->getCommandHistory()->addCommand(new CommandTranslateXY(view, "Translate", amountX, amountY));
+}
+
+///// rotateCommand ///////////////////////////////////////////////////////////
+void GLMoleculeView::rotateCommand(const float amountX, const float amountY, const float amountZ)
+/// Creates a Command to rotate the scene in the X, Y or Z direction. 
+/// Overridden from GLView::rotateCommand.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandRotate(view, "Rotate", amountX, amountY, amountZ));
+}
+
+///// translateSelectionCommand /////////////////////////////////////////////////////////
+void GLMoleculeView::translateSelectionCommand(const int amountX, const int amountY, const int amountZ)
+/// Creates a Command to translate the selected atoms in the X, Y or Z direction. 
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  if(amountZ != 0)
+    view->getCommandHistory()->addCommand(new CommandTranslateSelectionZ(view, "Zoom Selection", amountZ));
+  else
+    view->getCommandHistory()->addCommand(new CommandTranslateSelectionXY(view, "Translate Selection", amountX, amountY));
+}
+
+///// rotateSelectionCommand //////////////////////////////////////////////////
+void GLMoleculeView::rotateSelectionCommand(const double amountX, const double amountY, const double amountZ)
+/// Creates a Command to rotate the selected atoms in the X, Y or Z direction. 
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandRotateSelection(view, "Rotate Selection", amountX, amountY, amountZ));
+}
+
+///// changeSelectedICCommand /////////////////////////////////////////////////
+void GLMoleculeView::changeSelectedICCommand(const int range)
+/// Creates a Command to change the selected IC.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandChangeIC(view, "Change Internal Coordinate", range));
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Slots                                                       /////
@@ -595,11 +730,11 @@ void GLMoleculeView::deleteGLSurface(const unsigned int index)
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// translateSelection //////////////////////////////////////////////////////
-void GLMoleculeView::translateSelection(const int xRange, const int yRange, const int zRange)
+bool GLMoleculeView::translateSelection(const int xRange, const int yRange, const int zRange)
 /// Translates the selected atoms according to the screen.
 {
   if(selectionList.empty())
-    return;
+    return false;
 
   makeCurrent();
   // needed variables
@@ -632,7 +767,7 @@ void GLMoleculeView::translateSelection(const int xRange, const int yRange, cons
 
   // map the atom coordinates to the window coordinates with gluProject
   if(gluProject(x, y, z, modelview, projection, viewport, &xwin, &ywin, &zwin) == GL_FALSE)
-    return;
+    return false;
 
   // do the translation in window coordinates
   xwin += static_cast<double>(xRange);
@@ -645,7 +780,7 @@ void GLMoleculeView::translateSelection(const int xRange, const int yRange, cons
 
   // map the new window coordinates to the atom coordinates with gluUnproject
   if(gluUnProject(xwin, ywin, zwin, modelview, projection, viewport, &x, &y, &z) == GL_FALSE)
-    return;
+    return false;
 
   // determine the translation vector
   const double dx = x - atoms->x(*it);
@@ -663,14 +798,15 @@ void GLMoleculeView::translateSelection(const int xRange, const int yRange, cons
 
   updateAtomSet();
   setModified();
+  return true;
 }
 
 ///// rotateSelection /////////////////////////////////////////////////////////
-void GLMoleculeView::rotateSelection(const double angleX, const double angleY, const double angleZ)
+bool GLMoleculeView::rotateSelection(const double angleX, const double angleY, const double angleZ)
 /// Rotates the selected atoms around their local center of mass.
 {
   if(selectionList.empty())
-    return;
+    return false;
 
   ///// determine the axis around which to rotate all atoms + the amount of rotation
   ///// first the system should be backrotated from the scene's rotation (orientationQuaternion)
@@ -700,7 +836,7 @@ void GLMoleculeView::rotateSelection(const double angleX, const double angleY, c
   totalRotation.getAxisAngle(axis, angle);
   */
   if(fabs(angle) < Point3D<double>::TOLERANCE)
-    return;
+    return false;
 
   ///// determine the local center of mass (all masses are taken equal)
   Point3D<double> centerOfMass(0.0, 0.0, 0.0);
@@ -726,19 +862,20 @@ void GLMoleculeView::rotateSelection(const double angleX, const double angleY, c
   }
   updateAtomSet();
   setModified();
+  return true;
 }
 
 ///// changeSelectedIC ////////////////////////////////////////////////////////
-void GLMoleculeView::changeSelectedIC(const int range)
+bool GLMoleculeView::changeSelectedIC(const int range)
 /// Changes the selected internal coordinate
 /// according to the magnitude and direction of the range.
 {
   if(range == 0)
-    return;
+    return false;
 
   unsigned int atom1, atom2, atom3, atom4;
   std::list<unsigned int>::iterator it = selectionList.begin();
-  switch(selectionType)
+  switch(getSelectionType())
   {
     case SELECTION_BOND:    atom1 = *it++;
                             atom2 = *it;
@@ -759,6 +896,7 @@ void GLMoleculeView::changeSelectedIC(const int range)
   }
   updateAtomSet();
   setModified();
+  return true;
 }
 
 ///// drawItem ////////////////////////////////////////////////////////////////
@@ -787,3 +925,8 @@ void GLMoleculeView::drawItem(const unsigned int index)
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+///// Static Variables                                                    /////
+///////////////////////////////////////////////////////////////////////////////
+
+bool GLMoleculeView::manipulateSelection = false;

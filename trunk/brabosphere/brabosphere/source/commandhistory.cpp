@@ -40,6 +40,7 @@
 // Xbrabo header files
 #include "command.h"
 #include "commandhistory.h"
+#include "xbrabo.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
@@ -77,7 +78,21 @@ void CommandHistory::addCommand(Command* command)
 
   // If the previous command was not the last, make it the last
   //if(currentPosition != commandList.end()) // should work without this check
-    commandList.erase(currentPosition, commandList.end());
+  commandList.erase(currentPosition, commandList.end());
+
+  // Attempt to combine it with the previous command
+  if(!commandList.empty())
+  {
+    std::list<Command*>::iterator it = commandList.end();
+    --it; // points to the active command
+    qDebug("current command to combine the new one with: %X / " + (*it)->description(), *it);
+    if((*it)->combine(command))
+    {
+      // the 2 Commands were succesfully combined
+      delete command;
+      return;
+    }
+  }
   // Add the new Command
   commandList.push_back(command);
   lastActionAdded = true;

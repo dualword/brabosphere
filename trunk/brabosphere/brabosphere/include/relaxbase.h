@@ -57,6 +57,7 @@ class RelaxBase : public RelaxWidget
     void setDescription(const QString description);         // sets the description
     void setDir(const QString dir);     // sets the directory
     void setExtendedFormat(const bool state);     // sets extended format for coordinates & forces
+    void setAtomSet(AtomSet* atomSet);  // updates the AtomSet pointer to a new set.
 
     ///// public member function for retrieving data
     unsigned int inputGenerationFrequency();      // frequency with which the internal coordinates should be regenerated

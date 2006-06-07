@@ -56,6 +56,7 @@
 #include "atomset.h"
 #include "brabobase.h"
 #include "calculation.h"
+#include "command.h"
 #include "crdfactory.h"
 #include "domutils.h"
 #include "glmoleculeview.h"
@@ -80,12 +81,12 @@
 
 ///// Constructor /////////////////////////////////////////////////////////////
 XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const char* name, WFlags f) : QextMdiChildView( title, parent, name, f),
-  globalSetup(0),
-  braboSetup(0),
-  relaxSetup(0),
+  globalSetup(NULL),
+  braboSetup(NULL),
+  relaxSetup(NULL),
   mainWindow(mainWin),
   calcDate(QDateTime::currentDateTime(Qt::UTC).toString(Qt::ISODate)),
-  calculation(0)
+  calculation(NULL)
 /// The default constructor.
 /// \warning \c parent is not Xbrabo, but QextMdiChildArea or 0 (can dynamically change!).
 /// => pointer to Xbrabo passed using mainWin
@@ -101,7 +102,8 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
 
   ///// Initialize the atoms
   atoms = new AtomSet();
-  
+  qDebug("XbraboView constructor: atoms = %X, currentAomSet() = %X", atoms, currentAtomSet());
+
   ///// Construct widget layout
   BigLayout = new QVBoxLayout(this,10);
     Splitter = new QSplitter(this, 0);
@@ -137,6 +139,7 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
 #endif
   connect(MoleculeView, SIGNAL(modified()), this, SLOT(setModified()));
   connect(MoleculeView, SIGNAL(changed()), this, SIGNAL(changed()));
+  connect(&commandHistory, SIGNAL(changed()), this, SIGNAL(changed()));
   
   ///// What's This
   QWhatsThis::add(MoleculeView, 
@@ -215,13 +218,6 @@ bool XbraboView::isModified() const
   return calcModified;
 }
 
-/*//// isAnimating /////////////////////////////////////////////////////////////
-bool XbraboView::isAnimating() const
-/// Returns true if the molecule is animating.
-{
-  return MoleculeView->isAnimating();
-}*/
-
 ///// name ////////////////////////////////////////////////////////////////////
 QString XbraboView::name() const
 /// Returns the name of the calculation.
@@ -269,12 +265,6 @@ bool XbraboView::isPaused() const
   return calculation->isPaused();
 }
 
-/*//// hasSelection ////////////////////////////////////////////////////////////
-bool XbraboView::hasSelection() const
-/// Returns true if some atoms are selected
-{ 
-  return MoleculeView->selectedAtoms() > 0;
-}*/
 
 ///// cut /////////////////////////////////////////////////////////////////////
 void XbraboView::cut()
@@ -307,6 +297,39 @@ GLMoleculeView* XbraboView::moleculeView() const
 /// Returns a pointer to the GLMoleculeView class. 
 {
   return MoleculeView;
+}
+
+///// currentAtomSet //////////////////////////////////////////////////////////
+AtomSet* XbraboView::currentAtomSet() const
+/// Returns a pointer to the currently active AtomSet. 
+{
+  qDebug("XbraboView::currentAtomSet: returning %X, this = %X", atoms, this);
+  return atoms;
+}
+
+///// setAtomSet //////////////////////////////////////////////////////////////
+void XbraboView::setAtomSet(AtomSet* atomSet)
+/// Updates the current AtomSet from a pointer.
+{
+  qDebug("entering XbraboView::setAtomSet");
+
+  if(atomSet == NULL)
+    return;
+  if(calculation != NULL && calculation->isRunning())
+    return;
+
+  // assign the new pointer
+  atoms = atomSet;
+  // transfer this pointer to all classes that use it.
+  MoleculeView->setAtomSet(atoms);
+  if(braboSetup != NULL)
+    braboSetup->setAtomSet(atoms);
+  if(relaxSetup != NULL)
+    relaxSetup->setAtomSet(atoms);
+  if(calculation != NULL)
+    calculation->setAtomSet(atoms);
+
+  setModified();
 }
 
 ///// loadCML /////////////////////////////////////////////////////////////////
@@ -531,6 +554,73 @@ void XbraboView::setFileName(const QString filename)
   updateCaptions();
 }
 
+///// getCommandHistory ///////////////////////////////////////////////////////
+CommandHistory* XbraboView::getCommandHistory()
+/// Returns a pointer to the local undo/redo stack
+{
+  return &commandHistory;
+}
+
+///// moleculeReadCoordinates /////////////////////////////////////////////////
+bool XbraboView::moleculeReadCoordinates()
+/// Does the actual reading of coordinates into the AtomSet as called from 
+/// CommandReadCoordinates. It returns whether the operation was succesful or not.
+{
+  QString filename;
+  unsigned int result = CrdFactory::readFromFile(atoms, filename);
+  switch(result)
+  {
+    case CrdFactory::OK:
+      updateAtomSet();
+      TextEditStatus->append(tr("New coordinates read: ") + QString::number(atoms->count()) + tr(" atoms"));
+      return true;
+    case CrdFactory::UnknownExtension:
+      QMessageBox::warning(this, tr("Unknown format"), "The file " + filename + " has an unknown extension", QMessageBox::Ok, QMessageBox::NoButton);
+      break;
+    case CrdFactory::ErrorOpen:
+      QMessageBox::warning(this, tr("Error opening file"), "The file " + filename + " could not be opened for reading", QMessageBox::Ok, QMessageBox::NoButton);
+      break;
+    case CrdFactory::ErrorRead:
+      QMessageBox::warning(this, tr("Parse error"), "The contents of the file " + filename + " could not be parsed correctly", QMessageBox::Ok, QMessageBox::NoButton);
+      break;
+    case CrdFactory::UnknownFormat:
+      QMessageBox::warning(this, tr("Unknown format"), "The format (normal/extended) of the file " + filename + " could not be detected correctly", QMessageBox::Ok, QMessageBox::NoButton);
+      break;
+  }    
+  return false;
+}
+
+///// showProperties //////////////////////////////////////////////////////////
+bool XbraboView::showProperties()
+/// Changes which properties are shown in the OpenGL window. This is done through
+/// a MoleculePropertiesWidget.
+{
+  MoleculePropertiesWidget* properties = new MoleculePropertiesWidget(this, 0, true, 0);
+  properties->ComboBoxRenderingType->setCurrentItem(MoleculeView->displayStyle(GLSimpleMoleculeView::Molecule));
+  properties->ComboBoxForces->setCurrentItem(MoleculeView->displayStyle(GLSimpleMoleculeView::Forces));
+  properties->CheckBoxElement->setChecked(MoleculeView->isShowingElements());
+  properties->CheckBoxNumber->setChecked(MoleculeView->isShowingNumbers());
+  if(MoleculeView->isShowingCharges(AtomSet::Mulliken))
+    properties->ComboBoxCharge->setCurrentItem(AtomSet::Mulliken); 
+  else if(MoleculeView->isShowingCharges(AtomSet::Stockholder))
+    properties->ComboBoxCharge->setCurrentItem(AtomSet::Stockholder);
+  else
+    properties->ComboBoxCharge->setCurrentItem(AtomSet::None);
+
+  bool result = properties->exec() == QDialog::Accepted;
+  if(result)
+  {
+    MoleculeView->setDisplayStyle(GLSimpleMoleculeView::Molecule, properties->ComboBoxRenderingType->currentItem());
+    MoleculeView->setDisplayStyle(GLSimpleMoleculeView::Forces, properties->ComboBoxForces->currentItem());
+    MoleculeView->setLabels(properties->CheckBoxElement->isChecked(),
+                            properties->CheckBoxNumber->isChecked(),
+                            properties->ComboBoxCharge->currentItem());
+    MoleculeView->updateGL();
+  }
+  delete properties;
+  return result;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Slots                                                        /////
 ///////////////////////////////////////////////////////////////////////////////
@@ -553,34 +643,19 @@ void XbraboView::setModified(bool state)
   emit changed();
 }
 
-///// moleculeReadCoordinates /////////////////////////////////////////////////
-void XbraboView::moleculeReadCoordinates()
-/// Reads coordinates into the AtomSet from a file.
+///// moleculeReadCoordinatesCommand //////////////////////////////////////////
+void XbraboView::moleculeReadCoordinatesCommand()
+/// Creates a Command to read coordinates into the AtomSet from a file.
 {
-  QString filename;
-  unsigned int result = CrdFactory::readFromFile(atoms, filename);
-  switch(result)
-  {
-    case CrdFactory::OK:
-      setModified();
-      MoleculeView->updateAtomSet(true); // does a complete reset
-      if(calculation != 0)
-        calculation->setContinuable(false);
-      TextEditStatus->append(tr("New coordinates read: ") + QString::number(atoms->count()) + tr(" atoms"));
-      break;
-    case CrdFactory::UnknownExtension:
-      QMessageBox::warning(this, tr("Unknown format"), "The file " + filename + " has an unknown extension", QMessageBox::Ok, QMessageBox::NoButton);
-      break;
-    case CrdFactory::ErrorOpen:
-      QMessageBox::warning(this, tr("Error opening file"), "The file " + filename + " could not be opened for reading", QMessageBox::Ok, QMessageBox::NoButton);
-      break;
-    case CrdFactory::ErrorRead:
-      QMessageBox::warning(this, tr("Parse error"), "The contents of the file " + filename + " could not be parsed correctly", QMessageBox::Ok, QMessageBox::NoButton);
-      break;
-    case CrdFactory::UnknownFormat:
-      QMessageBox::warning(this, tr("Unknown format"), "The format (normal/extended) of the file " + filename + " could not be detected correctly", QMessageBox::Ok, QMessageBox::NoButton);
-      break;
-  }    
+  commandHistory.addCommand(new CommandReadCoordinates(this, "Read Coordinates")); // calls moleculeReadCoordinates
+}
+
+///// showPropertiesCommand ///////////////////////////////////////////////////
+void XbraboView::showPropertiesCommand()
+/// Creates a Command to change the display mode of the molecule and its 
+/// properties.
+{
+  commandHistory.addCommand(new CommandDisplayMode(this, "Display Mode")); // calls showProperties
 }
 
 ///// moleculeSaveCoordinates /////////////////////////////////////////////////
@@ -914,15 +989,15 @@ void XbraboView::popup()
 {
   ///// build the menu
   QPopupMenu* popup = new QPopupMenu(0,0);
-  popup->insertItem(IconSets::getIconSet(IconSets::MoleculeRead), tr("Read coordinates..."), this, SLOT(moleculeReadCoordinates()));
+  popup->insertItem(IconSets::getIconSet(IconSets::MoleculeRead), tr("Read coordinates..."), this, SLOT(moleculeReadCoordinatesCommand()));
   popup->insertItem(tr("Add atoms..."), MoleculeView, SLOT(addAtoms()));
-  const int ID_MOLECULE_DELETE = popup->insertItem(tr("Delete selected atoms"), MoleculeView, SLOT(deleteSelectedAtoms()));
+  const int ID_MOLECULE_DELETE = popup->insertItem(tr("Delete selected atoms"), MoleculeView, SLOT(deleteSelectedAtomsCommand()));
   popup->insertSeparator();
-  const int ID_ALTER_CARTESIAN = popup->insertItem(tr("Alter cartesian coordinates"), MoleculeView, SLOT(alterCartesian()));
-  const int ID_ALTER_INTERNAL = popup->insertItem(tr("Alter internal coordinate"), MoleculeView, SLOT(alterInternal()));    
+  const int ID_ALTER_CARTESIAN = popup->insertItem(tr("Alter cartesian coordinates"), MoleculeView, SLOT(alterCartesianCommand()));
+  const int ID_ALTER_INTERNAL = popup->insertItem(tr("Alter internal coordinate"), MoleculeView, SLOT(alterInternalCommand()));    
   popup->insertSeparator();
-  popup->insertItem(tr("Select all"), MoleculeView, SLOT(selectAll()));
-  popup->insertItem(tr("Select none"), MoleculeView, SLOT(unselectAll()));
+  popup->insertItem(tr("Select all"), MoleculeView, SLOT(selectAllCommand()));
+  popup->insertItem(tr("Select none"), MoleculeView, SLOT(unselectAllCommand()));
   popup->insertSeparator();
   popup->insertItem(IconSets::getIconSet(IconSets::SetupGlobal), tr("Setup global"),this, SLOT(setupGlobal()));
   popup->insertItem(IconSets::getIconSet(IconSets::SetupBrabo), tr("Setup energy && Forces"),this, SLOT(setupBrabo()));
@@ -1318,35 +1393,6 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
   outputViewer->exec(); // will delete itself when closed
 }
 
-///// showProperties //////////////////////////////////////////////////////////
-void XbraboView::showProperties()
-/// Changes which properties are shown in the OpenGL window. This is done through
-/// a MoleculePropertiesWidget.
-{
-  MoleculePropertiesWidget* properties = new MoleculePropertiesWidget(this, 0, true, 0);
-  properties->ComboBoxRenderingType->setCurrentItem(MoleculeView->displayStyle(GLSimpleMoleculeView::Molecule));
-  properties->ComboBoxForces->setCurrentItem(MoleculeView->displayStyle(GLSimpleMoleculeView::Forces));
-  properties->CheckBoxElement->setChecked(MoleculeView->isShowingElements());
-  properties->CheckBoxNumber->setChecked(MoleculeView->isShowingNumbers());
-  if(MoleculeView->isShowingCharges(AtomSet::Mulliken))
-    properties->ComboBoxCharge->setCurrentItem(AtomSet::Mulliken); 
-  else if(MoleculeView->isShowingCharges(AtomSet::Stockholder))
-    properties->ComboBoxCharge->setCurrentItem(AtomSet::Stockholder);
-  else
-    properties->ComboBoxCharge->setCurrentItem(AtomSet::None);
-
-  if(properties->exec() == QDialog::Accepted)
-  {
-    MoleculeView->setDisplayStyle(GLSimpleMoleculeView::Molecule, properties->ComboBoxRenderingType->currentItem());
-    MoleculeView->setDisplayStyle(GLSimpleMoleculeView::Forces, properties->ComboBoxForces->currentItem());
-    MoleculeView->setLabels(properties->CheckBoxElement->isChecked(),
-                            properties->CheckBoxNumber->isChecked(),
-                            properties->ComboBoxCharge->currentItem());
-    MoleculeView->updateGL();
-  }
-  delete properties;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Member Functions                                            /////
 ///////////////////////////////////////////////////////////////////////////////
@@ -1570,6 +1616,8 @@ void XbraboView::updateAtomSet()
 /// Does the necessary updating when the AtomSet has been changed. This means 
 /// new coordinates have been read from file or atoms have been added/deleted.
 {
+  setModified();
+  MoleculeView->updateAtomSet(true); // does a complete reset
   if(calculation != 0)
     calculation->setContinuable(false);
 

@@ -59,7 +59,6 @@
 // Xbrabo header files
 #include "aboutbox.h"
 #include "brabobase.h"
-#include "command.h"
 #include "iconsets.h"
 #include "glmoleculeview.h"
 #include "globalbase.h"
@@ -117,7 +116,7 @@ void Xbrabo::init()
 
   ///// connections
   connect(this, SIGNAL(lastChildViewClosed()),this, SLOT(updateActions()));
-  connect(&commandHistory, SIGNAL(changed()), this, SLOT(updateActions()));
+  //connect(&commandHistory, SIGNAL(changed()), this, SLOT(updateActions()));
 
   restoreToolbars(); // was being called in showevent
   updateActions();
@@ -287,7 +286,8 @@ void Xbrabo::fileOpen(const QString filename)
     }
   }
 
-  commandHistory.addCommand(new CommandOpenCalculation(this, "Open Calculation", fname)); // calls openCalculation
+  openCalculation(fname);
+  //commandHistory.addCommand(new CommandOpenCalculation(this, "Open Calculation", fname)); // calls openCalculation
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -338,7 +338,7 @@ void Xbrabo::closeEvent (QCloseEvent* e)
   while(!it->isDone())
   {
     XbraboView* view = dynamic_cast<XbraboView*>(it->currentItem());
-    if(view != 0)
+    if(view !=NULL)
     {
       if(!closeCalculation(view))
       {
@@ -376,8 +376,9 @@ void Xbrabo::closeEvent (QCloseEvent* e)
 ///// fileNew /////////////////////////////////////////////////////////////////
 void Xbrabo::fileNew()
 /// Generates a new calculation.
-{ 
-  commandHistory.addCommand(new CommandNewCalculation(this, "New Calculation")); // calls createCalculation
+{
+  createCalculation();
+  //commandHistory.addCommand(new CommandNewCalculation(this, "New Calculation")); // calls createCalculation
 }
 
 ///// fileSave ////////////////////////////////////////////////////////////////
@@ -516,7 +517,9 @@ void Xbrabo::editUndo()
 {  
   statusBar()->message(tr("Reverting the last action..."), 1000);
 
-  commandHistory.undo();
+  XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
+  if(view !=NULL)
+    view->getCommandHistory()->undo();
 }
 
 ///// editRedo ////////////////////////////////////////////////////////////////
@@ -525,7 +528,9 @@ void Xbrabo::editRedo()
 {  
   statusBar()->message(tr("Executing the last reverted action..."), 1000);
 
-  commandHistory.redo();
+  XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
+  if(view !=NULL)
+    view->getCommandHistory()->redo();
 }
 
 ///// editRepeat //////////////////////////////////////////////////////////////
@@ -534,7 +539,9 @@ void Xbrabo::editRepeat()
 {  
   statusBar()->message(tr("Repeating the last action..."), 1000);
 
-  commandHistory.repeat();
+  XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
+  if(view !=NULL)
+    view->getCommandHistory()->repeat();
 }
 
 ///// editCut /////////////////////////////////////////////////////////////////
@@ -544,7 +551,7 @@ void Xbrabo::editCut()
   statusBar()->message(tr("Cutting selection..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->cut();  
 }
 
@@ -555,7 +562,7 @@ void Xbrabo::editCopy()
   statusBar()->message(tr("Copying selection to clipboard..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->copy();  
 }
 
@@ -566,7 +573,7 @@ void Xbrabo::editPaste()
   statusBar()->message(tr("Inserting clipboard contents..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->paste();  
 }
 
@@ -574,7 +581,8 @@ void Xbrabo::editPaste()
 void Xbrabo::editPrefs()
 /// Changes the program's preferences.
 {  
-  commandHistory.addCommand(new CommandPreferences(this, "Change Preferences")); // calls changePreferences
+  changePreferences();
+  //commandHistory.addCommand(new CommandPreferences(this, "Change Preferences")); // calls changePreferences
 }
 
 ///// viewToolBarStandard /////////////////////////////////////////////////////
@@ -583,7 +591,7 @@ void Xbrabo::viewToolBarStandard()
 {  
   statusBar()->message(tr("Toggling Standard toolbar..."), 1000);
 
-  commandHistory.addCommand(new CommandDockWindow(this, "Toggle Standard Toolbar", ToolBarStandard));
+  //commandHistory.addCommand(new CommandDockWindow(this, "Toggle Standard Toolbar", ToolBarStandard));
 }
 
 ///// viewToolBarCalculation //////////////////////////////////////////////////
@@ -592,7 +600,7 @@ void Xbrabo::viewToolBarCalculation()
 {
   statusBar()->message(tr("Toggling Calculation toolbar..."), 1000);
 
-  commandHistory.addCommand(new CommandDockWindow(this, "Toggle Calculation Toolbar", ToolBarCalculation));
+  //commandHistory.addCommand(new CommandDockWindow(this, "Toggle Calculation Toolbar", ToolBarCalculation));
 }
 
 ///// viewToolBarCoordinates //////////////////////////////////////////////////
@@ -601,7 +609,7 @@ void Xbrabo::viewToolBarCoordinates()
 {
   statusBar()->message(tr("Toggling Coordinates toolbar..."), 1000);
 
-  commandHistory.addCommand(new CommandDockWindow(this, "Toggle Coordinates Toolbar", ToolBarCoordinates));
+  //commandHistory.addCommand(new CommandDockWindow(this, "Toggle Coordinates Toolbar", ToolBarCoordinates));
 }
 
 ///// viewStatusBar ///////////////////////////////////////////////////////////
@@ -610,7 +618,7 @@ void Xbrabo::viewStatusBar()
 {  
   statusBar()->message(tr("Toggling statusbar..."), 1000);
 
-  commandHistory.addCommand(new CommandStatusBar(this, "Toggle Statusbar"));
+  //commandHistory.addCommand(new CommandStatusBar(this, "Toggle Statusbar"));
 }
 
 ///// viewTaskBar /////////////////////////////////////////////////////////////
@@ -634,8 +642,8 @@ void Xbrabo::moleculeReadCoordinates()
   statusBar()->message(tr("Reading Coordinates..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeReadCoordinates();  
+  if(view !=NULL)
+    view->moleculeReadCoordinatesCommand();
 
   statusBar()->clear();
 }
@@ -647,7 +655,7 @@ void Xbrabo::moleculeCenterView()
   statusBar()->message(tr("Centering view..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeView()->centerView();
 }
 
@@ -658,7 +666,7 @@ void Xbrabo::moleculeResetOrientation()
   statusBar()->message(tr("Resetting orientation..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeView()->resetOrientation();
 }
 
@@ -669,7 +677,7 @@ void Xbrabo::moleculeZoomFit()
   statusBar()->message(tr("Resetting zoom..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeView()->zoomFit();
 }
 
@@ -680,7 +688,7 @@ void Xbrabo::moleculeResetView()
   statusBar()->message(tr("Resetting view..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeView()->resetView();
 }
 
@@ -691,7 +699,7 @@ void Xbrabo::moleculeAnimate()
   statusBar()->message(tr("Toggling animation..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
   {
     view->moleculeView()->toggleAnimation();
     updateActions(); // toggling animation doesn't fire a XbraboView::changed signal
@@ -705,7 +713,7 @@ void Xbrabo::moleculeFPS()
   statusBar()->message(tr("Calculating FPS..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeFPS();
 
   statusBar()->clear();
@@ -718,7 +726,7 @@ void Xbrabo::moleculeImage()
   statusBar()->message(tr("Saving to an image..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view != NULL)
     view->moleculeView()->saveImage();
 
   statusBar()->clear();
@@ -731,7 +739,7 @@ void Xbrabo::moleculeAddAtoms()
   statusBar()->message(tr("Adding atoms..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view != NULL)
     view->moleculeView()->addAtoms();
 }
 
@@ -742,8 +750,8 @@ void Xbrabo::moleculeDeleteSelection()
   statusBar()->message(tr("Deleting selection..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeView()->deleteSelectedAtoms();
+  if(view != NULL)
+    view->moleculeView()->deleteSelectedAtomsCommand();
 }
 
 ///// moleculeDensity /////////////////////////////////////////////////////////
@@ -753,7 +761,7 @@ void Xbrabo::moleculeDensity()
   statusBar()->message(tr("Changing density isosurfaces..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeView()->showDensity();
 }
 
@@ -764,8 +772,8 @@ void Xbrabo::moleculeDisplayMode()
   statusBar()->message(tr("Changing molecular display mode..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->showProperties();
+  if(view !=NULL)
+    view->showPropertiesCommand();
 }
 
 ///// moleculeAlterCartesian //////////////////////////////////////////////////
@@ -775,8 +783,8 @@ void Xbrabo::moleculeAlterCartesian()
   statusBar()->message(tr("Altering cartesian coordinates..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeView()->alterCartesian();
+  if(view !=NULL)
+    view->moleculeView()->alterCartesianCommand();
 }
 
 ///// moleculeAlterInternal ///////////////////////////////////////////////////
@@ -786,8 +794,8 @@ void Xbrabo::moleculeAlterInternal()
   statusBar()->message(tr("Altering selected internal coordinate..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeView()->alterInternal();
+  if(view !=NULL)
+    view->moleculeView()->alterInternalCommand();
 }
 
 ///// moleculeSelectAll ///////////////////////////////////////////////////////
@@ -797,8 +805,8 @@ void Xbrabo::moleculeSelectAll()
   statusBar()->message(tr("Selecting all atoms..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeView()->selectAll();
+  if(view !=NULL)
+    view->moleculeView()->selectAllCommand();
 }
 
 ///// moleculeSelectNone //////////////////////////////////////////////////////
@@ -808,8 +816,8 @@ void Xbrabo::moleculeSelectNone()
   statusBar()->message(tr("Deselecting all atoms..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeView()->unselectAll();
+  if(view !=NULL)
+    view->moleculeView()->unselectAllCommand();
 }
 
 ///// moleculeSaveCoordinates /////////////////////////////////////////////////
@@ -819,7 +827,7 @@ void Xbrabo::moleculeSaveCoordinates()
   statusBar()->message(tr("Saving coordinates..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->moleculeSaveCoordinates();
 }
 
@@ -829,9 +837,7 @@ void Xbrabo::moleculeSelection()
 {
   statusBar()->message(tr("Toggling manipulation target..."), 1000);
 
-  XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
-    view->moleculeView()->toggleSelection();
+  GLMoleculeView::toggleSelectionMode();
 }
 
 ///// setupGlobal /////////////////////////////////////////////////////////////
@@ -841,7 +847,7 @@ void Xbrabo::setupGlobal()
   statusBar()->message(tr("Setup Global..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->setupGlobal();
 
   statusBar()->clear();
@@ -854,7 +860,7 @@ void Xbrabo::setupBrabo()
   statusBar()->message(tr("Setup Energy & Forces..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->setupBrabo();
 
   statusBar()->clear();
@@ -867,7 +873,7 @@ void Xbrabo::setupRelax()
   statusBar()->message(tr("Setup Geometry Optimization..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->setupRelax();
 
   statusBar()->clear();
@@ -880,7 +886,7 @@ void Xbrabo::setupFreq()
   statusBar()->message(tr("Setup Frequencies..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->setupFreq();
 
   statusBar()->clear();
@@ -893,7 +899,7 @@ void Xbrabo::setupBuur()
   statusBar()->message(tr("Setup Crystal..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->setupBuur();
 
   statusBar()->clear();
@@ -906,7 +912,7 @@ void Xbrabo::runStart()
   statusBar()->message(tr("Starting Calculation..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->start();
 }
 
@@ -917,7 +923,7 @@ void Xbrabo::runPause()
   statusBar()->message(tr("Pausing Calculation..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->pause();
 }
 
@@ -928,7 +934,7 @@ void Xbrabo::runStop()
   statusBar()->message(tr("Stopping Calculation..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->stop();
 }
 
@@ -939,7 +945,7 @@ void Xbrabo::runWrite()
   statusBar()->message(tr("Writing Input Files..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->writeInput();
 }
 
@@ -950,7 +956,7 @@ void Xbrabo::runClean()
   statusBar()->message(tr("Cleaning the calculation directory..."), 1000);
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->cleanCalculation();
 }
 
@@ -961,7 +967,7 @@ void Xbrabo::resultsViewOutput()
   statusBar()->message(tr("Viewing Output Files..."));
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
     view->viewOutput();
 
   statusBar()->clear();
@@ -977,7 +983,7 @@ void Xbrabo::toolsPlotMap()
   
   /*
   view = dynamic_cast<XbraboView*>(activeWindow());
-  if(view != 0)
+  if(view !=NULL)
   {
     ///// active calculation
     if(plotmap->loadMapFile(view->directory() + QDir::separator() + view->name() + ".map.1"), true)
@@ -1164,6 +1170,8 @@ void Xbrabo::updateActions()
 /// to a changed() signal from an XbraboView, but not necessarily from the one
 /// with the focus. Some unneccesary updating is bound to occur.
 {
+  qDebug("calling updateActions");
+
   ///// check whether there is an active calculation
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   
@@ -1172,12 +1180,12 @@ void Xbrabo::updateActions()
   actionFileSaveAs->setEnabled(view != 0);
   actionFileClose->setEnabled(view != 0);
   ///// edit
-  actionEditUndo->setEnabled(commandHistory.undoAvailable());
-  actionEditUndo->setMenuText(tr("&Undo") + " " + commandHistory.undoText());
-  actionEditRedo->setEnabled(commandHistory.redoAvailable());
-  actionEditRedo->setMenuText(tr("&Redo") + " " + commandHistory.redoText());
-  actionEditRepeat->setEnabled(commandHistory.repeatAvailable());
-  actionEditRepeat->setMenuText(tr("R&epeat") + " " + commandHistory.repeatText());
+  actionEditUndo->setEnabled(view != NULL && view->getCommandHistory()->undoAvailable());
+  actionEditUndo->setMenuText(tr("&Undo") + " " + (view != NULL ? view->getCommandHistory()->undoText() : ""));
+  actionEditRedo->setEnabled(view != NULL && view->getCommandHistory()->redoAvailable());
+  actionEditRedo->setMenuText(tr("&Redo") + " " + (view != NULL ? view->getCommandHistory()->redoText() : ""));
+  actionEditRepeat->setEnabled(view != NULL && view->getCommandHistory()->repeatAvailable());
+  actionEditRepeat->setMenuText(tr("R&epeat") + " " + (view != NULL ? view->getCommandHistory()->repeatText() : ""));
   ///// view
   actionViewToolBarStandard->setOn(ToolBarStandard->isVisibleTo(this));
   actionViewToolBarCalculation->setOn(ToolBarCalculation->isVisibleTo(this));
@@ -1203,7 +1211,7 @@ void Xbrabo::updateActions()
   actionMoleculeSelectNone->setEnabled(view != 0 && view->moleculeView()->selectedAtoms() > 0);
   actionMoleculeDensity->setEnabled(view != 0);
   actionMoleculeDisplayMode->setEnabled(view != 0);
-  actionMoleculeSelection->setEnabled(view != 0 && view->moleculeView()->selectedAtoms() > 0);
+  actionMoleculeSelection->setEnabled(view != 0);
   ///// setup
   actionSetupGlobal->setEnabled(view != 0);
   actionSetupBrabo->setEnabled(view != 0);
@@ -1221,7 +1229,7 @@ void Xbrabo::updateActions()
   actionResultsViewOutput->setEnabled(view != 0);
 
   ///// set the caption to the active calculation
-  if(view != 0)
+  if(view !=NULL)
     setCaption(Version::appName + " - " + view->caption());
   else
     setCaption(Version::appName);

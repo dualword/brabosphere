@@ -29,6 +29,9 @@
 
 ///// Header files ////////////////////////////////////////////////////////////
 
+// C++ header files
+#include <cmath>
+
 // Qt header files
 #include <qaccel.h>
 #include <qaction.h>
@@ -579,7 +582,8 @@ void CrdView::readSettings()
   glBaseParameters.antialias                = settings.readBoolEntry(prefix + "antialias", true);
   glBaseParameters.smoothShading            = settings.readBoolEntry(prefix + "smooth_shading", true);
   glBaseParameters.depthCue                 = settings.readBoolEntry(prefix + "depth_cue", true);
-  glMoleculeParameters.quality              = settings.readNumEntry(prefix + "quality", 22); // 31 slices
+  const int quality = settings.readNumEntry(prefix + "quality", 22); // 31 slices
+  glMoleculeParameters.quality = quality < 11 ? quality : static_cast<int>(10.0 * pow(1.1, static_cast<int>(quality) - 10));
   glBaseParameters.perspectiveProjection    = settings.readBoolEntry(prefix + "perspective_projection", true);
 
   ///// Update
