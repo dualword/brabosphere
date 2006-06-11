@@ -302,7 +302,7 @@ void GLMoleculeView::alterCartesianCommand()
 /// This Command will call alterCartesian.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
-  view->getCommandHistory()->addCommand(new CommandAlterCartesian(view, "Alter Cartesian Coordinates"));
+  view->getCommandHistory()->addCommand(new CommandAlterCartesian(view, tr("Alter Cartesian Coordinates")));
 }
 
 ///// alterInternalCommand ////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ void GLMoleculeView::alterInternalCommand()
 /// atoms. This Command will call alterInternal.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
-  view->getCommandHistory()->addCommand(new CommandAlterInternal(view, "Alter Internal Coordinates"));
+  view->getCommandHistory()->addCommand(new CommandAlterInternal(view, tr("Alter Internal Coordinates")));
 }
 
 ///// deleteSelectedAtomsCommand //////////////////////////////////////////////
@@ -320,7 +320,7 @@ void GLMoleculeView::deleteSelectedAtomsCommand()
 /// deleteSelectedAtoms.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
-  view->getCommandHistory()->addCommand(new CommandDeleteAtoms(view, "Delete Selection"));
+  view->getCommandHistory()->addCommand(new CommandDeleteAtoms(view, tr("Delete Selection")));
 }
 
 ///// selectAllCommand ////////////////////////////////////////////////////////
@@ -328,7 +328,7 @@ void GLMoleculeView::selectAllCommand()
 /// Creates a Command to select all atoms. This Command will call selectAll.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
-  view->getCommandHistory()->addCommand(new CommandSelectAll(view, "Select All Atoms"));
+  view->getCommandHistory()->addCommand(new CommandSelectAll(view, tr("Select All Atoms")));
 }
 
 ///// unselectAllCommand //////////////////////////////////////////////////////
@@ -336,7 +336,40 @@ void GLMoleculeView::unselectAllCommand()
 /// Creates a Command to deselect all atoms. This Command will call unselectAll.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
-  view->getCommandHistory()->addCommand(new CommandSelectNone(view, "Deselect All Atoms"));
+  view->getCommandHistory()->addCommand(new CommandSelectNone(view, tr("Deselect All Atoms")));
+}
+
+///// centerViewCommand ///////////////////////////////////////////////////////
+void GLMoleculeView::centerViewCommand()
+/// Creates a Command to center the view. This Command will call centerView.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandCenterView(view, tr("Reset Translation")));
+}
+
+///// resetOrientationCommand /////////////////////////////////////////////////
+void GLMoleculeView::resetOrientationCommand()
+/// Creates a Command to reset the orientation of the view. This Command will 
+/// call resetOrientation.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandResetOrientation(view, tr("Reset Orientation")));
+}
+
+///// zoomFitCommand //////////////////////////////////////////////////////////
+void GLMoleculeView::zoomFitCommand()
+/// Creates a Command to reset the zoom factor. This Command will call zoomFit.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandZoomFit(view, tr("Reset Zoom")));
+}
+
+///// resetViewCommand ///////////////////////////////////////////////////////
+void GLMoleculeView::resetViewCommand()
+/// Creates a Command to reset the view. This Command will call resetView.
+{
+  XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
+  view->getCommandHistory()->addCommand(new CommandResetView(view, tr("Reset View")));
 }
 
 ///// showDensity /////////////////////////////////////////////////////////////

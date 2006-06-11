@@ -24,29 +24,36 @@
   The Command class itself is an abstract base class for the subclasses also
   present in this file. The implementation is such as to allow a stack for each 
   calculation.
-  The list of classes: Command
-                       CommandCoordinates
-                       CommandReadCoordinates
-                       CommandAddAtoms
-                       CommandDeleteAtoms
-                       CommandAlterCartesian
-                       CommandAlterInternal
-                       CommandSelection
-                       CommandSelectAll
-                       CommandSelectNone
-                       CommandSelectEntity
-                       CommandDisplayMode
-                       CommandTranslateXY
-                       CommandTranslateZ
-                       CommandRotate
-                       CommandTranslateSelectionXY
-                       CommandTranslateSelectionZ
-                       CommandRotateSelection
-                       CommandChangeIC
+  The list of classes: Command (abstract)
+                         CommandCoordinates (abstract)
+                           CommandReadCoordinates
+                           CommandAddAtoms
+                           CommandDeleteAtoms
+                           CommandAlterCartesian
+                           CommandAlterInternal
+                           CommandTranslateSelectionXY
+                           CommandTranslateSelectionZ
+                           CommandRotateSelection
+                           CommandChangeIC
+                         CommandSelection (abstract)
+                           CommandSelectAll
+                           CommandSelectNone
+                           CommandSelectEntity
+                         CommandDisplayMode
+                         CommandTranslate (abstract)
+                           CommandCenterView
+                           CommandTranslateXY
+                         CommandRotate (abstract)
+                           CommandResetOrientation
+                           CommandRotateXYZ
+                         CommandZoom (abstract)
+                           CommandZoomFit
+                           CommandTranslateZ
+                         CommandResetView
 
 */
 /// \file
-/// Contains the implementation of the class Command.
+/// Contains the implementation of the class Command and its subclasses.
 
 ///// Header files ////////////////////////////////////////////////////////////
 
@@ -549,6 +556,155 @@ bool CommandAlterInternal::combine(Command* command)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+///// Class CommandTranslateSelectionXY                                   /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandTranslateSelectionXY::CommandTranslateSelectionXY(XbraboView* parent, const QString description, const int amountX, const int amountY) : 
+  CommandCoordinates(parent, description),
+    incX(amountX),
+    incY(amountY)
+/// The default constructor. 
+{
+  repeatable = true;
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandTranslateSelectionXY* CommandTranslateSelectionXY::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandTranslateSelectionXY(*this);
+}
+
+///// initialRun /////////////////////////////////////////////////////////////////
+bool CommandTranslateSelectionXY::initialRun()
+/// Translates the cartesian coordinate(s) of the current selection.
+{
+  return view->moleculeView()->translateSelection(incX, incY, 0);
+}
+
+///// combine /////////////////////////////////////////////////////////////////
+bool CommandTranslateSelectionXY::combine(Command* command)
+/// Combines 2 translations of cartesian coordinates. 
+{
+  // as long as the other command is the same type nothing more has to be done.
+  return dynamic_cast<CommandTranslateSelectionXY*>(command) != NULL; 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandTranslateSelectionZ                                    /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandTranslateSelectionZ::CommandTranslateSelectionZ(XbraboView* parent, const QString description, const int amountZ) : 
+  CommandCoordinates(parent, description),
+    incZ(amountZ)
+/// The default constructor. 
+{
+  repeatable = true;
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandTranslateSelectionZ* CommandTranslateSelectionZ::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandTranslateSelectionZ(*this);
+}
+
+///// initialRun /////////////////////////////////////////////////////////////////
+bool CommandTranslateSelectionZ::initialRun()
+/// Translates the cartesian coordinate(s) of the current selection.
+{
+  return view->moleculeView()->translateSelection(0, 0, incZ);
+}
+
+///// combine /////////////////////////////////////////////////////////////////
+bool CommandTranslateSelectionZ::combine(Command* command)
+/// Combines 2 translations of cartesian coordinates. 
+{
+  // as long as the other command is the same type nothing more has to be done.
+  return dynamic_cast<CommandTranslateSelectionZ*>(command) != NULL; 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandRotateSelection                                        /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandRotateSelection::CommandRotateSelection(XbraboView* parent, const QString description, const double amountX, const double amountY, const double amountZ) : 
+  CommandCoordinates(parent, description),
+    incX(amountX),
+    incY(amountY),
+    incZ(amountZ)
+/// The default constructor. 
+{
+  repeatable = true;
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandRotateSelection* CommandRotateSelection::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandRotateSelection(*this);
+}
+
+///// initialRun /////////////////////////////////////////////////////////////////
+bool CommandRotateSelection::initialRun()
+/// Rotates the cartesian coordinate(s) of the current selection.
+{
+  return view->moleculeView()->rotateSelection(incX, incY, incZ);
+}
+
+///// combine /////////////////////////////////////////////////////////////////
+bool CommandRotateSelection::combine(Command* command)
+/// Combines 2 translations of cartesian coordinates. 
+{
+  // as long as the other command is the same type nothing more has to be done.
+  return dynamic_cast<CommandRotateSelection*>(command) != NULL; 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandChangeIC                                               /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandChangeIC::CommandChangeIC(XbraboView* parent, const QString description, const int range) : 
+  CommandCoordinates(parent, description),
+  amount(range)
+/// The default constructor. 
+{
+  repeatable = true;
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandChangeIC* CommandChangeIC::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandChangeIC(*this);
+}
+
+///// initialRun /////////////////////////////////////////////////////////////////
+bool CommandChangeIC::initialRun()
+/// Changes the internal coordiante formed by the selected atoms
+{
+  return view->moleculeView()->changeSelectedIC(amount);
+}
+
+///// combine /////////////////////////////////////////////////////////////////
+bool CommandChangeIC::combine(Command* command)
+/// Combines 2 changes of the selected internal coordinate. 
+{
+  // as long as the other command is the same type nothing more has to be done.
+  // -> maybe check for an identical selection... (not needed if all selections are also
+  //    put in the undo/redo stack
+  return dynamic_cast<CommandChangeIC*>(command) != NULL; 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 ///// Class CommandSelection                                              /////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -751,11 +907,56 @@ bool CommandDisplayMode::revert()
 
 
 ///////////////////////////////////////////////////////////////////////////////
+///// Class CommandTranslation                                             /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandTranslation::CommandTranslation(XbraboView* parent, const QString description) : Command(parent, description)
+/// The default constructor. 
+{
+  
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandTranslation::execute(bool fromBackup)
+/// Changes the translation of the molecule in the plane of the screen (X & Y).
+{
+  oldX = view->moleculeView()->xPos;
+  oldY = view->moleculeView()->yPos;
+
+  if(!fromBackup)
+  {
+    return initialRun();
+  }
+  else
+  {
+    view->moleculeView()->xPos = newX;
+    view->moleculeView()->yPos = newY;
+    view->moleculeView()->updateGL();
+    return true;
+  }
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandTranslation::revert()
+/// Restores the previous translation.
+{
+  newX = view->moleculeView()->xPos;
+  newY = view->moleculeView()->yPos;
+
+  view->moleculeView()->xPos = oldX;
+  view->moleculeView()->yPos = oldY;
+  view->moleculeView()->updateGL();
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 ///// Class CommandTranslateXY                                            /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandTranslateXY::CommandTranslateXY(XbraboView* parent, const QString description, const int amountX, const int amountY) : Command(parent, description),
+CommandTranslateXY::CommandTranslateXY(XbraboView* parent, const QString description, const int amountX, const int amountY) : CommandTranslation(parent, description),
   incX(amountX),
   incY(amountY)
 /// The default constructor. 
@@ -770,38 +971,13 @@ CommandTranslateXY* CommandTranslateXY::clone() const
   return new CommandTranslateXY(*this);
 }
 
-///// execute /////////////////////////////////////////////////////////////////
-bool CommandTranslateXY::execute(bool fromBackup)
+///// initialRun //////////////////////////////////////////////////////////////
+bool CommandTranslateXY::initialRun()
 /// Changes the translation of the molecule in the plane of the screen (X & Y).
 {
-  oldX = view->moleculeView()->xPos;
-  oldY = view->moleculeView()->yPos;
-
-  if(!fromBackup)
-  {
-    if(incX == 0 && incY == 0)
-      return false;
-    view->moleculeView()->translateXY(incX, incY);
-  }
-  else
-  {
-    view->moleculeView()->xPos = newX;
-    view->moleculeView()->yPos = newY;
-    view->moleculeView()->updateGL();
-  }
-  return true;
-}
-
-///// revert //////////////////////////////////////////////////////////////////
-bool CommandTranslateXY::revert()
-/// Restores the previous translation.
-{
-  newX = view->moleculeView()->xPos;
-  newY = view->moleculeView()->yPos;
-
-  view->moleculeView()->xPos = oldX;
-  view->moleculeView()->yPos = oldY;
-  view->moleculeView()->updateGL();
+  if(incX == 0 && incY == 0)
+    return false;
+  view->moleculeView()->translateXY(incX, incY);
   return true;
 }
 
@@ -813,12 +989,80 @@ bool CommandTranslateXY::combine(Command* command)
   return dynamic_cast<CommandTranslateXY*>(command) != NULL; 
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandCenterView                                             /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandCenterView::CommandCenterView(XbraboView* parent, const QString description) : CommandTranslation(parent, description)
+/// The default constructor. 
+{
+  
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandCenterView* CommandCenterView::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandCenterView(*this);
+}
+
+///// initialRun //////////////////////////////////////////////////////////////
+bool CommandCenterView::initialRun()
+/// Resets the translation of the molecule in the plane of the screen (X & Y).
+{
+  view->moleculeView()->centerView();
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandZoom                                                   /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandZoom::CommandZoom(XbraboView* parent, const QString description) : Command(parent, description)
+/// The default constructor. 
+{
+  
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandZoom::execute(bool fromBackup)
+/// Changes the translation of the molecule out of the plane of the screen (Z).
+{
+  oldZ = view->moleculeView()->zPos;
+
+  if(!fromBackup)
+  {
+    return initialRun();
+  }
+  else
+  {
+    view->moleculeView()->zPos = newZ;
+    view->moleculeView()->updateGL();
+    return true;
+  }
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandZoom::revert()
+/// Restores the previous translation.
+{
+  newZ = view->moleculeView()->zPos;
+
+  view->moleculeView()->zPos = oldZ;
+  view->moleculeView()->updateGL();
+  return true;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ///// Class CommandTranslateZ                                             /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandTranslateZ::CommandTranslateZ(XbraboView* parent, const QString description, const int amount) : Command(parent, description),
+CommandTranslateZ::CommandTranslateZ(XbraboView* parent, const QString description, const int amount) : CommandZoom(parent, description),
   incZ(amount)
 /// The default constructor. 
 {
@@ -832,35 +1076,14 @@ CommandTranslateZ* CommandTranslateZ::clone() const
   return new CommandTranslateZ(*this);
 }
 
-///// execute /////////////////////////////////////////////////////////////////
-bool CommandTranslateZ::execute(bool fromBackup)
+///// initialRun //////////////////////////////////////////////////////////////
+bool CommandTranslateZ::initialRun()
 /// Changes the translation of the molecule in the direction perpendicular to
 /// the screen (essentially zooming)
 {
-  oldZ = view->moleculeView()->zPos;
-
-  if(!fromBackup)
-  {
     if(incZ == 0)
       return false;
     view->moleculeView()->translateZ(incZ);
-  }
-  else
-  {
-    view->moleculeView()->zPos = newZ;
-    view->moleculeView()->updateGL();
-  }
-  return true;
-}
-
-///// revert //////////////////////////////////////////////////////////////////
-bool CommandTranslateZ::revert()
-/// Restores the previous translation.
-{
-  newZ = view->moleculeView()->zPos;
-  
-  view->moleculeView()->zPos = oldZ;
-  view->moleculeView()->updateGL();
   return true;
 }
 
@@ -874,12 +1097,78 @@ bool CommandTranslateZ::combine(Command* command)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+///// Class CommandZoomFit                                                /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandZoomFit::CommandZoomFit(XbraboView* parent, const QString description) : CommandZoom(parent, description)
+/// The default constructor. 
+{
+
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandZoomFit* CommandZoomFit::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandZoomFit(*this);
+}
+
+///// initialRun //////////////////////////////////////////////////////////////
+bool CommandZoomFit::initialRun()
+/// Zooms the molecule so it fits in the OpenGL window.
+{
+  view->moleculeView()->zoomFit();
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandRotation                                                 /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandRotation::CommandRotation(XbraboView* parent, const QString description) : Command(parent, description)
+/// The default constructor. 
+{
+  
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandRotation::execute(bool fromBackup)
+/// Changes the rotation of the molecule.
+{
+  oldRotation = *(view->moleculeView()->orientationQuaternion);
+
+  if(!fromBackup)
+    return initialRun();
+  else
+  {
+    *(view->moleculeView()->orientationQuaternion) = newRotation;
+    view->moleculeView()->updateGL();
+    return true;
+  }
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandRotation::revert()
+/// Restores the previous rotation.
+{
+  newRotation = *(view->moleculeView()->orientationQuaternion);
+  
+  *(view->moleculeView()->orientationQuaternion) = oldRotation;
+  view->moleculeView()->updateGL();
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 ///// Class CommandRotate                                                 /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandRotate::CommandRotate(XbraboView* parent, const QString description, const float amountX, const float amountY, const float amountZ) : 
-  Command(parent, description),
+  CommandRotation(parent, description),
   incX(amountX),
   incY(amountY),
   incZ(amountZ)
@@ -895,38 +1184,17 @@ CommandRotate* CommandRotate::clone() const
   return new CommandRotate(*this);
 }
 
-///// execute /////////////////////////////////////////////////////////////////
-bool CommandRotate::execute(bool fromBackup)
+///// initialRun //////////////////////////////////////////////////////////////
+bool CommandRotate::initialRun()
 /// Changes the rotation of the molecule by settings the step rotation.
 {
-  oldRotation = *(view->moleculeView()->orientationQuaternion);
-
-  if(!fromBackup)
-  {
-    view->moleculeView()->rotate(incX, incY, incZ);
-  }
-  else
-  {
-    *(view->moleculeView()->orientationQuaternion) = newRotation;
-    view->moleculeView()->updateGL();
-  }
-  return true;
-}
-
-///// revert //////////////////////////////////////////////////////////////////
-bool CommandRotate::revert()
-/// Restores the previous rotation.
-{
-  newRotation = *(view->moleculeView()->orientationQuaternion);
-  
-  *(view->moleculeView()->orientationQuaternion) = oldRotation;
-  view->moleculeView()->updateGL();
+  view->moleculeView()->rotate(incX, incY, incZ);
   return true;
 }
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandRotate::combine(Command* command)
-/// Combines 2 zoom actions.
+/// Combines 2 rotate actions.
 {
   // as long as the other command is the same type nothing more has to be done.
   return dynamic_cast<CommandRotate*>(command) != NULL; 
@@ -934,149 +1202,249 @@ bool CommandRotate::combine(Command* command)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-///// Class CommandTranslateSelectionXY                                   /////
+///// Class CommandResetOrientation                                       /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandTranslateSelectionXY::CommandTranslateSelectionXY(XbraboView* parent, const QString description, const int amountX, const int amountY) : 
-  CommandCoordinates(parent, description),
-    incX(amountX),
-    incY(amountY)
+CommandResetOrientation::CommandResetOrientation(XbraboView* parent, const QString description) : CommandRotation(parent, description)
 /// The default constructor. 
 {
-  repeatable = true;
+  
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
-CommandTranslateSelectionXY* CommandTranslateSelectionXY::clone() const
+CommandResetOrientation* CommandResetOrientation::clone() const
 /// The copy constructor using the 'virtual constructor idiom'
 {
-  return new CommandTranslateSelectionXY(*this);
+  return new CommandResetOrientation(*this);
 }
 
-///// initialRun /////////////////////////////////////////////////////////////////
-bool CommandTranslateSelectionXY::initialRun()
-/// Translates the cartesian coordinate(s) of the current selection.
+///// initialRun //////////////////////////////////////////////////////////////
+bool CommandResetOrientation::initialRun()
+/// Changes the rotation of the molecule by settings the step rotation.
 {
-  return view->moleculeView()->translateSelection(incX, incY, 0);
+  view->moleculeView()->resetOrientation();
+  return true;
 }
-
-///// combine /////////////////////////////////////////////////////////////////
-bool CommandTranslateSelectionXY::combine(Command* command)
-/// Combines 2 translations of cartesian coordinates. 
-{
-  // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandTranslateSelectionXY*>(command) != NULL; 
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
-///// Class CommandTranslateSelectionZ                                    /////
+///// Class CommandResetView                                              /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandTranslateSelectionZ::CommandTranslateSelectionZ(XbraboView* parent, const QString description, const int amountZ) : 
-  CommandCoordinates(parent, description),
-    incZ(amountZ)
+CommandResetView::CommandResetView(XbraboView* parent, const QString description) : Command(parent, description)
 /// The default constructor. 
 {
-  repeatable = true;
+  
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
-CommandTranslateSelectionZ* CommandTranslateSelectionZ::clone() const
+CommandResetView* CommandResetView::clone() const
 /// The copy constructor using the 'virtual constructor idiom'
 {
-  return new CommandTranslateSelectionZ(*this);
+  return new CommandResetView(*this);
 }
 
-///// initialRun /////////////////////////////////////////////////////////////////
-bool CommandTranslateSelectionZ::initialRun()
-/// Translates the cartesian coordinate(s) of the current selection.
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandResetView::execute(bool fromBackup)
+/// Resets the translation and rotation of te molecule.
 {
-  return view->moleculeView()->translateSelection(0, 0, incZ);
+  oldX = view->moleculeView()->xPos;
+  oldY = view->moleculeView()->yPos;
+  oldZ = view->moleculeView()->zPos;
+  oldRotation = *(view->moleculeView()->orientationQuaternion);
+
+  if(!fromBackup)
+  {
+    view->moleculeView()->resetView();
+  }
+  else
+  {
+    view->moleculeView()->xPos = newX;
+    view->moleculeView()->yPos = newY;
+    view->moleculeView()->zPos = newZ;
+    *(view->moleculeView()->orientationQuaternion) = newRotation;
+    view->moleculeView()->updateGL();
+    return true;
+  }
 }
 
-///// combine /////////////////////////////////////////////////////////////////
-bool CommandTranslateSelectionZ::combine(Command* command)
-/// Combines 2 translations of cartesian coordinates. 
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandResetView::revert()
+/// Restores the previous translation and rotation.
 {
-  // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandTranslateSelectionZ*>(command) != NULL; 
+  newX = view->moleculeView()->xPos;
+  newY = view->moleculeView()->yPos;
+  newZ = view->moleculeView()->zPos;
+  newRotation = *(view->moleculeView()->orientationQuaternion);
+
+  view->moleculeView()->xPos = oldX;
+  view->moleculeView()->yPos = oldY;
+  view->moleculeView()->zPos = oldZ;
+  *(view->moleculeView()->orientationQuaternion) = oldRotation;
+  view->moleculeView()->updateGL();
+  return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-///// Class CommandRotateSelection                                        /////
+///// Class CommandSetupGlobal                                            /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandRotateSelection::CommandRotateSelection(XbraboView* parent, const QString description, const double amountX, const double amountY, const double amountZ) : 
-  CommandCoordinates(parent, description),
-    incX(amountX),
-    incY(amountY),
-    incZ(amountZ)
+CommandSetupGlobal::CommandSetupGlobal(XbraboView* parent, const QString description) : Command(parent, description)
 /// The default constructor. 
 {
-  repeatable = true;
+  
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
-CommandRotateSelection* CommandRotateSelection::clone() const
+CommandSetupGlobal* CommandSetupGlobal::clone() const
 /// The copy constructor using the 'virtual constructor idiom'
 {
-  return new CommandRotateSelection(*this);
+  return new CommandSetupGlobal(*this);
 }
 
-///// initialRun /////////////////////////////////////////////////////////////////
-bool CommandRotateSelection::initialRun()
-/// Rotates the cartesian coordinate(s) of the current selection.
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandSetupGlobal::execute(bool fromBackup)
+/// Changes the Global setup options.
 {
-  return view->moleculeView()->rotateSelection(incX, incY, incZ);
+  if(view->globalSetup != 0)
+    oldData = view->globalSetup->data;
+  else
+    oldData.type = GlobalBase::Frequencies + 10;
+
+  if(!fromBackup)
+    return view->setupGlobal();
+  else
+  {
+    view->globalSetup->data = newData;
+    view->globalSetup->restoreWidgets();
+    return true;
+  }
 }
 
-///// combine /////////////////////////////////////////////////////////////////
-bool CommandRotateSelection::combine(Command* command)
-/// Combines 2 translations of cartesian coordinates. 
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandSetupGlobal::revert()
+/// Restores the previous translation and rotation.
 {
-  // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandRotateSelection*>(command) != NULL; 
+  newData = view->globalSetup->data;
+
+  if(oldData.type != GlobalBase::Frequencies + 10)
+  {
+    view->globalSetup->data = oldData;
+    view->globalSetup->restoreWidgets();
+  }
+  else
+    view->globalSetup->reset();
+  return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-///// Class CommandChangeIC                                               /////
+///// Class CommandSetupBrabo                                             /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandChangeIC::CommandChangeIC(XbraboView* parent, const QString description, const int range) : 
-  CommandCoordinates(parent, description),
-  amount(range)
+CommandSetupBrabo::CommandSetupBrabo(XbraboView* parent, const QString description) : Command(parent, description)
 /// The default constructor. 
 {
-  repeatable = true;
+  
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
-CommandChangeIC* CommandChangeIC::clone() const
+CommandSetupBrabo* CommandSetupBrabo::clone() const
 /// The copy constructor using the 'virtual constructor idiom'
 {
-  return new CommandChangeIC(*this);
+  return new CommandSetupBrabo(*this);
 }
 
-///// initialRun /////////////////////////////////////////////////////////////////
-bool CommandChangeIC::initialRun()
-/// Changes the internal coordiante formed by the selected atoms
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandSetupBrabo::execute(bool fromBackup)
+/// Changes the Brabo setup options.
 {
-  return view->moleculeView()->changeSelectedIC(amount);
+  if(view->braboSetup != 0)
+    oldData = view->braboSetup->data;
+  else
+    oldData.SCFMethod = 10;
+
+  if(!fromBackup)
+    return view->setupBrabo();
+  else
+  {
+    view->braboSetup->data = newData;
+    view->braboSetup->restoreWidgets();
+    return true;
+  }
 }
 
-///// combine /////////////////////////////////////////////////////////////////
-bool CommandChangeIC::combine(Command* command)
-/// Combines 2 changes of the selected internal coordinate. 
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandSetupBrabo::revert()
+/// Restores the previous set of Energy & Forces options.
 {
-  // as long as the other command is the same type nothing more has to be done.
-  // -> maybe check for an identical selection... (not needed if all selections are also
-  //    put in the undo/redo stack
-  return dynamic_cast<CommandChangeIC*>(command) != NULL; 
+  newData = view->braboSetup->data;
+
+  if(oldData.SCFMethod != 10)
+  {
+    view->braboSetup->data = oldData;
+    view->braboSetup->restoreWidgets();
+  }
+  else
+    view->braboSetup->reset();
+  return true;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Class CommandSetupRelax                                             /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// constructor /////////////////////////////////////////////////////////////
+CommandSetupRelax::CommandSetupRelax(XbraboView* parent, const QString description) : Command(parent, description)
+/// The default constructor. 
+{
+  
+}
+
+///// copy constructor ////////////////////////////////////////////////////////
+CommandSetupRelax* CommandSetupRelax::clone() const
+/// The copy constructor using the 'virtual constructor idiom'
+{
+  return new CommandSetupRelax(*this);
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandSetupRelax::execute(bool fromBackup)
+/// Changes the Relax setup options.
+{
+  if(view->relaxSetup != 0)
+    oldData = view->relaxSetup->data;
+  else
+    oldData.type = 10;
+
+  if(!fromBackup)
+    return view->setupRelax();
+  else
+  {
+    view->relaxSetup->data = newData;
+    view->relaxSetup->restoreWidgets();
+    return true;
+  }
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandSetupRelax::revert()
+/// Restores the previous translation and rotation.
+{
+  newData = view->relaxSetup->data;
+
+  if(oldData.type != 10)
+  {
+    view->relaxSetup->data = oldData;
+    view->relaxSetup->restoreWidgets();
+  }
+  else
+    view->relaxSetup->reset();
+  return true;
+}
+

@@ -123,6 +123,8 @@ class RelaxBase : public RelaxWidget
     void clearSelection();              // clears the selected cells in Table
     
   private:
+    friend class CommandSetupRelax;
+
     ///// private enums
     enum Categories{BASIC = 0, INTERNAL = 1, CARTESIAN = 2, ADVANCED = 3, DEBUG1 = 4, EXTRA = 5,
                     CARTESIAN_SYMMETRY = 6, CARTESIAN_OTHER = 7,

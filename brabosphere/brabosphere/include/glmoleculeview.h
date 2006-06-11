@@ -69,6 +69,11 @@ class GLMoleculeView : public GLSimpleMoleculeView
     void deleteSelectedAtomsCommand();  // creates a Command to delete all selected atoms
     void selectAllCommand();            // creates a Command to select all atoms.
     void unselectAllCommand();          // creates a Command to deselect all atoms.
+    void centerViewCommand();           // creates a Command to center the view
+    void resetOrientationCommand();     // creates a Command to reset the orientation of the view
+    void zoomFitCommand();              // creates a Command to zoom the scene for a perfect fit
+    void resetViewCommand();            // creates a Command to reset the entire view
+
     ///// other slots
 	  void showDensity();                 // shows electron density isosurfaces 
     void addAtoms();                    // adds atoms using a dialog
@@ -91,15 +96,22 @@ private slots:
 
   private:
     friend class CommandCoordinates;
-    friend class CommandSelection;
-    friend class CommandSelectEntity;
-    friend class CommandTranslateXY;
-    friend class CommandTranslateZ;
-    friend class CommandRotate;
     friend class CommandTranslateSelectionXY;
     friend class CommandTranslateSelectionZ;
     friend class CommandRotateSelection;
     friend class CommandChangeIC;
+    friend class CommandSelection;
+    friend class CommandSelectEntity;
+    friend class CommandTranslation;
+    friend class CommandTranslateXY;
+    friend class CommandCenterView;
+    friend class CommandZoom;
+    friend class CommandZoomFit;
+    friend class CommandTranslateZ;
+    friend class CommandRotation;
+    friend class CommandRotate;
+    friend class CommandResetOrientation;
+    friend class CommandResetView;
 
     ///// private enums
     enum ShapeTypesExtra{SHAPE_SURFACE = SHAPE_NEXT};

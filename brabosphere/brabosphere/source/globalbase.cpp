@@ -233,7 +233,7 @@ void GlobalBase::reset()
   LineEditDesc->clear();
   
   if(!GroupBoxType->isEnabled())
-    return; // when a calculation is running, onyl the description can be reset.
+    return; // when a calculation is running, only the description can be reset.
 
   ComboBoxType->setCurrentItem(SinglePointEnergy);
   //ComboBoxType->setCurrentItem(GeometryOptimization); //implementing RelaxBase

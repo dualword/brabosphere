@@ -656,7 +656,7 @@ void Xbrabo::moleculeCenterView()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->moleculeView()->centerView();
+    view->moleculeView()->centerViewCommand();
 }
 
 ///// moleculeResetOrientation ////////////////////////////////////////////////
@@ -667,7 +667,7 @@ void Xbrabo::moleculeResetOrientation()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->moleculeView()->resetOrientation();
+    view->moleculeView()->resetOrientationCommand();
 }
 
 ///// moleculeZoomFit /////////////////////////////////////////////////////////
@@ -678,7 +678,7 @@ void Xbrabo::moleculeZoomFit()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->moleculeView()->zoomFit();
+    view->moleculeView()->zoomFitCommand();
 }
 
 ///// moleculeResetView ///////////////////////////////////////////////////////
@@ -689,7 +689,7 @@ void Xbrabo::moleculeResetView()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->moleculeView()->resetView();
+    view->moleculeView()->resetViewCommand();
 }
 
 ///// moleculeAnimate /////////////////////////////////////////////////////////
@@ -848,7 +848,7 @@ void Xbrabo::setupGlobal()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->setupGlobal();
+    view->setupGlobalCommand();
 
   statusBar()->clear();
 }
@@ -861,7 +861,7 @@ void Xbrabo::setupBrabo()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->setupBrabo();
+    view->setupBraboCommand();
 
   statusBar()->clear();
 }
@@ -874,7 +874,7 @@ void Xbrabo::setupRelax()
 
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
   if(view !=NULL)
-    view->setupRelax();
+    view->setupRelaxCommand();
 
   statusBar()->clear();
 }

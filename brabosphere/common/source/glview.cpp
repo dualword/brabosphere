@@ -181,66 +181,32 @@ void GLView::toggleAnimation()
   emit changed(); // don't call setModified as animation does not get saved/restored
 }
 
-///// centerView //////////////////////////////////////////////////////////////
-void GLView::centerView(const bool update)
-/// Centers the view on the scene.
+///// centerViewCommand ///////////////////////////////////////////////////////
+void GLView::centerViewCommand()
+/// Centers the scene by a direct call to centerView
 {
-  xPos = 0.0;
-  yPos = 0.0;
-  if(update)
-    updateGL();
-  setModified();
+  centerView();
 }
 
-///// resetOrientation ////////////////////////////////////////////////////////
-void GLView::resetOrientation(const bool update)
-/// Resets the orientation of the scene.
+///// resetOrientationCommand /////////////////////////////////////////////////
+void GLView::resetOrientationCommand()
+/// Resets the orientation by a direct call to resetOrientation.
 {
-  orientationQuaternion->eulerToQuaternion(0.0f, 0.0f, 0.0f);
-  if(update)
-    updateGL();
-  setModified();
+  resetOrientation();
 }
 
-///// zoomFit /////////////////////////////////////////////////////////////////
-void GLView::zoomFit(const bool update)
-/// Calculates zPos so that the scene fits in the current window
-/// It uses the result of boundingSphereRadius, a pure virtual
+///// zoomFitCommand //////////////////////////////////////////////////////////
+void GLView::zoomFitCommand()
+/// Zooms the scene by a direct call to zoomFit
 {
-  ///// determine the radius of the bounding sphere
-  maxRadius = boundingSphereRadius();
-  ///// calculate the camera position
-  if(baseParameters.perspectiveProjection)
-  {
-    if(width() > height())
-      zPos = maxRadius/tan(fieldOfView)/1.5f;
-    else
-      zPos = maxRadius/tan(fieldOfView)/1.5f * static_cast<float>(height())/static_cast<float>(width());
-    if(zPos < 0.1f)
-      zPos = 0.1f;
-  }
-  else
-  {
-    zPos = 1.0f;
-    resizeGL(width(), height());
-  }
-
-  ///// update the scene
-  updateFog(maxRadius);
-  if(update)
-    updateGL();
-  setModified();
+  zoomFit();
 }
 
-///// resetView //////////////////////////////////////////////////////////////
-void GLView::resetView(const bool update)
-/// Resets translation/orientation/zoom of the scene.
+///// resetViewCommand ///////////////////////////////////////////////////////
+void GLView::resetViewCommand()
+/// Resets the scene by a direct call to resetView
 {
-  centerView(false);
-  resetOrientation(false);
-  zoomFit(false); // calls setModified()
-  if(update)
-    updateGL();
+  resetView();
 }
 
 ///// saveImage ///////////////////////////////////////////////////////////////
@@ -731,6 +697,69 @@ void GLView::setPerspective()
   else
     glOrtho(-maxRadius*aspectRatio*zPos, maxRadius*aspectRatio*zPos, -maxRadius*zPos, maxRadius*zPos, -maxRadius, maxRadius);
 }
+
+///// centerView //////////////////////////////////////////////////////////////
+void GLView::centerView(const bool update)
+/// Centers the view on the scene.
+{
+  xPos = 0.0;
+  yPos = 0.0;
+  if(update)
+    updateGL();
+  setModified();
+}
+
+///// resetOrientation ////////////////////////////////////////////////////////
+void GLView::resetOrientation(const bool update)
+/// Resets the orientation of the scene.
+{
+  orientationQuaternion->eulerToQuaternion(0.0f, 0.0f, 0.0f);
+  if(update)
+    updateGL();
+  setModified();
+}
+
+///// zoomFit /////////////////////////////////////////////////////////////////
+void GLView::zoomFit(const bool update)
+/// Calculates zPos so that the scene fits in the current window
+/// It uses the result of boundingSphereRadius, a pure virtual
+{
+  ///// determine the radius of the bounding sphere
+  maxRadius = boundingSphereRadius();
+  ///// calculate the camera position
+  if(baseParameters.perspectiveProjection)
+  {
+    if(width() > height())
+      zPos = maxRadius/tan(fieldOfView)/1.5f;
+    else
+      zPos = maxRadius/tan(fieldOfView)/1.5f * static_cast<float>(height())/static_cast<float>(width());
+    if(zPos < 0.1f)
+      zPos = 0.1f;
+  }
+  else
+  {
+    zPos = 1.0f;
+    resizeGL(width(), height());
+  }
+
+  ///// update the scene
+  updateFog(maxRadius);
+  if(update)
+    updateGL();
+  setModified();
+}
+
+///// resetView //////////////////////////////////////////////////////////////
+void GLView::resetView(const bool update)
+/// Resets translation/orientation/zoom of the scene.
+{
+  centerView(false);
+  resetOrientation(false);
+  zoomFit(false); // calls setModified()
+  if(update)
+    updateGL();
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Static Variables                                                    /////

@@ -59,11 +59,11 @@ class GLView : public QGLWidget
   public slots:
     void setModified(const bool status = true);   // sets the 'modified' status of the scene
     void toggleAnimation();             // turns animation on/off
-    void centerView(const bool update = true);    // centers the scene (through xPos and yPos)
-    void resetOrientation(const bool update = true);        // resets the orientation
-    void zoomFit(const bool update = true);      // zooms so the scene fits the window
-    void resetView(const bool update = true);     // resets translation/orientation/zoom
-    void saveImage();           // saves the current view to an image
+    virtual void centerViewCommand();   // centers the scene (through xPos and yPos)
+    virtual void resetOrientationCommand();       // resets the orientation
+    virtual void zoomFitCommand();      // zooms so the scene fits the window
+    virtual void resetViewCommand();    // resets translation/orientation/zoom
+    void saveImage();                   // saves the current view to an image
 
   protected:
     ///// protected member functions
@@ -87,6 +87,10 @@ class GLView : public QGLWidget
     void updateFog(const float radius); // updates the fog parameters
     void updateProjection();            // does the necessary updating when the projection type changes
     void setPerspective();              // sets the perspective
+    void centerView(const bool update = true);    // centers the scene
+    void resetOrientation(const bool update = true);        // resets the orientation
+    void zoomFit(const bool update = true);       // zooms the scene so it fits the window
+    void resetView(const bool update = true);     // resets translation/orientation/zoom
     
     ///// protected member data
     GLfloat xPos;                       ///< Amount of translation on the x-axis.

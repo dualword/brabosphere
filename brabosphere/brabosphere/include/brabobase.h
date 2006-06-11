@@ -129,6 +129,8 @@ class BraboBase : public BraboWidget
     void clearSelectionFORC();          // clears the selected cells in TableFORC    
 
   private:
+    friend class CommandSetupBrabo;
+
     ///// private enums
     enum Categories{BASIC = 0, ADVANCED, PROPERTIES, SCFCONVERGENCE, PVM, DEBUG1, EXTRA,
                     ADVANCED_METHOD, ADVANCED_SYMMETRY, ADVANCED_OTHER,

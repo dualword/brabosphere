@@ -128,7 +128,7 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
       ProgressLayout->addWidget(ProgressBar);
     // default size is 400x400
     MoleculeView->resize(MoleculeView->width(),350);
-    MoleculeView->resetView();
+    //MoleculeView->resetView();
 
   ///// Connections
   connect(TextEditStatus, SIGNAL(rightButtonClicked()),this, SLOT(popup()));
@@ -684,71 +684,25 @@ void XbraboView::moleculeFPS()
   TextEditStatus->append(tr("Frames per second: ") + QString::number(MoleculeView->calculateFPS()));
 }
 
-///// setupGlobal /////////////////////////////////////////////////////////////
-void XbraboView::setupGlobal()
-/// Sets up the global options.
+///// setupGlobalCommand //////////////////////////////////////////////////////
+void XbraboView::setupGlobalCommand()
+/// Creates a Command to set up the global options.
 {  
-  initGlobalSetup();
-  if(globalSetup->exec() == QDialog::Accepted)
-  {
-    ///// OK was pressed so something must have changed
-    setModified();
-    updateBraboSetup();
-    updateRelaxSetup();
-    updateCaptions();
-  }
+  commandHistory.addCommand(new CommandSetupGlobal(this, tr("Global setup")));
 }
 
-///// setupBrabo //////////////////////////////////////////////////////////////
-void XbraboView::setupBrabo()
-/// Sets up the Brabo options.
+///// setupBraboCommand //////////////////////////////////////////////////////
+void XbraboView::setupBraboCommand()
+/// Creates a Command to set up the Brabo options.
 {  
-  initBraboSetup();
-  if(braboSetup->exec() == QDialog::Accepted)
-  {
-    setModified();
-    if(calculation != 0 && calculation->isRunning() && globalSetup->calculationType() != GlobalBase::SinglePointEnergy
-      && globalSetup->calculationType() != GlobalBase::EnergyAndForces)
-    {
-      bool ok;
-      QStringList basissetList = braboSetup->basissets(ok);
-      if(!ok)
-        return; // don't apply the changes if the basissets are not available for all atoms
-      QString atdens = braboSetup->generateAtdens(ok);
-      if(!ok)
-        return; // same for the atomic density basisset
-
-      ///// update the calculation with the new input files
-      bool prefer;
-      unsigned int size1, size2;
-      QString startVector = braboSetup->startVector(prefer, size1, size2); // zero sizes for size1 and size2 imply a problem with
-                                                                           // reading the basisset files.
-      if(size1 == 0)
-        return;
-      calculation->setBraboInput(braboSetup->generateInput(BraboBase::BRABO), basissetList, startVector, prefer, size1, size2);
-      calculation->setStockInput(braboSetup->generateInput(BraboBase::STOCK), atdens);      
-    }
-  }
+  commandHistory.addCommand(new CommandSetupBrabo(this, tr("Energy & Forces setup")));
 }
 
-///// setupRelax //////////////////////////////////////////////////////////////
-void XbraboView::setupRelax()
-/// Sets up the Relax options.
-{
-  initRelaxSetup();
-  if(relaxSetup->exec() == QDialog::Accepted)
-  {
-    setModified();
-    if(calculation != 0 && calculation->isRunning() && globalSetup->calculationType() == GlobalBase::GeometryOptimization)
-    {
-      ///// no restrictions for a new input file for relax
-      std::vector<unsigned int> steps;
-      std::vector<double> factors;
-      relaxSetup->scaleFactors(steps, factors);
-      calculation->setRelaxInput(relaxSetup->generateInput(RelaxBase::AFF), relaxSetup->generateInput(RelaxBase::MAFF), 
-                                 relaxSetup->inputGenerationFrequency(), relaxSetup->maxSteps(), steps, factors);
-    }
-  }
+///// setupRelaxCommand //////////////////////////////////////////////////////
+void XbraboView::setupRelaxCommand()
+/// Creates a Command to set up the Relax options.
+{  
+  commandHistory.addCommand(new CommandSetupRelax(this, tr("Geometry optimization setup")));
 }
 
 ///// setupFreq ///////////////////////////////////////////////////////////////
@@ -782,10 +736,12 @@ void XbraboView::start()
     return;
 
   ///// Try to start the calculation
-  if(calculation->start())
-    globalSetup->allowChanges(false);
-  else
+  if(!calculation->start())
     return;
+
+  ///// prevent changes to the type of calculation and the coordinates
+  globalSetup->allowChanges(false);
+  commandHistory.pruneCoordinates();
 
   ///// cosmetic setup
   TextEditStatus->append("<font color=blue>" + tr("Calculation started") + "</font>");
@@ -999,9 +955,9 @@ void XbraboView::popup()
   popup->insertItem(tr("Select all"), MoleculeView, SLOT(selectAllCommand()));
   popup->insertItem(tr("Select none"), MoleculeView, SLOT(unselectAllCommand()));
   popup->insertSeparator();
-  popup->insertItem(IconSets::getIconSet(IconSets::SetupGlobal), tr("Setup global"),this, SLOT(setupGlobal()));
-  popup->insertItem(IconSets::getIconSet(IconSets::SetupBrabo), tr("Setup energy && Forces"),this, SLOT(setupBrabo()));
-  const int ID_SETUP_RELAX = popup->insertItem(IconSets::getIconSet(IconSets::SetupRelax), tr("Setup geometry optimization"),this, SLOT(setupRelax()));
+  popup->insertItem(IconSets::getIconSet(IconSets::SetupGlobal), tr("Setup global"),this, SLOT(setupGlobalCommand()));
+  popup->insertItem(IconSets::getIconSet(IconSets::SetupBrabo), tr("Setup energy && Forces"),this, SLOT(setupBraboCommand()));
+  const int ID_SETUP_RELAX = popup->insertItem(IconSets::getIconSet(IconSets::SetupRelax), tr("Setup geometry optimization"),this, SLOT(setupRelaxCommand()));
   popup->insertSeparator();
   const int ID_RUN_START = popup->insertItem(IconSets::getIconSet(IconSets::Start), tr("Start"), this, SLOT(start()));
   const int ID_RUN_PAUSE = popup->insertItem(IconSets::getIconSet(IconSets::Pause), tr("Pause"), this, SLOT(pause()));
@@ -1609,6 +1565,82 @@ bool XbraboView::initCalculation()
                                relaxSetup->inputGenerationFrequency(), relaxSetup->maxSteps(), steps, factors);
   }
   return true;
+}
+
+///// setupGlobal /////////////////////////////////////////////////////////////
+bool XbraboView::setupGlobal()
+/// Sets up the global options.
+{  
+  initGlobalSetup();
+  if(globalSetup->exec() == QDialog::Accepted)
+  {
+    ///// OK was pressed so something must have changed
+    setModified();
+    updateBraboSetup();
+    updateRelaxSetup();
+    updateCaptions();
+    return true;
+  }
+  else
+    return false;
+}
+
+///// setupBrabo //////////////////////////////////////////////////////////////
+bool XbraboView::setupBrabo()
+/// Sets up the Brabo options.
+{  
+  initBraboSetup();
+  if(braboSetup->exec() == QDialog::Accepted)
+  {
+    setModified();
+    if(calculation != 0 && calculation->isRunning() && globalSetup->calculationType() != GlobalBase::SinglePointEnergy
+      && globalSetup->calculationType() != GlobalBase::EnergyAndForces)
+    {
+      bool ok;
+      QStringList basissetList = braboSetup->basissets(ok);
+      if(!ok)
+        return true; // don't apply the changes if the basissets are not available for all atoms
+      QString atdens = braboSetup->generateAtdens(ok);
+      if(!ok)
+        return true; // same for the atomic density basisset
+
+      ///// update the calculation with the new input files
+      bool prefer;
+      unsigned int size1, size2;
+      QString startVector = braboSetup->startVector(prefer, size1, size2); // zero sizes for size1 and size2 imply a problem with
+                                                                           // reading the basisset files.
+      if(size1 == 0)
+        return true;
+      calculation->setBraboInput(braboSetup->generateInput(BraboBase::BRABO), basissetList, startVector, prefer, size1, size2);
+      calculation->setStockInput(braboSetup->generateInput(BraboBase::STOCK), atdens);      
+    }
+    return true;
+  }
+  else
+    return false;
+}
+
+///// setupRelax //////////////////////////////////////////////////////////////
+bool XbraboView::setupRelax()
+/// Sets up the Relax options.
+{
+  initRelaxSetup();
+  if(relaxSetup->exec() == QDialog::Accepted)
+  {
+    setModified();
+    if(calculation != 0 && calculation->isRunning() && globalSetup->calculationType() == GlobalBase::GeometryOptimization)
+    {
+      ///// no restrictions for a new input file for relax
+      std::vector<unsigned int> steps;
+      std::vector<double> factors;
+      relaxSetup->scaleFactors(steps, factors);
+      calculation->setRelaxInput(relaxSetup->generateInput(RelaxBase::AFF), relaxSetup->generateInput(RelaxBase::MAFF), 
+                                 relaxSetup->inputGenerationFrequency(), relaxSetup->maxSteps(), steps, factors);
+    }
+    return true;
+  }
+  else
+    return false;
 }
 
 ///// updateAtomSet ///////////////////////////////////////////////////////////
