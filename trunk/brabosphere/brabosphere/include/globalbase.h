@@ -72,6 +72,8 @@ class GlobalBase : public GlobalWidget
     void chooseDir();                   // chooses a working dir
     
   private:
+    friend class CommandSetupGlobal;
+
     ///// private member functions
     void makeConnections();             // sets up the permanent connections
     void init();                        // initializes the dialog

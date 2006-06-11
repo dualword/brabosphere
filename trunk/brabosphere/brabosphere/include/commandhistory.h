@@ -56,6 +56,7 @@ class CommandHistory: public QObject
     QString repeatText() const;         // Returns the description if the current command if it can be repeated
 
     void setMaxSize(const unsigned int size);     // Sets the maximum number of entries in the history
+    void pruneCoordinates();            // removes all coordinate altering entries which conflict with a started calculation
 
   signals:
     void changed();                     ///< Is emitted when a command was added or an undo/redo/repeat action was performed

@@ -481,6 +481,8 @@ void GLSimpleMoleculeView::processSelection(const unsigned int id)
 /// Changes the selection according to the change in
 /// selection of the entity with an ID id.
 {
+  qDebug("processSelection: id = %d, selected atom = %d", id, id - START_ATOMS);
+
   switch(id)
   {
     case START_BONDS:  selectionList.clear();
@@ -633,7 +635,7 @@ void GLSimpleMoleculeView::selectEntity(const QPoint position)
     pBuffer++; // GLuint maxz = *pBuffer++; // maximum z-value of selection
     GLuint id = *pBuffer; // the id of the first selection
     //qDebug("Number of selections: %d", count);
-    //qDebug("ID of first selection: %d", id);
+    qDebug("ID of first selection: %d", id);
     processSelectionCommand(id);
     updateGL();
   }

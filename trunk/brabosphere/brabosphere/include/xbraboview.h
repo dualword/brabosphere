@@ -97,9 +97,9 @@ class XbraboView : public QextMdiChildView
     void showPropertiesCommand();       // creates a Command to change the display mode of the properties.
     void moleculeSaveCoordinates();     // saves coordinates
     void moleculeFPS();                 // calculates the FPS for the current parameters
-    void setupGlobal();                 // sets up global options
-    void setupBrabo();                  // sets up Brabo options
-    void setupRelax();                  // sets up Relax options
+    void setupGlobalCommand();          // creates a Command to set up global options
+    void setupBraboCommand();           // creates a Command to set up Brabo options
+    void setupRelaxCommand();           // creates a Command to set up Relax options
     void setupFreq();                   // sets up Distor & Forkon options
     void setupBuur();                   // sets up Buur options
     void start();                       // starts the calculation
@@ -122,6 +122,10 @@ class XbraboView : public QextMdiChildView
     void showOutput(QListViewItem* item, const QPoint&, int column);  // shows a certain output chosen in an OutputChooserWidget
 
   private:
+    friend class CommandSetupGlobal;
+    friend class CommandSetupBrabo;
+    friend class CommandSetupRelax;
+
     ///// Private member functions 
     void loadCMLLocal(const QDomElement* root);   // load geometry
     void saveCMLLocal(QDomElement* root);         // save geometry
@@ -133,6 +137,10 @@ class XbraboView : public QextMdiChildView
     void initBraboSetup();              // constructs the BraboBase widget if it hasn't been created yet
     void initRelaxSetup();              // constructs the RelaxBase widget if it hasn't been created yet
     bool initCalculation();             // constructs the Calculation and does an initial setup
+    bool setupGlobal();                 // sets up the global options
+    bool setupBrabo();                  // sets up the Brabo options
+    bool setupRelax();                  // sets up the Relax options
+
     void updateAtomSet();               // does some updates when the atomset has changed
 
     ///// Private widgets 

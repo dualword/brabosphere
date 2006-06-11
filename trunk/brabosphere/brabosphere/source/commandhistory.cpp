@@ -40,7 +40,6 @@
 // Xbrabo header files
 #include "command.h"
 #include "commandhistory.h"
-#include "xbrabo.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
@@ -210,6 +209,42 @@ void CommandHistory::setMaxSize(const unsigned int size)
     maxSize = 1;
 
   enforceSize();
+}
+
+///// pruneCoordinates ////////////////////////////////////////////////////////
+void CommandHistory::pruneCoordinates()
+/// Removes all Commands that alter the coordinates. To be used when the 
+/// coordinates are updated from a calculation.
+{
+  if(commandList.empty())
+    return;
+
+  ///// check whether the current redo action has to be deleted. In that case all
+  ///// following redo's have to be deleted.
+  if(redoAvailable() && dynamic_cast<CommandCoordinates*>(*currentPosition) != NULL)
+  {
+    commandList.erase(currentPosition, commandList.end());
+    currentPosition = 0;
+  }
+
+  ///// remove all other instances of coordinate altering commands
+  std::list<Command*>::iterator it = commandList.end();
+  --it;
+  while(it != NULL)
+  {
+    if(dynamic_cast<CommandCoordinates*>(*it) != NULL)
+    {
+      std::list<Command*>::iterator it2 = it--;
+      delete *it2;
+      commandList.erase(it2);
+    }
+    else
+      --it;
+  }
+
+  ///// position again if the current redo command was deleted
+  if(currentPosition == 0)
+    currentPosition = commandList.end();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
