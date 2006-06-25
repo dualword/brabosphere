@@ -59,7 +59,7 @@ NewAtomBase::NewAtomBase(AtomSet* atomset, QWidget* parent, const char* name, bo
 {
   assert(atomset != 0);
 
-  connect(PushButtonAdd, SIGNAL(clicked()), this, SLOT(addAtom()));
+  connect(PushButtonAdd, SIGNAL(clicked()), this, SLOT(addAtomCommand()));
   connect(PushButtonClose, SIGNAL(clicked()), this, SLOT(hide()));
   connect(ButtonGroupType, SIGNAL(clicked(int)), this, SLOT(updateSelectedAtom(int)));
   connect(ButtonGroupCoordinates, SIGNAL(clicked(int)), WidgetStackCoordinates, SLOT(raiseWidget(int)));
@@ -165,7 +165,7 @@ void NewAtomBase::addAtomCommand()
 /// Adds an atom based on the status of the widgets
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget()->parentWidget()); // as ugly as it can get... NewAtomBase(GLMoleculeView(Splitter(XbraboView)))
-  view->getCommandHistory()->addCommand(new CommandAddAtoms(view, "Add Atoms", this));  // calls createAtom
+  view->getCommandHistory()->addCommand(new CommandAddAtoms(view, "Add Atoms", this));  // calls addAtom
 }
 
 ///// updateAtomLimits ////////////////////////////////////////////////////////

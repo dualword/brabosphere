@@ -30,8 +30,9 @@
 class QFile;
 
 // Xbrabo forward class declarations
+class DensityGrid;
 class LoadDensityThread;
-class IsoSurface;
+class MappedSurfaceWidget;
 
 // Xbrabo includes
 #include <point3d.h>
@@ -46,19 +47,26 @@ class DensityBase : public DensityWidget
 
   public:
     ///// constructor/destructor
-    DensityBase(IsoSurface* surface, QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);      // constructor
+    DensityBase(DensityGrid* grid, QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0);       // constructor
     ~DensityBase();                     // destructor
 
+    ///// public enums
+    enum VisType{ISOSURFACES = 0, VOLUME, SLICE, NO_VISUALIZATION};   ///< For returning the type of visualization
+
     ///// public member function for retrieving data
-    bool surfaceVisible(const unsigned int surface);        // returns true if a surface is visible
-    QColor surfaceColor(const unsigned int surface);        // returns the color of a surface
-    unsigned int surfaceOpacity(const unsigned int surface);// returns the opacity of a surface
-    unsigned int surfaceType(const unsigned int surface);   // returns the drawing type of a surface
+    unsigned int visualizationType() const;       // returns the active type of visualization
+    bool surfaceVisible(const unsigned int surface) const;        // returns true if a surface is visible
+    bool surfaceMapping() const;        // returns whether a color map is in use for the isosurfaces
+    QColor surfaceColor(const unsigned int surface) const;  // returns the color of a surface
+    unsigned int surfaceOpacity(const unsigned int surface) const;    // returns the opacity of a surface
+    unsigned int surfaceType(const unsigned int surface) const;       // returns the drawing type of a surface
 
   signals:
     void newSurface(const unsigned int surface);  // is emitted after a new surface is created
     void updatedSurface(const unsigned int surface);        // is emitted when a surface has changed
     void deletedSurface(const unsigned int surface);        // is emitted when an existing surface is deleted
+    void updatedVolume();               // is emitted when the volume rendering parameters have changed
+    void updatedSlice();                // is emitted when the slice parameters have changed
     void redrawScene();                 // is emitted when something has changed
 
   public slots:
@@ -75,6 +83,7 @@ class DensityBase : public DensityWidget
     void hideEvent(QHideEvent* e);      // reimplemented to keep the colour column fixed after a hide/show cycle
 
   private slots:
+    void updateVisualizationType();     // does the necessary updating when a new visualization type was chosen
     void updateSliderLevel();           // updates SliderLevel from the contents of LineEditLevel
     void updateLineEditLevel();         // updates LineEditLevel from the value of SliderLevel
     void updateListView();              // updates ListViewParameters upon changes in the settings
@@ -82,8 +91,15 @@ class DensityBase : public DensityWidget
     void updateVisibility(QListViewItem* item, const QPoint&, int column); // updates the visibility of a surface
     void updateOperation(const unsigned int density = 0);   // updates the possible operations 
     void updateOpacity();               // updates LabelOpacity with the current opacity value
+    void setSingleColor();              // allows single colors to be used for isosurfaces
+    void setMapping();                  // allows density mapping to be used to color isosurfaces
+    void resetMappedMaxima();           // resets the maxima in mappingWidget to their original values
+    void resetVolumeMaxima();           // resets the maxima for rendering volumes to their original values
+    void resetSliceMaxima();            // resets the maxima for rendering slices to their original values
+    void checkUpdate();                 // calls updateAll if automatic updates are enabled
 
   private:
+    friend class GLMoleculeView; // temporary for volume rendering test
     ///// private enums
     enum Columns{COLUMN_VISIBLE, COLUMN_ID, COLUMN_RGB, COLUMN_LEVEL, COLUMN_COLOUR, COLUMN_OPACITY, COLUMN_TYPE}; ///< Indices of each column in the ListView
 
@@ -97,12 +113,16 @@ class DensityBase : public DensityWidget
     unsigned int typeToNum(const QString& type);      // translates the type into a number
     void enableWidgets();               // enables/disables the correct widgets depending on the status of the class
     bool identicalGrids();              // returns true if the grids of densityA and B are identical
+    bool updateIsoSurfaces();           // updates all changes concerning isosurfaces
+    bool updateVolume();                // updates all changes concerning volumetric rendering
+    bool updateSlice();                 // updates all changes concerning slices.
 
     ///// private structs
     struct SurfaceProperties            
     /// Contains the properties of a surface.
     {
       bool visible;                     ///< = true if the surface is visible
+      bool mapped;                      ///< = true if the surface is color mapped
       double level;                     ///< The isolevel at which the surface is determined
       unsigned int colour;              ///< The colour of the surface
       unsigned int opacity;             ///< The opacity of the surface
@@ -111,9 +131,26 @@ class DensityBase : public DensityWidget
       bool isNew;                       ///< = true if the surface is a new one
       unsigned int ID;                  ///< The ID of the surface
     };
+    struct VolumeProperties
+    /// Contains the properties for volume renders
+    {
+      unsigned int positiveColor;       ///< The colour used to draw positive density
+      unsigned int negativeColor;       ///< The colour to draw negative density
+      QString maxLevel;                 ///< The maximum density level to plot.
+      QString minLevel;                 ///< The minimum density level to plot.
+    };
+    struct SliceProperties
+    /// Contains the properties for a slice
+    {
+      unsigned int positiveColor;       ///< The colour used to draw positive density
+      unsigned int negativeColor;       ///< The color used to draw negative density
+      unsigned int backgroundColor;     ///< The background color (if not transparant)
+      bool transparant;                 ///< If the background should be transparant
+      unsigned int index;               ///< The index of the current slice
+    };
 
     ///// private member data
-    IsoSurface* isoSurface;             ///< A pointer to the IsoSurface.
+    DensityGrid* densityGrid;           ///< A pointer to the DensityGrid.
     unsigned int idCounter;             ///< A counter for uniquely identifying defined surfaces.
     std::vector<SurfaceProperties> surfaceProperties;       ///< A list of the properties of each defined surface.
     LoadDensityThread* loadingThread;   ///< A thread that does the actual reading of the density points from the grid file.
@@ -128,6 +165,11 @@ class DensityBase : public DensityWidget
     Point3D<float> deltaB;              ///< Holds the cell lengths of density B.
     QString newDescription;             ///< Holds the description of the contents of a new density.
     int columnColourWidth;              ///< Holds the right column width for the one containing the colour of the surface.
+    MappedSurfaceWidget* mappingWidget; ///< The dialog for setting up density mapping.
+    int oldVisualizationType;           ///< Keeps tracks of changes in ComboBoxVisualizationType
+    bool mappingChanged;                ///< Keeps track of whether isosurfaces have to be redrawn due to changes in mapping
+    VolumeProperties volumeProperties;  ///< Keeps track of changes in the visualization of volumes
+    SliceProperties sliceProperties;    ///< Keeps track of changes to the slices.
 
     ///// static private member data
     static const double deltaLevel;     ///< The minimal change allowed in isoLevels.

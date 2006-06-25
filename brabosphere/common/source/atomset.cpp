@@ -419,14 +419,12 @@ void AtomSet::changeBond(const double amount, const unsigned int movingAtom, con
     newPosition.setLength(0.1); // the bond would get too small or even flip over
   else
     newPosition.changeLength(amount); // normal displacement
-  const double dx = newPosition.x() - oldPosition.x();
-  const double dy = newPosition.y() - oldPosition.y();
-  const double dz = newPosition.z() - oldPosition.z();
+  const Point3D<double> delta(newPosition.x() - oldPosition.x(), newPosition.y() - oldPosition.y(), newPosition.z() - oldPosition.z());
 
   ///// move all atoms
   vector<unsigned int>::iterator it = moveableAtoms.begin();
   while(it != moveableAtoms.end())
-    coords[*it++].add(Point3D<double>(dx, dy, dz));
+    coords[*it++].add(delta);
 
   setGeometryChanged();
 }
