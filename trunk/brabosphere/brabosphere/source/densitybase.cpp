@@ -38,6 +38,7 @@
 
 // Qt header files
 #include <qapplication.h>
+#include <qbuttongroup.h>
 #include <qcheckbox.h>
 #include <qcombobox.h>
 #include <qdatetime.h>
@@ -51,32 +52,43 @@
 #include <qmessagebox.h>
 #include <qprogressbar.h>
 #include <qpushbutton.h>
+#include <qradiobutton.h>
 #include <qslider.h>
 #include <qstring.h>
 #include <qtextstream.h>
 #include <qvalidator.h>
+#include <qwidgetstack.h>
 
 // Xbrabo header files
 #include "colorbutton.h"
 #include "densitybase.h"
-#include "isosurface.h"
+#include "densitygrid.h"
 #include "loadcubethread.h"
 #include "loadpltthread.h"
+#include "mappedsurfacewidget.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// Constructor /////////////////////////////////////////////////////////////
-DensityBase::DensityBase(IsoSurface* surface, QWidget* parent, const char* name, bool modal, WFlags fl) : DensityWidget(parent, name, modal, fl),
-  isoSurface(surface),
+DensityBase::DensityBase(DensityGrid* grid, QWidget* parent, const char* name, bool modal, WFlags fl) : DensityWidget(parent, name, modal, fl),
+  densityGrid(grid),
   loadingThread(0),
-  columnColourWidth(-1)
+  columnColourWidth(-1),
+  oldVisualizationType(-1)
 /// The defaults constructor.
 {
-  assert(isoSurface != NULL);
+  assert(densityGrid != NULL);
+  // validators
   QDoubleValidator* v = new QDoubleValidator(-100.0,100.0,3,this);
   LineEditLevel->setValidator(v);
+  LineEditVolumePos->setValidator(v);
+  LineEditVolumeNeg->setValidator(v);
+  LineEditSlicePos->setValidator(v);
+  LineEditSliceNeg->setValidator(v);
+  v = 0;
+  // Isosurfaces
   ListViewParameters->setSorting(-1);
   ListViewParameters->setColumnWidthMode(COLUMN_ID,QListView::Manual);
   ListViewParameters->setColumnWidth(COLUMN_ID,0);
@@ -84,6 +96,16 @@ DensityBase::DensityBase(IsoSurface* surface, QWidget* parent, const char* name,
   ListViewParameters->setColumnWidth(COLUMN_RGB,0);
   ProgressBarA->hide();
   ProgressBarB->hide();
+  // Volume
+  ColorButtonVolumePos->setColor(QColor(0, 0, 255));
+  ColorButtonVolumeNeg->setColor(QColor(255, 0, 0));
+  // Slice
+  ColorButtonSlicePos->setColor(QColor(0, 0, 255));
+  ColorButtonSliceNeg->setColor(QColor(255, 0, 0));
+  ColorButtonSliceBack->setColor(QColor(255, 255, 255));
+  // Density mapping
+  mappingWidget = new MappedSurfaceWidget(this, 0, true);
+
   enableWidgets();
   makeConnections();
 }
@@ -103,42 +125,52 @@ DensityBase::~DensityBase()
   }
 }
 
+///// visualizationType ///////////////////////////////////////////////////////
+unsigned int DensityBase::visualizationType() const
+/// Returns the active visualization type.
+{
+  return ComboBoxVisualizationType->currentItem();
+}
+
 ///// surfaceVisible //////////////////////////////////////////////////////////
-bool DensityBase::surfaceVisible(const unsigned int surface)
+bool DensityBase::surfaceVisible(const unsigned int surface) const
 /// Returns whether a surface is visible.
 {
-  if(surface >= surfaceProperties.size())
-    return false;
+  assert(surface < surfaceProperties.size());
 
   return surfaceProperties[surface].visible;
 }
 
+///// surfaceMapping //////////////////////////////////////////////////////////
+bool DensityBase::surfaceMapping() const
+/// Returns whether surfaces are using a color map.
+{
+  return PushButtonMapped->isOn();
+}
+
 ///// surfaceColor ////////////////////////////////////////////////////////////
-QColor DensityBase::surfaceColor(const unsigned int surface)
+QColor DensityBase::surfaceColor(const unsigned int surface) const
 /// Returns the color of a surface.
 {
-  if(surface >= surfaceProperties.size())
-    return QColor(0, 0, 0);
+  assert(surface < surfaceProperties.size());
 
   return QColor(surfaceProperties[surface].colour);
 }
 
 ///// surfaceOpacity //////////////////////////////////////////////////////////
-unsigned int DensityBase::surfaceOpacity(const unsigned int surface)
+unsigned int DensityBase::surfaceOpacity(const unsigned int surface) const
 /// Returns the opacity of a surface.
 {
-  if(surface >= surfaceProperties.size())
-    return false;
+  assert(surface < surfaceProperties.size());
 
   return surfaceProperties[surface].opacity;
 }
 
 ///// surfaceType /////////////////////////////////////////////////////////////
-unsigned int DensityBase::surfaceType(const unsigned int surface)
+unsigned int DensityBase::surfaceType(const unsigned int surface) const
 /// Returns the drawing type of a surface.
 {
-  if(surface >= surfaceProperties.size())
-    return false;
+  assert(surface < surfaceProperties.size());
 
   return surfaceProperties[surface].type;
 }
@@ -186,8 +218,7 @@ void DensityBase::addSurface()
   newSurface.ID = idCounter;
   surfaceProperties.push_back(newSurface);
 
-  if(CheckBoxUpdate->isOn())
-    updateAll();
+  checkUpdate();
   enableWidgets();
 }
 
@@ -256,8 +287,7 @@ void DensityBase::addSurfacePair()
   qDebug("RGB values for blue: " + item->text(COLUMN_RGB)); 
   qDebug("RGB values for red:  " + item2->text(COLUMN_RGB)); 
 
-  if(CheckBoxUpdate->isOn())
-    updateAll();
+  checkUpdate();
   enableWidgets();
 }
 
@@ -288,8 +318,7 @@ void DensityBase::deleteSurface()
     updateSettings();
   }
 
-  if(CheckBoxUpdate->isOn())
-    updateAll();
+  checkUpdate();
   enableWidgets();
 }
 
@@ -297,90 +326,27 @@ void DensityBase::deleteSurface()
 void DensityBase::updateAll()
 /// Updates all changes.
 {  
-  bool somethingChanged = false;
+  int newVisualizationType = ComboBoxVisualizationType->currentItem();
+  bool changed = oldVisualizationType != newVisualizationType;
 
-  ///// first traverse the surfaces backwards to remove deleted ones
-  std::vector<SurfaceProperties>::reverse_iterator rit = surfaceProperties.rbegin();
-  unsigned int surfaceIndex = surfaceProperties.size() - 1; 
-  while(rit != surfaceProperties.rend())
+  switch(newVisualizationType)
   {
-    if((*rit).deleted)
-    {
-      if(!(*rit).isNew)
-      {
-        isoSurface->removeSurface(surfaceIndex);
-        emit deletedSurface(surfaceIndex);
-        somethingChanged = true;
-      }
-      ///// delete the current surface but first change rit
-      std::vector<SurfaceProperties>::iterator itd = surfaceProperties.begin();
-      itd += surfaceIndex; // now itd should be equal to rit
-      assert((*itd).ID == (*rit).ID);
-      rit++;
-      surfaceProperties.erase(itd);
-    }
-    else
-      rit++;
-    surfaceIndex--;
+    case 0: // Isosurfaces
+            changed = updateIsoSurfaces() || changed; // have to do it in this order as otherwise the function might never be called
+            break;
+    case 1: // Volumetric rendering
+            changed = updateVolume() || changed;
+            break;
+    case 2: // Slice
+            changed = updateSlice() || changed;
+            break;
   }
-
-  ///// traverse the surfaces forward to update them if necessary
-  QListViewItemIterator it(ListViewParameters);
-  for(unsigned int i = 0; i < surfaceProperties.size(); i++, it++)
-  {
-    if(surfaceProperties[i].isNew == true)
-    {
-      // this is a new surface so everything must be updated
-      surfaceProperties[i].visible = dynamic_cast<QCheckListItem*>(it.current())->isOn();
-      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).toDouble();
-      surfaceProperties[i].colour = it.current()->text(COLUMN_RGB).toUInt();
-      surfaceProperties[i].opacity = it.current()->text(COLUMN_OPACITY).toUInt();
-      surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
-      surfaceProperties[i].isNew = false;
-
-      isoSurface->addSurface(surfaceProperties[i].level);
-      emit newSurface(isoSurface->numSurfaces() - 1);
-      somethingChanged = true;
-    }
-    else
-    {
-      ///// check whether anything has changed
-      bool visibilityChanged = false;
-      bool levelChanged = false;
-      bool colorChanged = false;
-      bool opacityChanged = false;
-      bool typeChanged = false;
-      if(dynamic_cast<QCheckListItem*>(it.current())->isOn() != surfaceProperties[i].visible)
-        visibilityChanged = true;
-      if(fabs(it.current()->text(COLUMN_LEVEL).toDouble() - surfaceProperties[i].level) >= deltaLevel*deltaLevel)
-        levelChanged = true;
-      if(it.current()->text(COLUMN_RGB).toUInt() != surfaceProperties[i].colour)
-        colorChanged = true;
-      if(it.current()->text(COLUMN_OPACITY).toUInt() != surfaceProperties[i].opacity)
-        opacityChanged = true;
-      if(typeToNum(it.current()->text(COLUMN_TYPE)) != surfaceProperties[i].type)
-        typeChanged = true;
-      ///// update the data
-      surfaceProperties[i].visible = dynamic_cast<QCheckListItem*>(it.current())->isOn();
-      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).toDouble();
-      surfaceProperties[i].colour = it.current()->text(COLUMN_RGB).toUInt();
-      surfaceProperties[i].opacity = it.current()->text(COLUMN_OPACITY).toUInt();
-      surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
-
-      if(levelChanged)
-        isoSurface->changeSurface(i, surfaceProperties[i].level); 
-      if(levelChanged || colorChanged || opacityChanged || typeChanged)
-      {       
-        emit updatedSurface(i);
-        somethingChanged = true;
-      }
-      else if(visibilityChanged)
-        somethingChanged = true;
-    }
-  }
-  if(somethingChanged)
+  oldVisualizationType = newVisualizationType;
+  if(changed)
     emit redrawScene();
+  //qDebug("at the end of updateAll, oldVisualizationType = %d", oldVisualizationType);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Protected Member Functions                                          /////
@@ -420,6 +386,19 @@ void DensityBase::hideEvent(QHideEvent* e)
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Slots                                                       /////
 ///////////////////////////////////////////////////////////////////////////////
+
+///// updateVisualizationType /////////////////////////////////////////////////
+void DensityBase::updateVisualizationType()
+/// Does the necessary updates when a new visualization type was chosen. 
+{
+  const int currentType = ComboBoxVisualizationType->currentItem();
+  // show the new page
+  WidgetStack->raiseWidget(currentType);
+  enableWidgets();
+
+  // automatic update?
+  checkUpdate();
+}
 
 ///// updateSliderLevel ///////////////////////////////////////////////////////
 void DensityBase::updateSliderLevel()
@@ -465,8 +444,7 @@ void DensityBase::updateListView()
   item->setText(COLUMN_TYPE, ComboBoxType->currentText());
   ListViewParameters->blockSignals(false);
 
-  if(CheckBoxUpdate->isOn())
-    updateAll();
+  checkUpdate();
 }
 
 ///// updateSettings //////////////////////////////////////////////////////////
@@ -506,13 +484,12 @@ void DensityBase::updateVisibility(QListViewItem* item, const QPoint&, int colum
     return;
 
   ///// the visibility of a surface was changed
-  if(CheckBoxUpdate->isOn())
-    updateAll();
+  checkUpdate();
 }
 
 ///// updateOperation /////////////////////////////////////////////////////////
 void DensityBase::updateOperation(const unsigned int op)
-/// Updates the possible operations and the isoSurface.
+/// Updates the possible operations and the DensityGrid.
 /// Possible values of \c op :
 /// \arg 0 : no density has changed, just the current item of ComboBoxOperation.
 /// \arg 1 : a new density was read into densityPointsA.
@@ -532,7 +509,7 @@ void DensityBase::updateOperation(const unsigned int op)
                 it = std::min_element(densityPointsA.begin(), densityPointsA.end());
                 minDensity = *it;
               }
-              isoSurface->setParameters(&densityPointsA, numPointsA, deltaA, originA);
+              densityGrid->setParameters(&densityPointsA, numPointsA, deltaA, originA);
               break;
       case 1: // density B
               { 
@@ -541,7 +518,7 @@ void DensityBase::updateOperation(const unsigned int op)
                 it = std::min_element(densityPointsB.begin(), densityPointsB.end());
                 minDensity = *it;
               }
-              isoSurface->setParameters(&densityPointsB, numPointsB, deltaB, originB);
+              densityGrid->setParameters(&densityPointsB, numPointsB, deltaB, originB);
               break;
       case 2: // A + B
               {
@@ -551,7 +528,7 @@ void DensityBase::updateOperation(const unsigned int op)
                 maxDensity = *it; 
                 it = std::min_element(densitySum.begin(), densitySum.end());
                 minDensity = *it;
-                isoSurface->setParameters(&densitySum, numPointsA, deltaA, originA);  
+                densityGrid->setParameters(&densitySum, numPointsA, deltaA, originA);  
               }
               break;
       case 3: // A - B
@@ -562,7 +539,7 @@ void DensityBase::updateOperation(const unsigned int op)
                 maxDensity = *it; 
                 it = std::min_element(densityDiff.begin(), densityDiff.end());
                 minDensity = *it;
-                isoSurface->setParameters(&densityDiff, numPointsA, deltaA, originA);  
+                densityGrid->setParameters(&densityDiff, numPointsA, deltaA, originA);  
               }
               break;
       case 4: // B - A
@@ -573,7 +550,7 @@ void DensityBase::updateOperation(const unsigned int op)
                 maxDensity = *it; 
                 it = std::min_element(densityDiff.begin(), densityDiff.end());
                 minDensity = *it;
-                isoSurface->setParameters(&densityDiff, numPointsA, deltaA, originA);  
+                densityGrid->setParameters(&densityDiff, numPointsA, deltaA, originA);  
               }
               break;
     }
@@ -615,6 +592,7 @@ void DensityBase::updateOperation(const unsigned int op)
       ///// do not update if the current operation is the other density
       if(ComboBoxOperation->currentItem() != 1)
         updateOperation();
+      setSingleColor(); // can't use mapping when only a single density is present
       return;
     }
   }
@@ -661,6 +639,7 @@ void DensityBase::updateOperation(const unsigned int op)
       ///// do not update if the current operation is the other density
       if(ComboBoxOperation->currentItem() != 0)
         updateOperation();
+      setSingleColor(); // can't use mapping when only a single density is present
       return;
     }
   }
@@ -698,9 +677,8 @@ void DensityBase::updateOperation(const unsigned int op)
     surfaceProperties[i].isNew = true;
 
   ///// update if requested
-  if(CheckBoxUpdate->isOn())
-    updateAll();
-
+  checkUpdate();
+  
   ///// update the type of density
   LabelMax->setText(QString::number(maxDensity,'f'));
   LabelMin->setText(QString::number(minDensity,'f'));
@@ -725,7 +703,11 @@ void DensityBase::updateOperation(const unsigned int op)
       ColorButtonLevel->setColor(QColor(255, 0, 0));
     }
   }
-
+  ///// update the maxima for volume rendering and slices
+  resetVolumeMaxima();
+  resetSliceMaxima();
+  SliderSlice->setMaxValue(densityGrid->getNumPoints().x() + densityGrid->getNumPoints().y() + densityGrid->getNumPoints().z() - 1);
+  SliderSlice->setTickInterval(SliderSlice->maxValue()/3);
   enableWidgets();
 }
 
@@ -740,6 +722,144 @@ void DensityBase::updateOpacity()
     LabelOpacity->setText(" " + QString::number(SliderOpacity->value()) + " %");
 }
 
+///// setSingleColor //////////////////////////////////////////////////////////
+void DensityBase::setSingleColor()
+/// Sets the use of single coors for the visualization of the isosurfaces.
+{
+  PushButtonSingleColor->setOn(true);
+  PushButtonMapped->setOn(false);
+  ColorButtonLevel->setEnabled(true);
+  checkUpdate();
+}
+
+///// setMapping //////////////////////////////////////////////////////////////
+void DensityBase::setMapping()
+/// Sets the use of another density for color mapping the isosurfaces.
+{
+  ///// setup the mapping widget
+  // the source density
+  QString currentDensity = mappingWidget->ComboBoxSource->currentText();
+  mappingWidget->ComboBoxSource->clear();
+  if(!densityPointsA.empty())
+    mappingWidget->ComboBoxSource->insertItem(tr("Density A"));
+  if(!densityPointsB.empty())
+    mappingWidget->ComboBoxSource->insertItem(tr("Density B"));
+  mappingWidget->ComboBoxSource->setCurrentItem(0);
+  bool noChange = false;
+  for(int i = 0; i < mappingWidget->ComboBoxSource->count(); i++)
+  {
+    if(currentDensity == mappingWidget->ComboBoxSource->text(i))
+    {
+      mappingWidget->ComboBoxSource->setCurrentItem(i);
+      noChange = true;
+    }
+  }
+
+  // the maximum plot values
+  if(!noChange)
+  {
+    bool update = CheckBoxUpdate->isOn();
+    CheckBoxUpdate->setChecked(false); // prevent automatic update
+    resetMappedMaxima(); // the current source density has changed so reset to the maximum values
+    CheckBoxUpdate->setChecked(update);
+  }
+  
+  // save the original values
+  const int oldDensity = mappingWidget->ComboBoxSource->currentItem();
+  const QString oldMax = mappingWidget->LineEditMaxPos->text();
+  const QString oldMin = mappingWidget->LineEditMaxNeg->text();
+  const int oldMap = mappingWidget->ButtonGroup->selectedId();
+  
+  // show it
+  if(mappingWidget->exec() == QDialog::Rejected)
+  {
+    // reset to the old values and return
+    mappingWidget->ComboBoxSource->setCurrentItem(oldDensity);
+    mappingWidget->LineEditMaxPos->setText(oldMax);
+    mappingWidget->LineEditMaxNeg->setText(oldMin);
+    mappingWidget->ButtonGroup->find(oldMap)->setDown(true);
+    if(PushButtonSingleColor->isOn())
+      PushButtonMapped->setOn(false);
+    return;
+  }
+  
+  // update the DensityGrid
+  std::vector<double>* points;
+  if(mappingWidget->ComboBoxSource->currentText() == tr("Density A"))
+    points = &densityPointsA;
+  else
+    points = &densityPointsB;
+  densityGrid->setMappingParameters(points, mappingWidget->ButtonGroup->selectedId(), 
+                                    mappingWidget->LineEditMaxPos->text().toFloat(), 
+                                    mappingWidget->LineEditMaxNeg->text().toFloat());
+  mappingChanged = true;
+
+  // update the isosurface's colors in the ListView
+  columnColourWidth = ListViewParameters->columnWidth(COLUMN_COLOUR);
+  QPixmap pm(*(mappingWidget->ButtonGroup->selected()->pixmap()));
+  QListViewItemIterator it(ListViewParameters);
+  if(it.current() && pm.height() > it.current()->height() - 2)
+    pm.resize(pm.width(), it.current()->height() - 2); // assume all rows have equal height
+  while(it.current())
+  {
+    it.current()->setPixmap(COLUMN_COLOUR, pm);
+    it++;
+  }
+  ListViewParameters->setColumnWidth(COLUMN_COLOUR, columnColourWidth); // reset the column width 
+
+  ///// fix relevant buttons
+  PushButtonMapped->setOn(true);
+  PushButtonSingleColor->setOn(false);
+  ColorButtonLevel->setEnabled(false);
+
+  checkUpdate();
+}
+
+///// resetMappedMaxima ///////////////////////////////////////////////////////
+void DensityBase::resetMappedMaxima()
+/// Resets the given maxima in MappedSurfaceWidget to their original values.
+{
+  if(mappingWidget->ComboBoxSource->currentText() == tr("Density A"))
+  {
+    std::vector<double>::iterator it = std::max_element(densityPointsA.begin(), densityPointsA.end());
+    mappingWidget->LineEditMaxPos->setText(QString::number(*it, 'f'));
+    it = std::min_element(densityPointsA.begin(), densityPointsA.end());
+    mappingWidget->LineEditMaxNeg->setText(QString::number(*it, 'f'));
+  }
+  else if(mappingWidget->ComboBoxSource->currentText() == tr("Density B"))
+  {
+    std::vector<double>::iterator it = std::max_element(densityPointsB.begin(), densityPointsB.end());
+    mappingWidget->LineEditMaxPos->setText(QString::number(*it, 'f'));
+    it = std::min_element(densityPointsB.begin(), densityPointsB.end());
+    mappingWidget->LineEditMaxNeg->setText(QString::number(*it, 'f'));
+  }
+  checkUpdate();
+}
+
+///// resetVolumeMaxima ///////////////////////////////////////////////////////
+void DensityBase::resetVolumeMaxima()
+/// Resets the given maxima for Volume rendering
+{
+  LineEditVolumePos->setText(LabelMax->text());
+  LineEditVolumeNeg->setText(LabelMin->text());
+}
+
+///// resetSliceMaxima ////////////////////////////////////////////////////////
+void DensityBase::resetSliceMaxima()
+/// Resets the given maxima for slices.
+{
+  LineEditSlicePos->setText(LabelMax->text());
+  LineEditSliceNeg->setText(LabelMin->text());
+}
+
+///// checkUpdate /////////////////////////////////////////////////////////////
+void DensityBase::checkUpdate()
+/// Does in update only if automatic updates are enabled.
+{
+  if(CheckBoxUpdate->isOn())
+    updateAll();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Member Functions                                            /////
 ///////////////////////////////////////////////////////////////////////////////
@@ -751,6 +871,8 @@ void DensityBase::makeConnections()
   ///// connections for buttons
   connect(PushButtonLoadA, SIGNAL(clicked()), this, SLOT(loadDensityA()));
   connect(PushButtonLoadB, SIGNAL(clicked()), this, SLOT(loadDensityB()));
+  connect(PushButtonSingleColor, SIGNAL(clicked()), this, SLOT(setSingleColor()));
+  connect(PushButtonMapped, SIGNAL(clicked()), this, SLOT(setMapping()));
   connect(PushButtonAdd, SIGNAL(clicked()), this, SLOT(addSurface()));
   connect(PushButtonAdd2, SIGNAL(clicked()), this, SLOT(addSurfacePair()));
   connect(PushButtonDelete, SIGNAL(clicked()), this, SLOT(deleteSurface()));
@@ -773,6 +895,31 @@ void DensityBase::makeConnections()
 
   ///// connections for ComboBoxOperation
   connect(ComboBoxOperation, SIGNAL(activated(int)), this, SLOT(updateOperation()));
+
+  ///// connections for ComboBoxVisualizationType
+  connect(ComboBoxVisualizationType, SIGNAL(activated(int)), this, SLOT(updateVisualizationType()));
+
+  ///// connections for MappedSurfaceWidget
+  connect(mappingWidget->PushButtonReset, SIGNAL(clicked()), this, SLOT(resetMappedMaxima()));
+  connect(mappingWidget->PushButtonCancel, SIGNAL(clicked()), mappingWidget, SLOT(reject()));
+  connect(mappingWidget->PushButtonOK, SIGNAL(clicked()), mappingWidget, SLOT(accept()));
+
+  ///// connections for Volume
+  connect(PushButtonVolumeReset, SIGNAL(clicked()), this, SLOT(resetVolumeMaxima()));
+  connect(ColorButtonVolumePos, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
+  connect(ColorButtonVolumeNeg, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
+  connect(LineEditVolumePos, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
+  connect(LineEditVolumeNeg, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
+ 
+  ///// connections for Slice
+  connect(PushButtonSliceReset, SIGNAL(clicked()), this, SLOT(resetSliceMaxima()));
+  connect(ColorButtonSlicePos, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
+  connect(ColorButtonSliceNeg, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
+  connect(ColorButtonSliceBack, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
+  connect(ButtonGroupSlice, SIGNAL(clicked(int)), this, SLOT(checkUpdate()));
+  connect(LineEditSlicePos, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
+  connect(LineEditSliceNeg, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
+  connect(SliderSlice, SIGNAL(valueChanged(int)), this, SLOT(checkUpdate()));
 }
 
 ///// loadDensity /////////////////////////////////////////////////////////////
@@ -852,18 +999,6 @@ bool DensityBase::loadCube(QFile* file)
   if(numPointsX == 0 || numPointsY == 0 || numPointsZ == 0 || stream.atEnd())
     return false;
 
-  if(loadingDensityA)
-  {
-    numPointsA.setValues(numPointsX, numPointsY, numPointsZ);
-    originA.setValues(originX, originY, originZ);
-    deltaA.setValues(deltaX, deltaY, deltaZ);
-  }
-  else
-  {
-    numPointsB.setValues(numPointsX, numPointsY, numPointsZ);
-    originB.setValues(originX, originY, originZ);
-    deltaB.setValues(deltaX, deltaY, deltaZ);
-  }
   ///// skip the lines containing the coordinates
   for(int i = 0; i < abs(numAtoms); i++)
     stream.readLine();
@@ -887,7 +1022,10 @@ bool DensityBase::loadCube(QFile* file)
   unsigned int numSkipValues = 0;
   if(listMO.size() > 1) 
   {
-    QString result = QInputDialog::getItem(tr("Select the desired MO"), tr("The file contains multiple entries for\n")+newDescription+"\nSelect the desired molecular orbital", listMO,0,false,0,this);
+    bool ok;
+    QString result = QInputDialog::getItem(tr("Select the desired MO"), tr("The file contains multiple entries for\n")+newDescription+"\nSelect the desired molecular orbital", listMO,0,false,&ok,this);
+    if(!ok)
+      return false; // cancelled. Only when returning false, the QFile is deleted properly.
     newDescription += QString(" for MO " + result);
     double skipValue;
     for(QStringList::iterator it = listMO.begin(); it != listMO.end(); ++it)
@@ -906,6 +1044,9 @@ bool DensityBase::loadCube(QFile* file)
   const unsigned int totalPoints = numPointsX * numPointsY * numPointsZ;
   if(loadingDensityA)
   { 
+    numPointsA.setValues(numPointsX, numPointsY, numPointsZ);
+    originA.setValues(originX, originY, originZ);
+    deltaA.setValues(deltaX, deltaY, deltaZ);
     ProgressBarA->setTotalSteps(totalPoints);
     ProgressBarA->setProgress(0);
     ProgressBarA->show();
@@ -914,6 +1055,9 @@ bool DensityBase::loadCube(QFile* file)
   }
   else
   { 
+    numPointsB.setValues(numPointsX, numPointsY, numPointsZ);
+    originB.setValues(originX, originY, originZ);
+    deltaB.setValues(deltaX, deltaY, deltaZ);
     ProgressBarB->setTotalSteps(totalPoints);
     ProgressBarB->setProgress(0);
     ProgressBarB->show();
@@ -1085,7 +1229,7 @@ void DensityBase::updateDensity()
   ///// equal the number of points of the other density
   if( (loadingDensityA && !densityPointsB.empty()) || (!loadingDensityA && !densityPointsA.empty())
       && !identicalGrids())
-    QMessageBox::warning(this, tr("Load Density"), tr("The grid of the new density does not equal\nthat of the other density.\nCombinations will not be allowed."));
+    QMessageBox::warning(this, tr("Load Density"), tr("The grid of the new density does not equal\nthat of the other density.\nCombinations or color mapping will not be allowed."));
 
   if(loadingDensityA)
   {
@@ -1149,47 +1293,26 @@ void DensityBase::enableWidgets()
   {
     PushButtonLoadA->setEnabled(true);
     PushButtonLoadB->setEnabled(true);
-    if(!densityPointsA.empty() && !densityPointsB.empty())
-      ComboBoxOperation->setEnabled(true);
-    else
-      ComboBoxOperation->setEnabled(false);
+    ComboBoxOperation->setEnabled(!densityPointsA.empty() && !densityPointsB.empty());
   }
 
   ///// disable widgets if no density is loaded
-  if(!isoSurface->densityPresent())
-  {
-    ListViewParameters->setEnabled(false);
-    PushButtonAdd->setEnabled(false);
-    PushButtonAdd2->setEnabled(false);
-    PushButtonDelete->setEnabled(false);
-    PushButtonUpdate->setEnabled(false);
-    CheckBoxUpdate->setEnabled(false);
-    GroupBoxSettings->setEnabled(false);
-  }
-  else
-  {
-    ///// enable widgets that are always available when a density is loaded
-    ListViewParameters->setEnabled(true);
-    PushButtonAdd->setEnabled(true);
-    ///// only enable the 'Add pair' widget if the density contains both positive and negative values
-    if(LabelMax->text().toDouble() <= deltaLevel || LabelMin->text().toDouble() >= -deltaLevel)
-      PushButtonAdd2->setEnabled(false);
-    else
-      PushButtonAdd2->setEnabled(true);
-    PushButtonUpdate->setEnabled(true);
-    CheckBoxUpdate->setEnabled(true);
-    ///// enable/disable widgets that are only available when surfaces are defined
-    if(ListViewParameters->childCount() != 0)
-    {
-      PushButtonDelete->setEnabled(true);
-      GroupBoxSettings->setEnabled(true);
-    }
-    else
-    {
-      PushButtonDelete->setEnabled(false);
-      GroupBoxSettings->setEnabled(false);
-    }
-  }
+  const bool hasDensity = densityGrid->densityPresent();
+  ButtonGroupVisualizationType->setEnabled(hasDensity);
+  ListViewParameters->setEnabled(hasDensity);
+  PushButtonAdd->setEnabled(hasDensity);
+  PushButtonUpdate->setEnabled(hasDensity);
+  CheckBoxUpdate->setEnabled(hasDensity);
+
+  ///// only enable the mapping functionality if 2 identical grids are present
+  PushButtonMapped->setEnabled(hasDensity && identicalGrids());
+
+  ///// only enable the 'Add pair' widget if the density contains both positive and negative values
+  PushButtonAdd2->setEnabled(hasDensity && LabelMax->text().toDouble() > deltaLevel && LabelMin->text().toDouble() < -deltaLevel);
+
+  ///// enable/disable widgets that are only available when surfaces are defined
+  PushButtonDelete->setEnabled(hasDensity && ListViewParameters->childCount() != 0);
+  GroupBoxSettings->setEnabled(hasDensity && ListViewParameters->childCount() != 0);
 }
 
 ///// identicalGrids //////////////////////////////////////////////////////////
@@ -1197,7 +1320,7 @@ bool DensityBase::identicalGrids()
 /// Returns true if the densities A and B are located
 /// on the same grid. If true these densities can be succesfully combined.
 {
-  /*
+  
   if(densityPointsA.size() != densityPointsB.size())
     qDebug("grids are not identical because sizes differ: %d and %d",densityPointsA.size(),densityPointsB.size());
 
@@ -1209,9 +1332,153 @@ bool DensityBase::identicalGrids()
 
   if(!(deltaA == deltaB))
     qDebug("grids are not identical because deltas differ: A(%f,%f,%f) and B(%f,%f,%f)",deltaA.x(),deltaA.y(),deltaA.z(),deltaB.x(),deltaB.y(),deltaB.z());
-  */
+  
   return densityPointsA.size() == densityPointsB.size() && originA == originB && numPointsA == numPointsB && deltaA == deltaB;
 }
+
+///// updateIsoSurfaces ///////////////////////////////////////////////////////
+bool DensityBase::updateIsoSurfaces()
+/// Updates all changes concerning isosurfaces
+{
+  bool somethingChanged = false;
+
+  ///// first traverse the surfaces backwards to remove deleted ones
+  std::vector<SurfaceProperties>::reverse_iterator rit = surfaceProperties.rbegin();
+  unsigned int surfaceIndex = surfaceProperties.size() - 1; 
+  while(rit != surfaceProperties.rend())
+  {
+    if((*rit).deleted)
+    {
+      if(!(*rit).isNew)
+      {
+        densityGrid->removeSurface(surfaceIndex);
+        emit deletedSurface(surfaceIndex);
+        somethingChanged = true;
+      }
+      ///// delete the current surface but first change rit
+      std::vector<SurfaceProperties>::iterator itd = surfaceProperties.begin();
+      itd += surfaceIndex; // now itd should be equal to rit
+      assert((*itd).ID == (*rit).ID);
+      rit++;
+      surfaceProperties.erase(itd);
+    }
+    else
+      rit++;
+    surfaceIndex--;
+  }
+
+  ///// traverse the surfaces forward to update them if necessary
+  QListViewItemIterator it(ListViewParameters);
+  for(unsigned int i = 0; i < surfaceProperties.size(); i++, it++)
+  {
+    if(surfaceProperties[i].isNew == true)
+    {
+      // this is a new surface so everything must be updated
+      surfaceProperties[i].visible = dynamic_cast<QCheckListItem*>(it.current())->isOn();
+      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).toDouble();
+      surfaceProperties[i].colour = it.current()->text(COLUMN_RGB).toUInt();
+      surfaceProperties[i].opacity = it.current()->text(COLUMN_OPACITY).toUInt();
+      surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
+      surfaceProperties[i].isNew = false;
+
+      densityGrid->addSurface(surfaceProperties[i].level);
+      emit newSurface(densityGrid->numSurfaces() - 1);
+      somethingChanged = true;
+    }
+    else
+    {
+      ///// check whether anything has changed
+      bool visibilityChanged = false;
+      bool levelChanged = false;
+      bool colorChanged = false;
+      bool opacityChanged = false;
+      bool typeChanged = false;
+      if(dynamic_cast<QCheckListItem*>(it.current())->isOn() != surfaceProperties[i].visible)
+        visibilityChanged = true;
+      if(fabs(it.current()->text(COLUMN_LEVEL).toDouble() - surfaceProperties[i].level) >= deltaLevel*deltaLevel)
+        levelChanged = true;
+      if(it.current()->text(COLUMN_RGB).toUInt() != surfaceProperties[i].colour)
+        colorChanged = true;
+      if(it.current()->text(COLUMN_OPACITY).toUInt() != surfaceProperties[i].opacity)
+        opacityChanged = true;
+      if(typeToNum(it.current()->text(COLUMN_TYPE)) != surfaceProperties[i].type)
+        typeChanged = true;
+      ///// update the data
+      surfaceProperties[i].visible = dynamic_cast<QCheckListItem*>(it.current())->isOn();
+      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).toDouble();
+      surfaceProperties[i].colour = it.current()->text(COLUMN_RGB).toUInt();
+      surfaceProperties[i].opacity = it.current()->text(COLUMN_OPACITY).toUInt();
+      surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
+
+      if(levelChanged)
+        densityGrid->changeSurface(i, surfaceProperties[i].level); 
+      if(levelChanged || colorChanged || opacityChanged || typeChanged || mappingChanged)
+      { 
+        emit updatedSurface(i);
+        somethingChanged = true;
+      }
+      else if(visibilityChanged)
+        somethingChanged = true;
+    }
+  }
+  mappingChanged = false;
+  return somethingChanged;
+}
+
+///// updateVolume ////////////////////////////////////////////////////////////
+bool DensityBase::updateVolume()
+/// Updates all changes concerning volumetric rendering.
+{
+  // check for changes
+  bool changed = ColorButtonVolumePos->color().rgb() != volumeProperties.positiveColor ||
+                 ColorButtonVolumeNeg->color().rgb() != volumeProperties.negativeColor ||
+                 LineEditVolumePos->text() != volumeProperties.maxLevel ||
+                 LineEditVolumeNeg->text() != volumeProperties.minLevel;
+ 
+  // notify that the volume needs to be updated
+  if(changed)
+    emit updatedVolume();
+
+  // save the changes
+  if(changed)
+  {
+    volumeProperties.positiveColor = ColorButtonVolumePos->color().rgb();
+    volumeProperties.negativeColor = ColorButtonVolumeNeg->color().rgb();
+    volumeProperties.maxLevel = LineEditVolumePos->text();
+    volumeProperties.minLevel = LineEditVolumeNeg->text();
+  }
+
+  return changed;
+}
+
+///// updateSlice /////////////////////////////////////////////////////////////
+bool DensityBase::updateSlice()
+/// Updates all changes concerning slices.
+{
+  // check for changes
+  bool changed = ColorButtonSlicePos->color().rgb() != sliceProperties.positiveColor ||
+                 ColorButtonSliceNeg->color().rgb() != sliceProperties.negativeColor ||
+                 ColorButtonSliceBack->color().rgb() != sliceProperties.backgroundColor ||
+                 RadioButtonSliceTransparant->isOn() != sliceProperties.transparant ||
+                 SliderSlice->value() != sliceProperties.index;
+
+  // notify that the slice needs to be updated
+  if(changed)
+    emit updatedSlice();
+
+  // save the changes
+  if(changed)
+  {
+    sliceProperties.positiveColor = ColorButtonSlicePos->color().rgb();
+    sliceProperties.negativeColor = ColorButtonSliceNeg->color().rgb();
+    sliceProperties.backgroundColor = ColorButtonSliceBack->color().rgb();
+    sliceProperties.transparant = RadioButtonSliceTransparant->isOn();
+    sliceProperties.index = SliderSlice->value();
+  }
+
+  return changed;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Static Variables                                                    /////

@@ -29,27 +29,34 @@
 
 ///// Header files ////////////////////////////////////////////////////////////
 
+// C++ header files
+#include <cassert>
+
 // STL header files
 #include <algorithm>
 
 // Qt header files
+#include <qcombobox.h>
 #include <qfiledialog.h>
+#include <qimage.h>
 #include <qinputdialog.h>
 #include <qmessagebox.h>
 //#include <qpoint.h>
 #include <qradiobutton.h>
+#include <qslider.h>
 #include <qstringlist.h>
 #include <qtimer.h>
 #include <qvalidator.h>
 
 // Xbrabo header files
 #include "atomset.h"
+#include "colorbutton.h" // maybe this one shouldn't be here but provide getters for colors of DensityBase
 #include "command.h"
 #include "commandhistory.h"
 #include "coordinateswidget.h"
 #include "densitybase.h"
 #include "glmoleculeview.h"
-#include "isosurface.h"
+#include "densitygrid.h"
 #include "newatombase.h"
 #include "point3d.h"
 #include "quaternion.h"
@@ -63,10 +70,12 @@
 ///// constructor /////////////////////////////////////////////////////////////
 GLMoleculeView::GLMoleculeView(AtomSet* atomset, QWidget* parent, const char* name) : GLSimpleMoleculeView(atomset, parent, name),
   densityDialog(NULL),
-  newAtomDialog(NULL)
+  newAtomDialog(NULL),
+  numVolumeObjects(0),
+  sliceObject(-1)
 /// The default constructor.
 {
-  isoSurface = new IsoSurface();
+  densityGrid = new DensityGrid();
 }
 
 ///// destructor //////////////////////////////////////////////////////////////
@@ -76,7 +85,11 @@ GLMoleculeView::~GLMoleculeView()
   makeCurrent();
   for(unsigned int i = 0; i < glSurfaces.size(); i++)
     glDeleteLists(glSurfaces[i], 1);
-  delete isoSurface;
+  if(numVolumeObjects > 0)
+    glDeleteLists(volumeObjects, numVolumeObjects);
+  if(sliceObject != -1)
+    glDeleteLists(sliceObject, 1);
+  delete densityGrid;
 }
 
 ///// setAtomSet //////////////////////////////////////////////////////////////
@@ -378,14 +391,16 @@ void GLMoleculeView::showDensity()
 {
   if(densityDialog == NULL)
   {
-    densityDialog = new DensityBase(isoSurface, this);
+    densityDialog = new DensityBase(densityGrid, this);
     connect(densityDialog, SIGNAL(newSurface(const unsigned int)), this, SLOT(addGLSurface(const unsigned int)));
     connect(densityDialog, SIGNAL(updatedSurface(const unsigned int)), this, SLOT(updateGLSurface(const unsigned int)));
     connect(densityDialog, SIGNAL(deletedSurface(const unsigned int)), this, SLOT(deleteGLSurface(const unsigned int)));
-    connect(densityDialog, SIGNAL(redrawScene()), this, SLOT(updateGL()));
+    connect(densityDialog, SIGNAL(updatedVolume()), this, SLOT(updateVolume()));
+    connect(densityDialog, SIGNAL(updatedSlice()), this, SLOT(updateSlice()));
+    connect(densityDialog, SIGNAL(redrawScene()), this, SLOT(updateScene()));
   }
   densityDialog->show();
-  if(!isoSurface->densityPresent())
+  if(!densityGrid->densityPresent())
     densityDialog->loadDensityA();
 }
 
@@ -408,6 +423,14 @@ void GLMoleculeView::addAtoms()
 ///// Protected Member Functions                                          /////
 ///////////////////////////////////////////////////////////////////////////////
 
+///// initializeGL ////////////////////////////////////////////////////////////
+void GLMoleculeView::initializeGL()
+/// Overridden from GLSimpleMoleculeView::initializeGL(). Initializes texturing
+{
+  GLSimpleMoleculeView::initializeGL();
+  glEnable(GL_TEXTURE_2D);
+}
+
 ///// boundingSphereRadius ////////////////////////////////////////////////////
 float GLMoleculeView::boundingSphereRadius()
 /// Calculates the radius of the bounding sphere. If atoms are present, the
@@ -416,12 +439,12 @@ float GLMoleculeView::boundingSphereRadius()
 {
   float radius = GLSimpleMoleculeView::boundingSphereRadius();
 
-  if(atoms->count() == 0 && isoSurface->densityPresent())
+  if(atoms->count() == 0 && densityGrid->densityPresent())
   {
     ///// get the boundaries of the box
-    Point3D<float> origin = isoSurface->getOrigin();
-    Point3D<float> delta = isoSurface->getDelta();
-    Point3D<unsigned int> numPoints = isoSurface->getNumPoints();
+    Point3D<float> origin = densityGrid->getOrigin();
+    Point3D<float> delta = densityGrid->getDelta();
+    Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
     float x, y, z;
     std::vector<float> squaredR;
     // the current radius
@@ -587,14 +610,33 @@ void GLMoleculeView::updateShapes()
   ShapeProperties prop;
 
   ///// surfaces
-  for(unsigned int i = 0; i < isoSurface->numSurfaces(); i++)
+  if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::ISOSURFACES)
   {
-    prop.id = i;
-    if(densityDialog->surfaceType(i) == 0)
-      prop.opacity = densityDialog->surfaceOpacity(i);
-    else
-      prop.opacity = 100;
-    prop.type = SHAPE_SURFACE;
+    for(unsigned int i = 0; i < densityGrid->numSurfaces(); i++)
+    {
+      prop.id = i;
+      if(densityDialog->surfaceType(i) == 0)
+        prop.opacity = densityDialog->surfaceOpacity(i);
+      else
+        prop.opacity = 100;
+      prop.type = SHAPE_SURFACE;
+      shapes.push_back(prop);
+    }
+  }
+  ///// volumetric rendering
+  else if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::VOLUME)
+  {
+    prop.id = 0; // not used
+    prop.opacity = 0; // always draw the volume last
+    prop.type = SHAPE_VOLUME;
+    shapes.push_back(prop);
+  }
+  ///// slices
+  else if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::SLICE)
+  {
+    prop.id = 0; // not used
+    prop.opacity = 0; // always needs blending turned on, regardless of the slice's background setting
+    prop.type = SHAPE_SLICE;
     shapes.push_back(prop);
   }
 }
@@ -685,25 +727,43 @@ void GLMoleculeView::updateGLSurface(const unsigned int index)
 {
   makeCurrent();
   QColor surfaceColor = densityDialog->surfaceColor(index);
+  bool usesMapping = densityDialog->surfaceMapping();
   unsigned int surfaceOpacity = densityDialog->surfaceOpacity(index);
   Point3D<float> point1, point2, point3, normal1, normal2, normal3;
+  QColor color1, color2, color3;
 
-  qDebug("updating surface %d", index);
-  qDebug(" which consists of %d vertices and %d triangles",isoSurface->numVertices(index),isoSurface->numTriangles(index));
-  qDebug(" with color %d, %d, %d and opacity %d", surfaceColor.red(), surfaceColor.green(), surfaceColor.blue(), surfaceOpacity);
+  //qDebug("updating surface %d", index);
+  //qDebug(" which consists of %d vertices and %d triangles",densityGrid->numVertices(index),densityGrid->numTriangles(index));
+  //qDebug(" with color %d, %d, %d and opacity %d", surfaceColor.red(), surfaceColor.green(), surfaceColor.blue(), surfaceOpacity);
   glNewList(glSurfaces[index], GL_COMPILE);
     switch(densityDialog->surfaceType(index))
     {
       case 0: // Solid surface
         glBegin(GL_TRIANGLES);
-          glColor4d(surfaceColor.red()/255.0, surfaceColor.green()/255.0, surfaceColor.blue()/255, surfaceOpacity/100.0);
-	        for(unsigned int i = 0; i < isoSurface->numTriangles(index); i++)
+          if(!usesMapping)
+            glColor4d(surfaceColor.red()/255.0, surfaceColor.green()/255.0, surfaceColor.blue()/255, surfaceOpacity/100.0);
+	        for(unsigned int i = 0; i < densityGrid->numTriangles(index); i++)
 	        {
-            isoSurface->getTriangle(index, i, point1, point2, point3, normal1, normal2, normal3);
+            densityGrid->getTriangle(index, i, point1, point2, point3, normal1, normal2, normal3);
+            if(usesMapping)
+            {
+              color1 = densityGrid->getMappingColor(point1);
+              glColor4d(color1.red()/255.0, color1.green()/255.0, color1.blue()/255.0, surfaceOpacity/100.0);
+            }
     		    glNormal3f(normal1.x(), normal1.y(), normal1.z());
             glVertex3f(point1.x(), point1.y(), point1.z());
+            if(usesMapping)
+            {
+              color1 = densityGrid->getMappingColor(point2);
+              glColor4d(color1.red()/255.0, color1.green()/255.0, color1.blue()/255.0, surfaceOpacity/100.0);
+            }
 		        glNormal3f(normal2.x(), normal2.y(), normal2.z());
             glVertex3f(point2.x(), point2.y(), point2.z());
+            if(usesMapping)
+            {
+              color1 = densityGrid->getMappingColor(point3);
+              glColor4d(color1.red()/255.0, color1.green()/255.0, color1.blue()/255.0, surfaceOpacity/100.0);
+            }
 		        glNormal3f(normal3.x(), normal3.y(), normal3.z());
             glVertex3f(point3.x(), point3.y(), point3.z());
 	        }
@@ -718,15 +778,33 @@ void GLMoleculeView::updateGLSurface(const unsigned int index)
           qDebug("linewidth and pointsize used for generating: %f and %f", lw, ps);
         }
         glBegin(GL_LINES);
-          glColor3d(surfaceColor.red()/255.0, surfaceColor.green()/255.0, surfaceColor.blue()/255.0);
-	        for(unsigned int i = 0; i < isoSurface->numTriangles(index); i++)
+          if(!usesMapping)
+            qglColor(surfaceColor);
+	        for(unsigned int i = 0; i < densityGrid->numTriangles(index); i++)
 	        {
-            isoSurface->getTriangle(index, i, point1, point2, point3, normal1, normal2, normal3);
+            densityGrid->getTriangle(index, i, point1, point2, point3, normal1, normal2, normal3);
+            if(usesMapping)
+            {
+              color1 = densityGrid->getMappingColor(point1);
+              color2 = densityGrid->getMappingColor(point2);
+              color3 = densityGrid->getMappingColor(point3);
+              qglColor(color1);
+            }
             glVertex3f(point1.x(), point1.y(), point1.z());
+            if(usesMapping)
+              qglColor(color2);
 		        glVertex3f(point2.x(), point2.y(), point2.z());
+            if(usesMapping)
+              qglColor(color1);
             glVertex3f(point1.x(), point1.y(), point1.z());
+            if(usesMapping)
+              qglColor(color3);
             glVertex3f(point3.x(), point3.y(), point3.z());
+            if(usesMapping)
+              qglColor(color2);
 		        glVertex3f(point2.x(), point2.y(), point2.z());
+            if(usesMapping)
+              qglColor(color3);
             glVertex3f(point3.x(), point3.y(), point3.z());
 	        }
         glEnd();
@@ -734,10 +812,13 @@ void GLMoleculeView::updateGLSurface(const unsigned int index)
       case 2: // Dots
         glPointSize(1.0);
         glBegin(GL_POINTS);
-          glColor3d(surfaceColor.red()/255.0, surfaceColor.green()/255.0, surfaceColor.blue()/255.0);
-	        for(unsigned int i = 0; i < isoSurface->numVertices(index); i++)
+          if(!usesMapping)
+            qglColor(surfaceColor);
+	        for(unsigned int i = 0; i < densityGrid->numVertices(index); i++)
 	        {
-            point1 = isoSurface->getPoint(index, i);
+            point1 = densityGrid->getPoint(index, i);
+            if(usesMapping)
+              qglColor(densityGrid->getMappingColor(point1));
             glVertex3f(point1.x(), point1.y(), point1.z());
           }
         glEnd();
@@ -757,6 +838,593 @@ void GLMoleculeView::deleteGLSurface(const unsigned int index)
   glSurfaces.erase(it);
   reorderShapes();
 }
+
+///// updateScene /////////////////////////////////////////////////////////////
+void GLMoleculeView::updateScene()
+/// Does the necessary updating when something changed in DensityBase (like e.g.
+/// the visualization type.
+{
+  makeCurrent();
+  reorderShapes();
+
+  // set the correct texturing mode for volume rendering and slices
+  switch(densityDialog->ComboBoxVisualizationType->currentItem())
+  {
+    case DensityBase::VOLUME: glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // transparant textures
+                              break;
+    case DensityBase::SLICE:  if(densityDialog->RadioButtonSliceTransparant->isOn())
+                                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // transparant textures
+                              else
+                                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL); // textures blended with the current color
+  }
+
+  updateGL();
+}
+
+///// updateVolume ////////////////////////////////////////////////////////////
+void GLMoleculeView::updateVolume()
+/// Recalculates the stack of slices for viewing the volumetric rendering of 
+/// the active density grid.
+{
+  makeCurrent();
+
+  // data regarding the density grid
+  Point3D<float> origin = densityGrid->getOrigin();
+  Point3D<float> delta = densityGrid->getDelta();
+  Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
+
+  // visualization settings from DensityBase
+  QColor positiveColor = densityDialog->ColorButtonVolumePos->color();
+  QColor negativeColor = densityDialog->ColorButtonVolumeNeg->color();
+  double maxPlotValue = densityDialog->LineEditVolumePos->text().toDouble();
+  double minPlotValue = densityDialog->LineEditVolumeNeg->text().toDouble();
+
+  // rest
+  QImage image, glImage;
+  GLuint textureID;
+
+  ///// Allocate enough display lists to hold all textured quads
+  if(numVolumeObjects < numPoints.x() + numPoints.y() + numPoints.z())
+  {
+    if(numVolumeObjects > 0)
+      glDeleteLists(volumeObjects, numVolumeObjects);
+    numVolumeObjects = numPoints.x() + numPoints.y() + numPoints.z();
+    volumeObjects = glGenLists(numVolumeObjects);
+  }
+
+  glColor3f(1.0f, 1.0f, 1.0f); // needed so the colors are blended with white
+
+  ///// Create the textured quads for the X-direction
+  for(unsigned int x = 0; x < numPoints.x(); x++)
+  {
+    // get the image
+    image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+    // create a texture from it
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+    // create a display list
+    glNewList(volumeObjects + x, GL_COMPILE);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z());
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
+      glEnd();
+    glEndList();
+  }
+
+  ///// Create the textured quads for the Y-direction
+  for(unsigned int y = 0; y < numPoints.y(); y++)
+  {
+    // get the image
+    image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+    // create a texture from it
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+    // create a display list
+    glNewList(volumeObjects + numPoints.x() + y, GL_COMPILE);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z());
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+      glEnd();
+    glEndList();
+  } 
+
+  ///// Create the textured quads for the Z-direction
+  for(unsigned int z = 0; z < numPoints.z(); z++)
+  {
+    // get the image
+    image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+    // create a texture from it
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+    // create a display list
+    glNewList(volumeObjects + numPoints.x() + numPoints.y() + z, GL_COMPILE);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * delta.z());
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * delta.z());
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+      glEnd();
+    glEndList();
+  }
+  
+  reorderShapes();
+
+  ///// old code which reloaded textures upon changes in the viewing direction 
+  ///// -> noticable interruptions when changing directions
+  /*
+  // data regarding the density grid
+  Point3D<float> origin = densityGrid->getOrigin();
+  Point3D<float> delta = densityGrid->getDelta();
+  Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
+
+  // visluaization settings from DensityBase
+  QColor positiveColor = densityDialog->ColorButtonVolumePos->color();
+  QColor negativeColor = densityDialog->ColorButtonVolumeNeg->color();
+  double maxPlotValue = densityDialog->LineEditVolumePos->text().toDouble();
+  double minPlotValue = densityDialog->LineEditVolumeNeg->text().toDouble();
+
+  // rest
+  QColor backgroundColor(qRgba(255, 255, 255, 0)); // fully transparant
+  QImage image, glImage;
+  GLuint textureID;
+
+  // update according to the orientation of the scene
+  switch(getDirection())
+  { 
+    case DIRECTION_POSX:
+    {
+      // make sure a sufficient number of OpenGL display lists are available
+      if(numVolumeObjects < numPoints.x())
+      {
+        if(numVolumeObjects > 0)
+          glDeleteLists(volumeObjects, numVolumeObjects);
+        numVolumeObjects = numPoints.x();
+        volumeObjects = glGenLists(numVolumeObjects);
+      }
+      // get the QImages, bind them to textures and create OpenGL display lists for showing them
+      for(unsigned int x = 0; x < numPoints.x(); x++)
+      {
+        // get the image
+        image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, backgroundColor, maxPlotValue, minPlotValue);
+        glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+        // create a texture from it
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+        // create a display list
+        glNewList(volumeObjects + x, GL_COMPILE);
+          glBindTexture(GL_TEXTURE_2D, textureID);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z());
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
+          glEnd();
+        glEndList();
+      }
+      break;
+    }
+
+    case DIRECTION_NEGX:
+    {
+      // make sure a sufficient number of OpenGL display lists are available
+      if(numVolumeObjects < numPoints.x())
+      {
+        if(numVolumeObjects > 0)
+          glDeleteLists(volumeObjects, numVolumeObjects);
+        numVolumeObjects = numPoints.x();
+        volumeObjects = glGenLists(numVolumeObjects);
+      }
+      // get the QImages, bind them to textures and create OpenGL display lists for showing them
+      for(unsigned int x = 0; x < numPoints.x(); x++)
+      {
+        // get the image
+        image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, backgroundColor, maxPlotValue, minPlotValue);
+        glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+        // create a texture from it
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+        // create a display list
+        glNewList(volumeObjects + x, GL_COMPILE);
+          glBindTexture(GL_TEXTURE_2D, textureID);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z());
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+          glEnd();
+        glEndList();
+      }
+      break;
+    }
+
+    case DIRECTION_POSY:
+    {
+      // make sure a sufficient number of OpenGL display lists are available
+      if(numVolumeObjects < numPoints.y())
+      {
+        if(numVolumeObjects > 0)
+          glDeleteLists(volumeObjects, numVolumeObjects);
+        numVolumeObjects = numPoints.y();
+        volumeObjects = glGenLists(numVolumeObjects);
+      }
+      // get the QImages, bind them to textures and create OpenGL display lists for showing them
+      for(unsigned int y = 0; y < numPoints.y(); y++)
+      {
+        // get the image
+        image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, backgroundColor, maxPlotValue, minPlotValue);
+        glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+        // create a texture from it
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+        // create a display list
+        glNewList(volumeObjects + y, GL_COMPILE);
+          glBindTexture(GL_TEXTURE_2D, textureID);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z());
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+          glEnd();
+        glEndList();
+      }
+      break;
+    }
+
+    case DIRECTION_NEGY:
+    {
+      // make sure a sufficient number of OpenGL display lists are available
+      if(numVolumeObjects < numPoints.y())
+      {
+        if(numVolumeObjects > 0)
+          glDeleteLists(volumeObjects, numVolumeObjects);
+        numVolumeObjects = numPoints.y();
+        volumeObjects = glGenLists(numVolumeObjects);
+      }
+      // get the QImages, bind them to textures and create OpenGL display lists for showing them
+      for(unsigned int y = 0; y < numPoints.y(); y++)
+      {
+        // get the image
+        image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, backgroundColor, maxPlotValue, minPlotValue);
+        glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+        // create a texture from it
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+        // create a display list
+        glNewList(volumeObjects + y, GL_COMPILE);
+          glBindTexture(GL_TEXTURE_2D, textureID);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z());
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+          glEnd();
+        glEndList();
+      }
+      break;
+    }
+
+    case DIRECTION_POSZ:
+    {
+      // make sure a sufficient number of OpenGL display lists are available
+      if(numVolumeObjects < numPoints.z())
+      {
+        if(numVolumeObjects > 0)
+          glDeleteLists(volumeObjects, numVolumeObjects);
+        numVolumeObjects = numPoints.z();
+        volumeObjects = glGenLists(numVolumeObjects);
+      }
+      // get the QImages, bind them to textures and create OpenGL display lists for showing them
+      for(unsigned int z = 0; z < numPoints.z(); z++)
+      {
+        // get the image
+        image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, backgroundColor, maxPlotValue, minPlotValue);
+        glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+        // create a texture from it
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+        // create a display list
+        glNewList(volumeObjects + z, GL_COMPILE);
+          glBindTexture(GL_TEXTURE_2D, textureID);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * delta.z());
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * delta.z());
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+          glEnd();
+        glEndList();
+      }
+      break;
+    }
+
+    case DIRECTION_NEGZ: 
+    {
+      // make sure a sufficient number of OpenGL display lists are available
+      if(numVolumeObjects < numPoints.z())
+      {
+        if(numVolumeObjects > 0)
+          glDeleteLists(volumeObjects, numVolumeObjects);
+        numVolumeObjects = numPoints.z();
+        volumeObjects = glGenLists(numVolumeObjects);
+      }
+      // get the QImages, bind them to textures and create OpenGL display lists for showing them
+      for(unsigned int z = 0; z < numPoints.z(); z++)
+      {
+        // get the image
+        image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, backgroundColor, maxPlotValue, minPlotValue);
+        glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+        // create a texture from it
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+        // create a display list
+        glNewList(volumeObjects + z, GL_COMPILE);
+          glBindTexture(GL_TEXTURE_2D, textureID);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * delta.z());
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * delta.z());
+          glEnd();
+        glEndList();
+      }
+      break;
+    }
+  }
+  */
+}
+
+///// updateSlice /////////////////////////////////////////////////////////////
+void GLMoleculeView::updateSlice()
+/// Updates the active slice to be displayed
+{
+  if(densityDialog->ComboBoxVisualizationType->currentItem() != DensityBase::SLICE)
+    return;
+
+  makeCurrent();
+
+  // densityGrid data
+  Point3D<float> origin = densityGrid->getOrigin();
+  Point3D<float> delta = densityGrid->getDelta();
+  // visualization settings from DensityBase
+  QColor positiveColor = densityDialog->ColorButtonSlicePos->color();
+  QColor negativeColor = densityDialog->ColorButtonSliceNeg->color();
+  double maxPlotValue = densityDialog->LineEditSlicePos->text().toDouble();
+  double minPlotValue = densityDialog->LineEditSliceNeg->text().toDouble();
+  GLuint textureID;
+
+
+  //glColor3f(1.0f, 1.0f, 1.0f); // always blend the color with white when generating the textures
+  qglColor(densityDialog->ColorButtonSliceBack->color());
+
+  if(sliceObject == -1)
+    sliceObject = glGenLists(1); // can't create it in the constructor
+
+  const unsigned int index = densityDialog->SliderSlice->value();
+  const Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
+  if(index < numPoints.x())
+  {
+    qDebug("calling updateSlice for YZ-plane (varying X)");
+    // a slice in the YZ-plane
+    const unsigned int x = index;
+    QImage image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    QImage glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+    // create a texture from it
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+    // create a display list
+    glNewList(sliceObject, GL_COMPILE);
+      // the texture 
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z());
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
+      glEnd();
+      
+      // a rectangle in case of transparant textures
+      if(densityDialog->RadioButtonSliceTransparant->isOn())
+      {
+        qglColor(densityDialog->ColorButtonSliceBack->color());
+        glBindTexture(GL_TEXTURE_2D, 0); // don't use texturing for this
+        glBegin(GL_LINE_LOOP);
+          glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z());
+          glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+          glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+          glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
+        glEnd();
+      }
+    glEndList();
+  }
+  else if(index < numPoints.x() + numPoints.y())
+  {
+    qDebug("calling updateSlice for XZ-plane (varying Y)");
+    // a slice in the XZ-plane
+    unsigned int y = index - numPoints.x();
+    QImage image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    QImage glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+    // create a texture from it
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+    // create a display list
+    glNewList(sliceObject, GL_COMPILE);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z());
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+      glEnd();
+      // a rectangle in case of transparant textures
+      if(densityDialog->RadioButtonSliceTransparant->isOn())
+      {
+        qglColor(densityDialog->ColorButtonSliceBack->color());
+        glBindTexture(GL_TEXTURE_2D, 0); // don't use texturing for this
+        glBegin(GL_LINE_LOOP);
+          glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z());
+          glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+          glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+          glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+        glEnd();
+      }
+    glEndList();
+  }
+  else
+  {
+    qDebug("calling updateSlice for XY-plane (varying Z)");
+    // a slice in the XY-plane
+    unsigned int z = index - numPoints.x() - numPoints.y();
+    QImage image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    QImage glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+
+    image.save("test-slice-xy-"+QString::number(z)+".png", "PNG");
+
+    // create a texture from it
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+
+    // create a display list
+    glNewList(sliceObject, GL_COMPILE);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * delta.z());
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * delta.z());
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+      glEnd();
+      // a rectangle in case of transparant textures
+      if(densityDialog->RadioButtonSliceTransparant->isOn())
+      {
+        qglColor(densityDialog->ColorButtonSliceBack->color());
+        glBindTexture(GL_TEXTURE_2D, 0); // don't use texturing for this
+        glBegin(GL_LINE_LOOP);
+          glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * delta.z());
+          glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * delta.z());
+          glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+          glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
+        glEnd();
+      }
+    glEndList();
+  }
+
+  reorderShapes();
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Private Member Functions                                            /////
@@ -936,20 +1604,29 @@ bool GLMoleculeView::changeSelectedIC(const int range)
 void GLMoleculeView::drawItem(const unsigned int index)
 /// Draws the item shapes[index].
 {
-  if(shapes[index].type != SHAPE_SURFACE)
-    return; // this routine only draws isosurfaces at the moment
+  switch(shapes[index].type)
+  {
+    case SHAPE_SURFACE: drawSurface(index);
+                        break;
+    case SHAPE_VOLUME:  drawVolume();
+                        break;
+    case SHAPE_SLICE:   drawSlice();
+  }
+}
+
+///// drawSurface /////////////////////////////////////////////////////////////
+void GLMoleculeView::drawSurface(const unsigned int index)
+/// Draws the surface shapes[index].
+{
+  assert(shapes[index].type == SHAPE_SURFACE);
+  assert(shapes[index].id < densityGrid->numSurfaces());
 
   const unsigned int currentSurface = shapes[index].id;
-  if(currentSurface >= isoSurface->numSurfaces())
-    return; // asked to draw a non-existing surface
-
   if(densityDialog->surfaceVisible(currentSurface))
   {
-    if(densityDialog->surfaceType(currentSurface) == 0)
-    {
+    if(densityDialog->surfaceType(currentSurface) == 0) // solid
       glCallList(glSurfaces[currentSurface]);
-    }
-    else
+    else // wireframe or dots
     {
       glDisable(GL_LIGHTING);
       glCallList(glSurfaces[currentSurface]);
@@ -957,6 +1634,153 @@ void GLMoleculeView::drawItem(const unsigned int index)
     }
   }
 }
+
+///// drawVolume //////////////////////////////////////////////////////////////
+void GLMoleculeView::drawVolume()
+/// Draws a density grid with volumetric rendering.
+{
+  qDebug("calling drawVolume");
+  //static unsigned int direction = DIRECTION_NONE; // initial direction is nowhere
+
+  glColor3f(1.0f, 1.0f, 1.0f); // needed so the colors are blended with white
+
+  ///// get the current direction as the largest value of the dot product of the view vector
+  ///// with the scene rotated primary axes
+  //unsigned int currentDirection = getDirection();
+  unsigned int numX = densityGrid->getNumPoints().x(), numY = densityGrid->getNumPoints().y(), numZ = densityGrid->getNumPoints().z();
+  // update if the number of slices has to be changed
+  /*if(numX + numY + numZ != numVolumeObjects)
+  {
+    qDebug("extra call to updateVolume() from drawVolume()");
+    updateVolume(); // needed apparently
+  }*/
+
+  // update if the direction changed
+  /*if(currentDirection != direction)
+  {
+    direction = currentDirection;
+    updateVolume();
+  }*/
+
+  ///// The display lists are updated so now just call them from back to front 
+  glDisable(GL_LIGHTING);
+  glDisable(GL_CULL_FACE); // now the backsides can be visible
+  switch(getDirection())
+  {
+    case DIRECTION_POSX: for(unsigned int x = 0; x < numX; x++)
+                           glCallList(volumeObjects + x);
+                         break;
+
+    case DIRECTION_NEGX: for(unsigned int x = 0; x < numX; x++)
+                           glCallList(volumeObjects + numX-1 - x);
+                         break;
+
+    case DIRECTION_POSY: for(unsigned int y = 0; y < numY; y++)
+                           glCallList(volumeObjects + numX + y);
+                         break;
+
+    case DIRECTION_NEGY: for(unsigned int y = 0; y < numY; y++)
+                           glCallList(volumeObjects + numX + numY-1 - y);
+                         break;
+
+    case DIRECTION_POSZ: for(unsigned int z = 0; z < numZ; z++)
+                           glCallList(volumeObjects + numX + numY + z);
+                         break;
+
+    case DIRECTION_NEGZ: for(unsigned int z = 0; z < numZ; z++)
+                           glCallList(volumeObjects + numX + numY + numZ-1 - z);
+                         break;
+  } 
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_LIGHTING);
+}
+
+///// drawSlice ///////////////////////////////////////////////////////////////
+void GLMoleculeView::drawSlice()
+/// Draws a 2D slice
+{
+  qDebug("calling drawSlice");
+
+  if(densityDialog->RadioButtonSliceTransparant->isOn())
+    glColor3f(1.0f, 1.0f, 1.0f); // for tranparant slices blend the color with white
+  else
+    qglColor(densityDialog->ColorButtonSliceBack->color());
+
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_LIGHTING);
+  glCallList(sliceObject);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_CULL_FACE);
+}
+
+///// getDirection ////////////////////////////////////////////////////////////
+unsigned int GLMoleculeView::getDirection() const
+/// Calculates the face of the scene (along the axes) currently most visible.
+/// This is done by calculating the dot product of the view vector with the normal
+/// of each of the six faces. The result is the cosine of the angle between the 
+/// 2 vectors. A value of 1 indicates vectors pointing in the same direction, 
+/// a value of -1 indicates opposite direction.
+{
+  // get the axis/angle representation of the current scene orientation
+  Vector3D<float> orientationVector, axis;
+  float orientationAngle;
+  orientationQuaternion->getAxisAngle(orientationVector, orientationAngle); 
+  orientationAngle = -orientationAngle; // we need opposite rotation from the OpenGL one.
+
+  // the view vector (not needed anymore because of the shortcut in calculating the dot product, 
+  // namely a dot product with (0, 0, 1) is always equal to the Z-component of the other argument)
+  //Vector3D<float> view(0.0f, 0.0f, 1.0f); // we're looking into the negative Z-direction so the normal 
+                                          // of the plane we want to see points towards us into the positive Z-direction
+
+  // rotate a unit vector along the positive X-axis
+  axis.setValues(1.0f, 0.0f, 0.0f);
+  axis.rotate(orientationVector, orientationAngle);
+  // get the dot product with the view vector
+  // as the view vector is (0, 0, 1), the dot product is always equal to the Z-component of the axis 
+  float dotX = axis.z(); // = axis.dot(view); with view = Vector3D(0.0f, 0.0f, 1.0f);
+
+  // rotate a unit vector along the positive Y-axis
+  axis.setValues(0.0f, 1.0f, 0.0f);
+  axis.rotate(orientationVector, orientationAngle);
+  // get the dot product with the view vector
+  float dotY = axis.z();
+
+  // rotate a unit vector along the positive Z-axis
+  axis.setValues(0.0f, 0.0f, 1.0f);
+  axis.rotate(orientationVector, orientationAngle);
+  // get the dot product with the view vector
+  float dotZ = axis.z(); 
+
+  // determine the general direction
+  unsigned int direction = DIRECTION_NONE;
+  if(abs(dotX) > abs(dotY))
+  {
+    if(abs(dotX) > abs(dotZ))
+      direction = DIRECTION_POSX;
+    else
+      direction = DIRECTION_POSZ;
+  }
+  else
+  {
+    if(abs(dotY) > abs(dotZ))
+      direction = DIRECTION_POSY;
+    else
+      direction = DIRECTION_POSZ;
+  }
+
+  // determine the specific direction
+  if(direction == DIRECTION_POSX && dotX < 0.0f)
+    direction = DIRECTION_NEGX;
+  else if(direction == DIRECTION_POSY && dotY < 0.0f)
+    direction = DIRECTION_NEGY;
+  else if(direction == DIRECTION_POSZ && dotZ < 0.0f)
+    direction = DIRECTION_NEGZ;
+
+  qDebug("direction %d has been chosen", direction);
+
+  return direction;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Static Variables                                                    /////

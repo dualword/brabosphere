@@ -33,7 +33,7 @@
 
 // Xbrabo forward class declarations
 class AtomSet;
-class IsoSurface;
+class DensityGrid;
 class DensityBase;
 class NewAtomBase;
 
@@ -79,6 +79,7 @@ class GLMoleculeView : public GLSimpleMoleculeView
     void addAtoms();                    // adds atoms using a dialog
 
   protected:
+    virtual void initializeGL();        // initial OpenGL setup
     void mouseMoveEvent(QMouseEvent* e);// event which takes place when the mouse is moved while a mousebutton is pressed
     void keyPressEvent(QKeyEvent* e);   // event which takes places when a key is pressed
     virtual void updateShapes();        // updates the shapes vector
@@ -93,6 +94,9 @@ private slots:
     void addGLSurface(const unsigned int index);  // adds a surface to the GL display list
     void updateGLSurface(const unsigned int index);         // updates an existing surface GL display list 
     void deleteGLSurface(const unsigned int index);         // deletes an existing surface GL display list
+    void updateScene();                 // does the necessary updating when something changed in DensityBase
+    void updateVolume();                // updates the textures used for volume rendering
+    void updateSlice();                 // updates the current slice
 
   private:
     friend class CommandCoordinates;
@@ -114,20 +118,29 @@ private slots:
     friend class CommandResetView;
 
     ///// private enums
-    enum ShapeTypesExtra{SHAPE_SURFACE = SHAPE_NEXT};
+    enum ShapeTypesExtra{SHAPE_SURFACE = SHAPE_NEXT, SHAPE_VOLUME, SHAPE_SLICE};///< extention of GLSimpleMoleculeView::ShapeTypes
+    enum Directions{DIRECTION_NONE, DIRECTION_POSX, DIRECTION_NEGX, DIRECTION_POSY, DIRECTION_NEGY, DIRECTION_POSZ, DIRECTION_NEGZ};        // directions for volumetric rendering
 
     ///// private member functions
     float boundingSphereRadius();      // calculates the radius of the bounding sphere
     bool translateSelection(const int xRange, const int yRange, const int zRange);        // translates the selected atoms according to the current view
     bool rotateSelection(const double angleX, const double angleY, const double angleZ);  // rotates the selected atoms around their local center of mass
     bool changeSelectedIC(const int range);       // changes the selected internal coordinate
-    void drawItem(const unsigned int index);    // draws the item shapes[index]
+    void drawItem(const unsigned int index);      // draws the item shapes[index]
+    void drawSurface(const unsigned int index);   // drwas an isosurface
+    void drawVolume();                  // draws a grid with volumetric rendering
+    void drawSlice();                   // draws a slice
+    unsigned int getDirection() const;  // gets the current viewing direction
     
     ///// private member data   
-    IsoSurface* isoSurface;             ///< An isodensity surface.
+    DensityGrid* densityGrid;           ///< An isodensity surface.
     DensityBase* densityDialog;         ///< A dialog for changing the isodensity surfaces.
     NewAtomBase* newAtomDialog;         ///< A dialog for adding atoms to the atomset
     std::vector<GLuint> glSurfaces;     ///< A vector that holds the GL display list indices for surfaces.
+    GLuint volumeObjects;               ///< Holds the start index of the first GL display list for volume rendering textures.
+    unsigned int numVolumeObjects;      ///< Holds the number of allocated display lists for texturing.
+    GLuint sliceObject;                 ///< Holds the OpenGL display list number for slices
+
     ///// static private member data
     static bool manipulateSelection;    ///< If true, only the selected atoms are manipulated instead of the entire system.
 };

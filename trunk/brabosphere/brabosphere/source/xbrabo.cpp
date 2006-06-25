@@ -1170,7 +1170,7 @@ void Xbrabo::updateActions()
 /// to a changed() signal from an XbraboView, but not necessarily from the one
 /// with the focus. Some unneccesary updating is bound to occur.
 {
-  qDebug("calling updateActions");
+  //qDebug("calling updateActions");
 
   ///// check whether there is an active calculation
   XbraboView* view = dynamic_cast<XbraboView*>(activeWindow());
@@ -1625,12 +1625,12 @@ void Xbrabo::initActions()
                                                  "a calculation is running.")));
   connect(actionMoleculeDeleteSelection, SIGNAL(activated()), this, SLOT(moleculeDeleteSelection()));
 
-  ///// Molecule->Density Isosurfaces
-  actionMoleculeDensity = new QAction(QIconSet(), tr("Density &isosurfaces..."), 0, this);
-  actionMoleculeDensity->setToolTip(tr("Change the density isosurfaces"));
-  actionMoleculeDensity->setWhatsThis(actionText(tr("Density Isosurfaces"), tr("Allows changing the density isosurfaces."),
+  ///// Molecule->3D density grids
+  actionMoleculeDensity = new QAction(QIconSet(), tr("3D density &grids..."), 0, this);
+  actionMoleculeDensity->setToolTip(tr("Change the representation of any density grid"));
+  actionMoleculeDensity->setWhatsThis(actionText(tr("3D Density Grids"), tr("Allows changing the representation of any 3D density grid."),
                                       tr("This command opens a window where up to 2 density (cube) files "
-                                         "can be loaded and any number of isosurfaces can be defined. "
+                                      "can be loaded and visualized in a number of ways (isosurfaces, volumetric rendering and slices). "
                                          "Loaded density files and generated isosurfaces are not saved with "
                                          "the calculation.")));
   connect(actionMoleculeDensity, SIGNAL(activated()), this, SLOT(moleculeDensity()));

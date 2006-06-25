@@ -456,7 +456,7 @@ CommandAddAtoms* CommandAddAtoms::clone() const
 bool CommandAddAtoms::initialRun()
 /// Adds atoms to the current molecular system. 
 {
-  newAtomBase->addAtomCommand();
+  newAtomBase->addAtom();
   return true;
 }
 

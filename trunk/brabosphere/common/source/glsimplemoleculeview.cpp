@@ -696,6 +696,26 @@ void GLSimpleMoleculeView::drawScene()
 
   glTranslatef(-centerX, -centerY, -centerZ); // center the molecule
 
+  // DEBUG
+  // add the axes
+  glDisable(GL_LIGHTING);
+  glBegin(GL_LINES);
+    // x-axis in red
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(1.0f, 0.0f, 0.0f);
+    // y-axis in green
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 1.0f, 0.0f);
+    // z-axis in blue
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 1.0f);
+  glEnd();
+  glEnable(GL_LIGHTING);
+  // END DEBUG
+
   glInitNames();
   glPushName(0);
 

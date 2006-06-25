@@ -1,5 +1,5 @@
 /***************************************************************************
-                         isosurface.h  -  description
+                        densitygrid.h  -  description
                              -------------------
     begin                : Fri Mar 11 2005
     copyright            : (C) 2005-2006 by Ben Swerts
@@ -16,10 +16,10 @@
  ***************************************************************************/
 
 /// \file
-/// Contains the declaration of the class IsoSurface
+/// Contains the declaration of the class DensityGrid
 
-#ifndef ISOSURFACE_H
-#define ISOSURFACE_H
+#ifndef DENSITYGRID_H
+#define DENSITYGRID_H
 
 ///// Forward class declarations & header files ///////////////////////////////
 
@@ -29,26 +29,43 @@
 using std::map;
 using std::vector;
 
+// Qt forward class declarations
+class QColor;
+class QImage;
+
 // Xbrabo includes
 #include <point3d.h>
 
-///// class IsoSurface ////////////////////////////////////////////////////////
-class IsoSurface
+///// class DensityGrid ///////////////////////////////////////////////////////
+class DensityGrid
 {
   public:
-  	IsoSurface();                       // constructor
-	  ~IsoSurface();                      // destructor
+    ///// constructur/destructor
+  	DensityGrid();                      // constructor
+	  ~DensityGrid();                     // destructor
 
+    ///// public enums
+    enum ColorMapType{MAP_BLUE_RAINBOW_RED = 0, MAP_RED_RAINBOW_BLUE, MAP_BLACK_RAINBOW_WHITE, 
+                      MAP_WHITE_RAINBOW_BLACK, MAP_BLUE_MAGENTA_RED, MAP_RED_MAGENTA_BLUE,
+                      MAP_LAST};        ///< currently equal to the possibilities in the class MappedSurfaceWidget
+
+    enum Plane{PLANE_XY, PLANE_XZ, PLANE_YZ};     ///< Different orientations for slices
+    ///// public member functions for changing data
 	  void setParameters(const std::vector<double>* values, const Point3D<unsigned int>& pointDimension, const Point3D<float>& pointDelta, const Point3D<float>& pointOrigin);         // set up the parameters for the surface 
+    void setMappingParameters(const std::vector<double>* values, const unsigned int map, const float maxValue, const float minValue);       // sets up the mapping density for the given regular density and the color map
 	  void addSurface(const double isoDensity); // calculates a new surface
     void changeSurface(const unsigned int surface, const double isoDensity);      // recalculates a surface
 
+    ///// public member functions for retrieving data
     bool densityPresent() const;          // returns whether a density has been loaded
+    bool hasMapping() const;              // returns whether a mapping density is present
     unsigned int numSurfaces() const;     // returns the number of calculated surfaces
     unsigned int numTriangles(const unsigned int surface) const;        // returns the number of triangles a certain surface consists of
 	  unsigned int numVertices(const unsigned int surface) const;         // returns the number of points a certain surface consists of
-	  void getTriangle(const unsigned int surface, const unsigned int index, Point3D<float>& point1, Point3D<float>& point2, Point3D<float>& point3, 
+	  void getTriangle(const unsigned int surface, const unsigned int index, 
+                     Point3D<float>& point1, Point3D<float>& point2, Point3D<float>& point3, 
                      Point3D<float>& normal1, Point3D<float>& normal2, Point3D<float>& normal3) const;// return the data of a triangle of a surface    
+    QColor getMappingColor(const Point3D<float>& point) const;        // return the color of the given point according to the active color map
     Point3D<float> getPoint(const unsigned int surface, const unsigned int index) const;    // returns the coordinates of a point on a surface
     void clearParameters();               // clear all data
     void clearSurfaces();                 // removes all existing surfaces
@@ -56,6 +73,10 @@ class IsoSurface
     Point3D<float> getOrigin() const;               // returns the set origin
     Point3D<float> getDelta() const;                // returns the set deltas
     Point3D<unsigned int> getNumPoints() const;     // returns the number of points in all directions
+    double getMaximumDensity() const;               // returns the most positive value of the density
+    double getMinimumDensity() const;               // returns the most negative value of the density
+    QImage getSlice(const unsigned int plane, const unsigned int index, const QColor& positiveColor, const QColor& negativeColor, 
+                    const double maxPlotValue, const double minPlotValue) const;// Returns an image to be used as a slice
 
   private:
 	  ///// private structs
@@ -74,9 +95,11 @@ class IsoSurface
 	  void renameVerticesAndTriangles(vector<Point3D<float> >* singleVerticesList, vector<unsigned int>* singleTriangleIndices);  // renames the vertices and triangles
     void calculateNormals(vector<float>* singleNormals, const unsigned int surface);        // calculates the normals
     unsigned int getArrayIndex(const unsigned int x, const unsigned int y, const unsigned int z) const;         // returns the index into the densityValues array
+    QColor mapColor(const double value) const;    // returns the color from the active color map on a scale of value (0.0 - 1.0)
 
     ///// private member data
     vector<double> densityValues;         ///< a vector containing the input density values
+    vector<double> mappingValues;         ///< a vector containing the mapping density values
     Point3D<unsigned int> numPoints;      ///< a Point3D containing the number of points in the 3 directions
     Point3D<float> delta;                 ///< a Point3D containing the cell lengths in the 3 directions
     Point3D<float> origin;                ///< the origin of the density values
@@ -87,6 +110,9 @@ class IsoSurface
     vector< vector<Point3D<float> >* > verticesList;///< an easily accessible list of vertices for each calculated surface
     vector< vector<unsigned int>* > triangleIndices;///< an easily accessible list of vertex indices for each calculated surface
     vector< vector<float>* > normals;     ///< a list of normals for each calculated surface
+    unsigned int colorMap;                ///< holds the current color map type
+    double maxDensity, minDensity;        ///< hold the extrema of the density values
+    double maxMapValue, minMapValue;      ///< hold the extrema between which the mapping colors have to be interpolated
 
 	  ///// private static member data
 	  static const unsigned int edgeTable[256];        ///< lookup table for edges
