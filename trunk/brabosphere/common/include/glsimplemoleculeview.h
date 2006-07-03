@@ -34,7 +34,6 @@ class QDomElement;
 class AtomSet;
 
 // Xbrabo header files
-#include "glmoleculeparameters.h"
 #include "glview.h"
 
 class GLSimpleMoleculeView : public GLView
@@ -61,6 +60,29 @@ class GLSimpleMoleculeView : public GLView
     void saveCML(QDomElement* root);    // saves the setup of the view
     void setDisplayStyle(const DisplaySource source, const unsigned int style); // sets the display style for a certain primitive
     void setLabels(const bool element, const bool number, const unsigned int type);       // sets up showing of the labels
+
+    ///// public structs
+    ///// struct GLMoleculeParameters /////////////////////////////////////////////
+    struct GLMoleculeParameters
+    /// Struct containing OpenGL parameters specific to the visualisation of molecules.
+    {
+      int quality;                      ///< The rendering quality of spheres (atoms) and cylinders (bonds) = the number of slices
+      GLfloat sizeLines;                ///< Thickness for line-type bonds
+      GLfloat sizeBonds;                ///< The bond size for cylinder-type bonds 
+      GLfloat sizeForces;               ///< The size for cylinder-type forces 
+      unsigned int defaultMoleculeStyle;///< The default molecule display style
+      unsigned int defaultForcesStyle;  ///< The default forces display style
+      unsigned int fastRenderLimit;     ///< The number of atoms above which to switch to fast rendering (lines and no labels)
+      bool showElements;                ///< Whether to show the element labels by default
+      bool showNumbers;                 ///< Whether to show the number labels by default
+      unsigned int colorLabels;         ///< The color for rendering the textlabels
+      unsigned int colorICs;            ///< The color for rendering the values of the internal coordinates
+      unsigned int colorSelections;     ///< The color for rendering the selections
+      unsigned int opacitySelections;   ///< The opacity of the selection color (0-100)
+      unsigned int colorForces;         ///< The color for rendering the forces
+      bool forcesOneColor;              ///< Whether to render the forces in one color or in the atom's color
+      unsigned int opacityForces;       ///< The opacity of the color of the forces (0-100)
+    };
 
     ///// static public member functions
     static void setParameters(GLMoleculeParameters params); // sets new OpenGL parameters

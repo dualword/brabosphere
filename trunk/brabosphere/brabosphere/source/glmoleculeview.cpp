@@ -36,6 +36,7 @@
 #include <algorithm>
 
 // Qt header files
+#include <qcheckbox.h>
 #include <qcombobox.h>
 #include <qfiledialog.h>
 #include <qimage.h>
@@ -304,6 +305,14 @@ void GLMoleculeView::toggleSelectionMode()
 {
   manipulateSelection = !manipulateSelection;
 }
+
+///// setParameters ///////////////////////////////////////////////////////////
+void GLMoleculeView::setParameters(GLTextureParameters params)
+/// Updates the OpenGL texture parameters.
+{
+  textureParameters = params;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Slots                                                        /////
@@ -850,12 +859,12 @@ void GLMoleculeView::updateScene()
   // set the correct texturing mode for volume rendering and slices
   switch(densityDialog->ComboBoxVisualizationType->currentItem())
   {
-    case DensityBase::VOLUME: glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // transparant textures
+    case DensityBase::VOLUME: glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // transparent textures
                               break;
-    case DensityBase::SLICE:  if(densityDialog->RadioButtonSliceTransparant->isOn())
-                                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // transparant textures
+    case DensityBase::SLICE:  if(densityDialog->PushButtonSingleColor->isOn() && densityDialog->CheckBoxSliceTransparent->isChecked())
+                                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // transparent textures
                               else
-                                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL); // textures blended with the current color
+                                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL); // textures blended with the current background color
   }
 
   updateGL();
@@ -899,7 +908,7 @@ void GLMoleculeView::updateVolume()
   {
     // get the image
     image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, maxPlotValue, minPlotValue);
-    glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+    glImage = glSlice(image);
 
     // create a texture from it
     glGenTextures(1, &textureID);
@@ -929,7 +938,7 @@ void GLMoleculeView::updateVolume()
   {
     // get the image
     image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, maxPlotValue, minPlotValue);
-    glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+    glImage = glSlice(image);
 
     // create a texture from it
     glGenTextures(1, &textureID);
@@ -945,11 +954,11 @@ void GLMoleculeView::updateVolume()
         glTexCoord2f(0.0f, 0.0f);
         glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z());
         glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
+        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
         glTexCoord2f(1.0f, 1.0f);
         glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
         glTexCoord2f(0.0f, 1.0f);
-        glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+        glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
       glEnd();
     glEndList();
   } 
@@ -959,7 +968,7 @@ void GLMoleculeView::updateVolume()
   {
     // get the image
     image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, maxPlotValue, minPlotValue);
-    glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+    glImage = glSlice(image);
 
     // create a texture from it
     glGenTextures(1, &textureID);
@@ -1280,10 +1289,12 @@ void GLMoleculeView::updateSlice()
   QColor negativeColor = densityDialog->ColorButtonSliceNeg->color();
   double maxPlotValue = densityDialog->LineEditSlicePos->text().toDouble();
   double minPlotValue = densityDialog->LineEditSliceNeg->text().toDouble();
+  unsigned int colorMap = densityDialog->ComboBoxSliceMap->currentItem();
+  if(densityDialog->PushButtonSingleColor->isOn())
+    colorMap = DensityGrid::MAP_LAST; // no mapping
   GLuint textureID;
 
 
-  //glColor3f(1.0f, 1.0f, 1.0f); // always blend the color with white when generating the textures
   qglColor(densityDialog->ColorButtonSliceBack->color());
 
   if(sliceObject == -1)
@@ -1296,8 +1307,8 @@ void GLMoleculeView::updateSlice()
     qDebug("calling updateSlice for YZ-plane (varying X)");
     // a slice in the YZ-plane
     const unsigned int x = index;
-    QImage image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, maxPlotValue, minPlotValue);
-    QImage glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+    QImage image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x, positiveColor, negativeColor, maxPlotValue, minPlotValue, colorMap);
+    QImage glImage = glSlice(image);
 
     // create a texture from it
     glGenTextures(1, &textureID);
@@ -1321,8 +1332,8 @@ void GLMoleculeView::updateSlice()
         glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
       glEnd();
       
-      // a rectangle in case of transparant textures
-      if(densityDialog->RadioButtonSliceTransparant->isOn())
+      // a rectangle in case of transparent textures
+      if(densityDialog->PushButtonSingleColor->isOn() && densityDialog->CheckBoxSliceTransparent->isChecked())
       {
         qglColor(densityDialog->ColorButtonSliceBack->color());
         glBindTexture(GL_TEXTURE_2D, 0); // don't use texturing for this
@@ -1340,8 +1351,8 @@ void GLMoleculeView::updateSlice()
     qDebug("calling updateSlice for XZ-plane (varying Y)");
     // a slice in the XZ-plane
     unsigned int y = index - numPoints.x();
-    QImage image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, maxPlotValue, minPlotValue);
-    QImage glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
+    QImage image = densityGrid->getSlice(DensityGrid::PLANE_XZ, y, positiveColor, negativeColor, maxPlotValue, minPlotValue, colorMap);
+    QImage glImage = glSlice(image);
 
     // create a texture from it
     glGenTextures(1, &textureID);
@@ -1363,8 +1374,8 @@ void GLMoleculeView::updateSlice()
         glTexCoord2f(0.0f, 1.0f);
         glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
       glEnd();
-      // a rectangle in case of transparant textures
-      if(densityDialog->RadioButtonSliceTransparant->isOn())
+      // a rectangle in case of transparent textures
+      if(densityDialog->PushButtonSingleColor->isOn() && densityDialog->CheckBoxSliceTransparent->isChecked())
       {
         qglColor(densityDialog->ColorButtonSliceBack->color());
         glBindTexture(GL_TEXTURE_2D, 0); // don't use texturing for this
@@ -1382,10 +1393,8 @@ void GLMoleculeView::updateSlice()
     qDebug("calling updateSlice for XY-plane (varying Z)");
     // a slice in the XY-plane
     unsigned int z = index - numPoints.x() - numPoints.y();
-    QImage image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, maxPlotValue, minPlotValue);
-    QImage glImage = QGLWidget::convertToGLFormat(image.smoothScale(64, 64));
-
-    image.save("test-slice-xy-"+QString::number(z)+".png", "PNG");
+    QImage image = densityGrid->getSlice(DensityGrid::PLANE_XY, z, positiveColor, negativeColor, maxPlotValue, minPlotValue, colorMap);
+    QImage glImage = glSlice(image);
 
     // create a texture from it
     glGenTextures(1, &textureID);
@@ -1407,8 +1416,8 @@ void GLMoleculeView::updateSlice()
         glTexCoord2f(0.0f, 1.0f);
         glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * delta.z());
       glEnd();
-      // a rectangle in case of transparant textures
-      if(densityDialog->RadioButtonSliceTransparant->isOn())
+      // a rectangle in case of transparent textures
+      if(densityDialog->PushButtonSingleColor->isOn() && densityDialog->CheckBoxSliceTransparent->isChecked())
       {
         qglColor(densityDialog->ColorButtonSliceBack->color());
         glBindTexture(GL_TEXTURE_2D, 0); // don't use texturing for this
@@ -1701,8 +1710,8 @@ void GLMoleculeView::drawSlice()
 {
   qDebug("calling drawSlice");
 
-  if(densityDialog->RadioButtonSliceTransparant->isOn())
-    glColor3f(1.0f, 1.0f, 1.0f); // for tranparant slices blend the color with white
+  if(densityDialog->CheckBoxSliceTransparent->isOn())
+    glColor3f(1.0f, 1.0f, 1.0f); // for tranparent slices blend the color with white
   else
     qglColor(densityDialog->ColorButtonSliceBack->color());
 
@@ -1776,9 +1785,44 @@ unsigned int GLMoleculeView::getDirection() const
   else if(direction == DIRECTION_POSZ && dotZ < 0.0f)
     direction = DIRECTION_NEGZ;
 
-  qDebug("direction %d has been chosen", direction);
+  //qDebug("direction %d has been chosen", direction);
 
   return direction;
+}
+
+///// glSlice /////////////////////////////////////////////////////////////////
+QImage GLMoleculeView::glSlice(const QImage& image) const
+/// Resizes the given image according to the maximum texture size (so it shows 
+/// maximum detail when shown as an OpenGL texture) and returns it in OpenGL format.
+{
+  QSize newSize(image.size());
+
+  // make the width a power of 2
+  if(newSize.width() < 16) 
+    newSize.setWidth(16); // the minimum size allowed in the Preferences
+  else if(newSize.width() > textureParameters.maximumSize)
+    newSize.setWidth(textureParameters.maximumSize); // the maximum size as set in the Preferences
+  else
+  {
+    // round to the nearest larger power of 2
+    //newSize.setWidth(static_cast<int>pow(2.0,ceil(log2(static_cast<double>(newSize.width())))))); // doesn't work as Visual C++ 2003 doesn't define log2
+    double log2 = log10(static_cast<double>(newSize.width()))/log(2.0); // log2(x) = log10(x)/log(2)
+    newSize.setWidth(static_cast<int>(pow(2.0,ceil(log2))));
+  }
+
+  // the same for the height
+  if(newSize.height() < 16) 
+    newSize.setHeight(16); 
+  else if(newSize.height() > 256)
+    newSize.setHeight(256);
+  else
+  {
+    double log2 = log10(static_cast<double>(newSize.height()))/log(2.0);
+    newSize.setHeight(static_cast<int>(pow(2.0,ceil(log2))));
+  }
+
+  //qDebug("image size (%d,%d) was rounded to (%d,%d)", image.width(), image.height(), newSize.width(), newSize.height());
+  return QGLWidget::convertToGLFormat(image.smoothScale(newSize));
 }
 
 
@@ -1787,3 +1831,4 @@ unsigned int GLMoleculeView::getDirection() const
 ///////////////////////////////////////////////////////////////////////////////
 
 bool GLMoleculeView::manipulateSelection = false;
+GLMoleculeView::GLTextureParameters GLMoleculeView::textureParameters = {128};

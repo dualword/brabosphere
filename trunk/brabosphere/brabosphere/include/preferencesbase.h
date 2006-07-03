@@ -38,8 +38,7 @@ class QextMdiMainFrm;
 
 // Xbrabo forward class declarations
 class ColorButton;
-#include "glbaseparameters.h" // structs can't be declared forward
-#include "glmoleculeparameters.h"
+#include "glmoleculeview.h"
 
 // Base class header file
 #include "preferenceswidget.h"
@@ -57,8 +56,9 @@ class PreferencesBase : public PreferencesWidget
     ///// public member functions for retrieving data               
     //unsigned int preferredBasisset() const;       // returns the preferred basisset
     bool useBinDirectory() const;                 // returns true if .11 files should be written to a special directory
-    GLBaseParameters getGLBaseParameters() const; // returns a struct with the OpenGL base parameters
-    GLMoleculeParameters getGLMoleculeParameters() const;   // returns a struct with the OpenGL molecule parameters
+    GLView::GLBaseParameters getGLBaseParameters() const;   // returns a struct with the OpenGL base parameters
+    GLSimpleMoleculeView::GLMoleculeParameters getGLMoleculeParameters() const; // returns a struct with the OpenGL molecule parameters
+    GLMoleculeView::GLTextureParameters getGLTextureParameters() const;         // returns a struct with the OpenGL texture parameters
     QStringList getPVMHosts() const;              // returns a list of PVM hosts
     void setToolbarsInfo(const QString& info, const bool status);     // sets the info needed to restore the toolbars
     void getToolbarsInfo(bool& status, QString& info) const;// returns the toolbars info
@@ -89,6 +89,8 @@ class PreferencesBase : public PreferencesWidget
     void selectBasisDir();              // selects a directory to read the basissets from
     ///// Visuals
     void selectBackground();            // selects a background image
+    void updateUndoRedo();              // updates the undo/redo spinboxes
+    ///// Molecule
     void updateLineEditBondSizeLines(); // updates LineEditBondSizeLines according to SliderBondSizeLines
     void updateLineEditBondSizeTubes(); // updates LineEditBondSizeTubes according to SliderBondSizeTubes
     void updateSliderBondSizeTubes();   // updates SliderBondSizeTubes according to LineEditBondSizeTubes
@@ -108,7 +110,7 @@ class PreferencesBase : public PreferencesWidget
     friend class CommandPreferences;
 
     ///// private enums
-    enum{SettingsVersion = 100};        //< The current version for the settings file 
+    enum{SettingsVersion = 110};        //< The current version for the settings file 
 
     ///// private member functions
     void makeConnections();             // sets up all permanent connections
@@ -150,11 +152,14 @@ class PreferencesBase : public PreferencesWidget
       unsigned int opacityForces;       ///< SliderForceOpacity
       bool forcesOneColor;              ///< ComboBoxForceColor
 
-      ///// Visuals
+      ///// Application
       unsigned int backgroundType;      ///< ButtonGroupBackground
       QString backgroundImage;          ///< LineEditBackground
       unsigned int backgroundColor;     ///< ColorButtonBackground
       unsigned int styleApplication;    ///< ComboBoxStyle
+      unsigned int undoRedo;            ///< ButtonGroupUndoRedo
+      unsigned int undoLevels;          ///< SpinBoxUndoLevels;
+      unsigned int undoRAM;             ///< SpinBoxUndoRAM
       
       ///// OpenGL
       unsigned int lightPosition;       ///< ButtonGroupLightPosition
@@ -165,6 +170,7 @@ class PreferencesBase : public PreferencesWidget
       bool smoothShading;               ///< CheckBoxSmooth
       bool depthCue;                    ///< CheckBoxDepthCue;
       unsigned int quality;             ///< SliderQuality
+      unsigned int sliceQuality;        ///< SliderSlices
       bool perspectiveProjection;       ///< ButtonGroupProjection
 
       ///// PVM
@@ -185,8 +191,7 @@ class PreferencesBase : public PreferencesWidget
     float maxLineWidthGL;               ///< Contains the maximum possible linewidth for a glLineWidth call.
     float lineWidthGranularity;         ///< Contains the granularity for OpenGL linewidths.
     QString toolbarsInfo;               ///< Contains the info needed to restore the toolbars.
-    bool toolbarsStatus;                ///< Contains the visibility of the statusbar (not present in toolbarsInfo).
-    
+    bool toolbarsStatus;                ///< Contains the visibility of the statusbar (not present in toolbarsInfo).   
 };
 
 #endif

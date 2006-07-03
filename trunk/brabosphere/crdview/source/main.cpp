@@ -23,6 +23,7 @@
 // Qt header files
 #include <qapplication.h>
 #include <qfont.h>
+#include <qgl.h>
 #include <qstring.h>
 #include <qtextcodec.h>
 #include <qtranslator.h>
@@ -94,11 +95,7 @@ int main(int argc, char *argv[])
 
   // check for OpenGL support after any conversion has finished
   if (!QGLFormat::hasOpenGL())
-  {
-    qWarning("This system has no working OpenGL support. Exiting...");
-    return -1;
-  }
-
+    qFatal("This system has no working OpenGL support. Exiting...");
 
   //QTranslator tor( 0 );
   // set the location where your .qm files are in load() below as the last parameter instead of "."

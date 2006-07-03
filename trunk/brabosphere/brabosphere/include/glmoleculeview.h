@@ -27,10 +27,6 @@
 #include <list>
 #include <vector>
 
-// Qt forward class declarations
-//class QDomDocument;
-//class QDomElement;
-
 // Xbrabo forward class declarations
 class AtomSet;
 class DensityGrid;
@@ -56,8 +52,16 @@ class GLMoleculeView : public GLSimpleMoleculeView
     bool alterInternal();               // alters the internal coordinates formed by the selected atoms
     bool deleteSelectedAtoms();         // deletes the selected atoms
     
+    ///// public structs
+    struct GLTextureParameters
+    /// A struct containing all the OpenGL parameters pertaining to texturing.
+    {
+      int maximumSize;                  ///< The maximum size of a 2D texture (should be a power of 2)
+    };
+
     ///// static public member functions
     static void toggleSelectionMode();  // Toggles the manipulation target
+    static void setParameters(GLTextureParameters params);  // sets new OpenGL texture parameters
 
   signals:
     void atomsetChanged();              ///< Is emitted when the number of atoms has been changed
@@ -100,6 +104,7 @@ private slots:
 
   private:
     friend class CommandCoordinates;
+    friend class CommandReadCoordinates;
     friend class CommandTranslateSelectionXY;
     friend class CommandTranslateSelectionZ;
     friend class CommandRotateSelection;
@@ -127,10 +132,11 @@ private slots:
     bool rotateSelection(const double angleX, const double angleY, const double angleZ);  // rotates the selected atoms around their local center of mass
     bool changeSelectedIC(const int range);       // changes the selected internal coordinate
     void drawItem(const unsigned int index);      // draws the item shapes[index]
-    void drawSurface(const unsigned int index);   // drwas an isosurface
+    void drawSurface(const unsigned int index);   // draws an isosurface
     void drawVolume();                  // draws a grid with volumetric rendering
     void drawSlice();                   // draws a slice
     unsigned int getDirection() const;  // gets the current viewing direction
+    QImage glSlice(const QImage& image) const;    // resizes an image according to the maximum slice size settings and OpenGL limitations
     
     ///// private member data   
     DensityGrid* densityGrid;           ///< An isodensity surface.
@@ -143,6 +149,7 @@ private slots:
 
     ///// static private member data
     static bool manipulateSelection;    ///< If true, only the selected atoms are manipulated instead of the entire system.
+    static GLTextureParameters textureParameters; ///< Holds the OpenGL texturing parameters
 };
    
 #endif

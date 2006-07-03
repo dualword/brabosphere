@@ -26,12 +26,12 @@ HEADERS += include/aboutbox.h \
            include/command.h \
            include/commandhistory.h \
            include/densitybase.h \
+           include/densitygrid.h \
            include/glmoleculeview.h \
            include/globalbase.h \
            include/glorbitalview.h \
            include/icons.h \
            include/iconsets.h \
-           include/isosurface.h \
            include/latin1validator.h \
            include/loadcubethread.h \
            include/loaddensitythread.h \
@@ -56,11 +56,11 @@ SOURCES += source/aboutbox.cpp \
            source/command.cpp \
            source/commandhistory.cpp \
            source/densitybase.cpp \
+           source/densitygrid.cpp \
            source/glmoleculeview.cpp \
            source/globalbase.cpp \
            source/glorbitalview.cpp \
            source/iconsets.cpp \
-           source/isosurface.cpp \
            source/latin1validator.cpp \
            source/loadcubethread.cpp \
            source/loaddensitythread.cpp \
@@ -82,6 +82,7 @@ FORMS +=   ui/brabowidget.ui \
            ui/coordinateswidget.ui \
            ui/densitywidget.ui \
            ui/globalwidget.ui \
+           ui/mappedsurfacewidget.ui \
            ui/newatomwidget.ui \
            ui/outputchooserwidget.ui \
            ui/orbitaloptionswidget.ui \

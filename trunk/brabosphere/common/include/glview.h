@@ -28,7 +28,7 @@ class QPoint;
 class QTimer;
 
 // Xbrabo forward class declarations
-#include <glbaseparameters.h>  // struct GLBaseParameters can't be declared forward
+//#include <glbaseparameters.h>  // struct GLBaseParameters can't be declared forward
 template <class T> class Quaternion;
 
 // Base class header file
@@ -48,6 +48,28 @@ class GLView : public QGLWidget
     bool isModified() const;            // returns whether the scene needs to be saved
     bool isAnimating() const;           // returns whether the scene is animating
     unsigned int calculateFPS();        // returns the maximum framerate for the current parameters
+
+    ///// public structs
+    ///// struct GLBaseParameters /////////////////////////////////////////////////
+    struct GLBaseParameters
+    /// A struct containing all the basic OpenGL parameters pertaining the lighting,
+    /// quality, material and other properties.
+    {
+      GLfloat lightPositionX;           ///< X-position of the light
+      GLfloat lightPositionY;           ///< Y-position of the light
+      GLfloat lightPositionZ;           ///< Z-position of the light
+      //change needed for compilation under MSVC .NET 2002 (should be fixed in .NET 2003)
+      //QColor  lightColor;
+      unsigned int lightColor;         ///< The color of the light
+      GLfloat materialSpecular;        ///< The specular property of all materials
+      GLfloat materialShininess;       ///< The shininess of all materials
+      //QColor  backgroundColor;
+      unsigned int backgroundColor;    ///< The background color
+      bool    antialias;               ///< Antialiasing property
+      bool    smoothShading;           ///< Smoothshading property
+      bool    depthCue;                ///< Depthcueing property
+      bool    perspectiveProjection;   ///< Perspective vs orthogonal projection
+    };
 
     ///// static public member functions
     static void setParameters(GLBaseParameters params);     // sets new OpenGL parameters
@@ -97,7 +119,6 @@ class GLView : public QGLWidget
     GLfloat yPos;                       ///< Amount of translation on the y-axis.
     GLfloat zPos;                       ///< Zoomfactor = distance camera from center.
     Quaternion<float>* orientationQuaternion;     ///< Orientation of the molecule in 4D.
-    //GLfloat aspectRatio;                ///< Needed in resizeGL and selectEntity.
     QPoint mousePosition;               ///< Position of the mouse.
 
     ///// protected constants (made static for ease)

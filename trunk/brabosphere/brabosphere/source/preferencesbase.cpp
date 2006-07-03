@@ -73,7 +73,8 @@
 #include "basisset.h"
 #include "brabobase.h"
 #include "colorbutton.h"
-#include "glsimplemoleculeview.h"
+#include "commandhistory.h"
+#include "glmoleculeview.h"
 #include "iconsets.h"
 #include "latin1validator.h"
 #include "paths.h"
@@ -126,10 +127,10 @@ bool PreferencesBase::useBinDirectory() const
 }
 
 ///// getGLBaseParameters /////////////////////////////////////////////////////
-GLBaseParameters PreferencesBase::getGLBaseParameters() const
+GLView::GLBaseParameters PreferencesBase::getGLBaseParameters() const
 /// Returns a struct containing all OpenGL parameters used in GLView.
 {
-  GLBaseParameters result;
+  GLView::GLBaseParameters result;
   switch(data.lightPosition)
   {
     case 0: result.lightPositionX = -1.0;
@@ -174,10 +175,10 @@ GLBaseParameters PreferencesBase::getGLBaseParameters() const
 }
 
 ///// getGLMoleculeParameters /////////////////////////////////////////////////
-GLMoleculeParameters PreferencesBase::getGLMoleculeParameters() const
+GLSimpleMoleculeView::GLMoleculeParameters PreferencesBase::getGLMoleculeParameters() const
 /// Returns a struct containing all OpenGL parameters used in GLSimpleMoleculeView.
 {
-  GLMoleculeParameters result;
+  GLSimpleMoleculeView::GLMoleculeParameters result;
 
   if(data.quality < 11)
     result.quality = data.quality;
@@ -199,6 +200,16 @@ GLMoleculeParameters PreferencesBase::getGLMoleculeParameters() const
   result.forcesOneColor = data.forcesOneColor;
   result.opacityForces = data.opacityForces;
 
+  return result;
+}
+
+///// getGLTextureParameters //////////////////////////////////////////////////
+GLMoleculeView::GLTextureParameters PreferencesBase::getGLTextureParameters() const
+/// Returns a struct containing all OpenGL parameters used for the display of
+/// properties using textures in GLMoleculeView.
+{
+  GLMoleculeView::GLTextureParameters result;
+  result.maximumSize = pow(2,data.sliceQuality);
   return result;
 }
 
@@ -241,8 +252,26 @@ void PreferencesBase::applyChanges()
   BraboBase::setPreferredBasisset(ComboBoxBasis->currentItem());
   GLView::setParameters(getGLBaseParameters());
   GLSimpleMoleculeView::setParameters(getGLMoleculeParameters());
+  GLMoleculeView::setParameters(getGLTextureParameters());
   ///// Other visuals
   updateVisuals();
+  ///// Undo/Redo options
+  switch(data.undoRedo)
+  {
+    case 0: // unlimited
+            CommandHistory::setMaxLevels(-1);
+            CommandHistory::setMaxRAM(-1);
+            break;
+    case 1: // limited levels
+            CommandHistory::setMaxLevels(data.undoLevels); 
+            break;
+    case 2: // limited RAM
+            CommandHistory::setMaxRAM(data.undoRAM);
+            break;
+    case 3: // disabled
+            CommandHistory::setMaxLevels(0); // also sets maxRAM to zero
+            break;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -277,7 +306,7 @@ void PreferencesBase::loadSettings()
   ///// Preferences entries ///////////
   unsigned int settingsVersion = settings.readNumEntry(unixPrefix + "version", 0);
   if(settingsVersion > SettingsVersion)
-    qWarning("the seetings file was written with a newer version of " + Version::appName);
+    qWarning("the settings file was written with a newer version of " + Version::appName);
 
   ///// Paths
   data.path              = settings.readEntry(prefix + "path", appDirBrabo + QDir::separator());
@@ -313,11 +342,14 @@ void PreferencesBase::loadSettings()
   data.forcesOneColor    = settings.readBoolEntry(prefix + "color_force_type", false); // atom color
   data.opacityForces     = settings.readNumEntry(prefix + "opacity_forces", 100);
 
-  ///// Visuals
+  ///// Application
   data.backgroundType    = settings.readNumEntry(prefix + "background_type", 0); // default
   data.backgroundImage   = settings.readEntry(prefix + "background_image", QString::null);
   data.backgroundColor   = settings.readNumEntry(prefix + "background_color", QColor(224, 224, 224).rgb()); // Light grey
   data.styleApplication  = settings.readNumEntry(prefix + "style", 0); // Startup style
+  data.undoRedo          = settings.readNumEntry(prefix + "undo_redo_type", 1); // limited levels
+  data.undoLevels        = settings.readNumEntry(prefix + "undo_redo_levels", 100);
+  data.undoRAM           = settings.readNumEntry(prefix + "undo_redo_ram", 5); 
 
   ///// OpenGL
   data.lightPosition     = settings.readNumEntry(prefix + "light_position", 2);
@@ -327,7 +359,16 @@ void PreferencesBase::loadSettings()
   data.antialias         = settings.readBoolEntry(prefix + "antialias", true);
   data.smoothShading     = settings.readBoolEntry(prefix + "smooth_shading", true);
   data.depthCue          = settings.readBoolEntry(prefix + "depth_cue", true);
-  data.quality           = settings.readNumEntry(prefix + "quality", 22); // 31 slices
+  if(settingsVersion < 110)
+  {
+    data.quality         = settings.readNumEntry(prefix + "quality", 22); // originally 31*62 slices
+    data.quality = data.quality/2;
+    if(data.quality < 2)
+      data.quality = 2;
+  }
+  else
+    data.quality         = settings.readNumEntry(prefix + "atom_quality", 15); // 32*32 slices
+  data.sliceQuality      = settings.readNumEntry(prefix + "slice_quality", 7); // 128x128 textures
   data.perspectiveProjection = settings.readBoolEntry(prefix + "perspective_projection", true);
   ///// PVM
   data.pvmHosts          = settings.readListEntry(prefix + "pvm_hosts");
@@ -394,11 +435,14 @@ void PreferencesBase::saveSettings()
   settings.writeEntry(prefix + "color_forces", static_cast<int>(data.colorForces));
   settings.writeEntry(prefix + "color_force_type", data.forcesOneColor);
   settings.writeEntry(prefix + "opacity_forces", static_cast<int>(data.opacityForces));
-  ///// Visuals
+  ///// Application
   settings.writeEntry(prefix + "background_type", static_cast<int>(data.backgroundType));
   settings.writeEntry(prefix + "background_image", data.backgroundImage);
   settings.writeEntry(prefix + "background_color", static_cast<int>(data.backgroundColor));
   settings.writeEntry(prefix + "style", static_cast<int>(data.styleApplication));
+  settings.writeEntry(prefix + "undo_redo_type", static_cast<int>(data.undoRedo));
+  settings.writeEntry(prefix + "undo_redo_levels", static_cast<int>(data.undoLevels));
+  settings.writeEntry(prefix + "undo_redo_ram", static_cast<int>(data.undoRAM));
   ///// OpenGL
   settings.writeEntry(prefix + "light_position", static_cast<int>(data.lightPosition));
   settings.writeEntry(prefix + "light_color", static_cast<int>(data.lightColor));
@@ -407,7 +451,8 @@ void PreferencesBase::saveSettings()
   settings.writeEntry(prefix + "antialias", data.antialias);
   settings.writeEntry(prefix + "smooth_shading", data.smoothShading);
   settings.writeEntry(prefix + "depth_cue", data.depthCue);
-  settings.writeEntry(prefix + "quality", static_cast<int>(data.quality));
+  settings.writeEntry(prefix + "atom_quality", static_cast<int>(data.quality));
+  settings.writeEntry(prefix + "slice_quality", static_cast<int>(data.sliceQuality));
   settings.writeEntry(prefix + "perspective_projection", data.perspectiveProjection);
   ///// PVM
   settings.writeEntry(prefix + "pvm_hosts", data.pvmHosts);
@@ -503,7 +548,7 @@ void PreferencesBase::selectWidget(QIconViewItem* item)
 {
   if(item->text() == tr("BRABO"))
     WidgetStackCategory->raiseWidget(0);
-  else if(item->text() == tr("Visuals"))
+  else if(item->text() == tr("General"))
     WidgetStackCategory->raiseWidget(1);
   else if(item->text() == tr("OpenGL"))
     WidgetStackCategory->raiseWidget(2);
@@ -621,6 +666,14 @@ void PreferencesBase::selectBackground()
   QString filename = QFileDialog::getOpenFileName(LineEditBackground->text(), QString::null, this, 0, tr("Choose an image"));
   if(!filename.isNull())
     LineEditBackground->setText(filename);
+}
+
+///// updateUndoRedo //////////////////////////////////////////////////////////
+void PreferencesBase::updateUndoRedo()
+/// Enables the proper spinbox when changing the undo/redo type
+{
+  SpinBoxUndoLevels->setEnabled(ButtonGroupUndoRedo->selectedId() == 1);
+  SpinBoxUndoRAM->setEnabled(ButtonGroupUndoRedo->selectedId() == 2);
 }
 
 ///// updateLineEditBondSizeLines /////////////////////////////////////////////
@@ -787,8 +840,10 @@ void PreferencesBase::makeConnections()
   connect(SliderSelectionOpacity, SIGNAL(valueChanged(int)), this, SLOT(updateOpacitySelection()));
   connect(SliderForceOpacity, SIGNAL(valueChanged(int)), this, SLOT(updateOpacityForces()));
   connect(ComboBoxForceColor, SIGNAL(activated(int)), this, SLOT(updateColorButtonForce()));
-  ///// Visuals
+  ///// Application
   connect(ToolButtonBackground, SIGNAL(clicked()), this, SLOT(selectBackground()));
+  connect(ButtonGroupUndoRedo, SIGNAL(clicked(int)), this, SLOT(updateUndoRedo()));
+
   ///// PVM
   connect(ListViewPVMHosts, SIGNAL(selectionChanged()), this, SLOT(changePVMHost()));
   connect(LineEditPVMHosts, SIGNAL(textChanged(const QString&)), this, SLOT(updatePVMHost(const QString&)));
@@ -824,11 +879,14 @@ void PreferencesBase::makeConnections()
   connect(ColorButtonForce, SIGNAL(newColor(QColor*)), this, SLOT(changed()));
   connect(ComboBoxForceColor, SIGNAL(activated(int)), this, SLOT(changed()));
   connect(SliderForceOpacity, SIGNAL(valueChanged(int)), this, SLOT(changed()));
-  ///// Visuals
+  ///// Application
   connect(ButtonGroupBackground, SIGNAL(clicked(int)), this, SLOT(changed()));
   connect(LineEditBackground, SIGNAL(textChanged(const QString&)), this, SLOT(changed()));
   connect(ColorButtonBackground, SIGNAL(newColor(QColor*)), this, SLOT(changed()));
   connect(ComboBoxStyle, SIGNAL(activated(int)), this, SLOT(changed()));
+  connect(ButtonGroupUndoRedo, SIGNAL(clicked(int)), this, SLOT(changed()));
+  connect(SpinBoxUndoLevels, SIGNAL(valueChanged(int)), this, SLOT(changed()));
+  connect(SpinBoxUndoRAM, SIGNAL(valueChanged(int)), this, SLOT(changed()));
   ///// OpenGL
   connect(SliderQuality, SIGNAL(valueChanged(int)), this, SLOT(changed()));
   connect(CheckBoxAA, SIGNAL(clicked()), this, SLOT(changed()));
@@ -900,7 +958,7 @@ void PreferencesBase::init()
       item->setPixmap(IconSets::getPixmap(IconSets::BRABO));
     else if(item->text() == tr("Molecule"))
       item->setPixmap(IconSets::getPixmap(IconSets::Molecule));
-    else if(item->text() == tr("Visuals"))
+    else if(item->text() == tr("General"))
       item->setPixmap(IconSets::getPixmap(IconSets::Visuals));
     else if(item->text() == tr("OpenGL"))
       item->setPixmap(IconSets::getPixmap(IconSets::OpenGL));
@@ -939,6 +997,20 @@ void PreferencesBase::initOpenGL()
   minLineWidthGL = lwrange[0];
   maxLineWidthGL = lwrange[1];
   lineWidthGranularity = lwgran[0];
+
+  ///// Get the texture size parameters
+  GLint maxSize;
+  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+  // take one size lower than indicated for safety
+  if(maxSize <= 128)
+    maxSize = 6; // 2^6 = 64, should be the minimum supported size
+  else if(maxSize <= 256)
+    maxSize = 7; // 2^7 = 128
+  else
+    maxSize = 8; // 2^8 = 256, maximum size to be used by Brabosphere, corresponding to a Volume render needing 256*256*256*4*3 bytes = 192 MB
+                   // the next size is 512 and would need around 1.5 GB of texture memory...
+  // setup the slider
+  SliderSlices->setMaxValue(maxSize);
 
   /*
   qDebug("Renderer: %s",(const char*)glGetString(GL_RENDERER));
@@ -989,25 +1061,21 @@ void PreferencesBase::saveWidgets()
   data.opacityForces = SliderForceOpacity->value();
   data.forcesOneColor = ComboBoxForceColor->currentItem() == 1;
 
-  ///// Visuals
+  ///// Application
   data.backgroundType = ButtonGroupBackground->selectedId();
   data.backgroundImage = LineEditBackground->text();
   data.backgroundColor = ColorButtonBackground->color().rgb();
   data.styleApplication = ComboBoxStyle->currentItem();
+  data.undoRedo = ButtonGroupUndoRedo->selectedId();
+  data.undoLevels = SpinBoxUndoLevels->value();
+  data.undoRAM = SpinBoxUndoRAM->value();
 
   ///// OpenGL
   data.quality = SliderQuality->value();
+  data.sliceQuality = SliderSlices->value();
   data.antialias = CheckBoxAA->isChecked();
   data.smoothShading = CheckBoxSmooth->isChecked();
   data.depthCue = CheckBoxDepthCue->isChecked();
-  /*for(unsigned int i = 0; i < 9; i++)
-  {
-    if(ButtonGroupLightPosition->find(i)->isOn())
-    {
-      data.lightPosition = i;
-      break;
-    }
-  }*/
   data.lightPosition = ButtonGroupLightPosition->selectedId();
   data.lightColor = ColorButtonLight->color().rgb();
   data.materialSpecular = SliderSpecular->value();
@@ -1069,14 +1137,18 @@ void PreferencesBase::restoreWidgets()
   SliderForceOpacity->setValue(data.opacityForces);
   ComboBoxForceColor->setCurrentItem(data.forcesOneColor ? 1 : 0);
 
-  ///// Visuals
+  ///// Application
   ButtonGroupBackground->setButton(data.backgroundType);
   LineEditBackground->setText(data.backgroundImage);
   ColorButtonBackground->setColor(data.backgroundColor);
   ComboBoxStyle->setCurrentItem(data.styleApplication);
+  ButtonGroupUndoRedo->setButton(data.undoRedo);
+  SpinBoxUndoLevels->setValue(data.undoLevels);
+  SpinBoxUndoRAM->setValue(data.undoRAM);
 
   ///// OpenGL
   SliderQuality->setValue(data.quality);
+  SliderSlices->setValue(data.sliceQuality);
   CheckBoxAA->setChecked(data.antialias);
   CheckBoxSmooth->setChecked(data.smoothShading);
   CheckBoxDepthCue->setChecked(data.depthCue);

@@ -54,9 +54,11 @@ class CommandHistory: public QObject
     QString undoText() const;           // Returns the description if the current command if it can be reverted
     QString redoText() const;           // Returns the description if the previous command if it can be re-executed
     QString repeatText() const;         // Returns the description if the current command if it can be repeated
-
-    void setMaxSize(const unsigned int size);     // Sets the maximum number of entries in the history
     void pruneCoordinates();            // removes all coordinate altering entries which conflict with a started calculation
+
+    ///// static public member functions
+    static void setMaxLevels(const int levels);// Sets the maximum number of entries in the history
+    static void setMaxRAM(const int mb);       // Sets the maximum number of MB the history may become.
 
   signals:
     void changed();                     ///< Is emitted when a command was added or an undo/redo/repeat action was performed
@@ -68,8 +70,11 @@ class CommandHistory: public QObject
     // private member variables
     std::list<Command*> commandList;    ///< A list of all added Command's
     std::list<Command*>::iterator currentPosition;///< Holds the position of the current Command
-    unsigned int maxSize;               ///< The maximum number of Command's the history should hold
     bool lastActionAdded;               ///< Keeps track of whether the last action was an addCommand call.
+
+    // static private member variables
+    static int maxLevels;               ///< The maximum number of Command's the history should hold
+    static int maxRAM;                  ///< The maximum RAM size of the history in Megabyte
 };
 
 #endif

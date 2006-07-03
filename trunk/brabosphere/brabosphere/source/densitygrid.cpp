@@ -350,13 +350,18 @@ double DensityGrid::getMinimumDensity() const
 
 ///// getSlice ////////////////////////////////////////////////////////////////
 QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index, const QColor& positiveColor, const QColor& negativeColor, 
-                             const double maxPlotValue, const double minPlotValue) const
+                             const double maxPlotValue, const double minPlotValue, const unsigned int map) const
 /// Returns a slice from the 3D grid oriented according to the given plane with 
 /// the given depth index. The image is produced in OpenGL coordinates, meaning
 /// y will increase from the bottom of the image to the top.
+/// If a color map is specified (different from MAP_LAST), it will be used for
+/// color mapping between the given extrema.
 {
   unsigned int opacity;
   double value;
+  // backup the current colormap as it will be overwritten
+  unsigned int currentMap = colorMap;
+  colorMap = map;
 
   switch(plane)
   {
@@ -372,31 +377,45 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
         for(unsigned int y = numPoints.y(); y > 0; y--)
         {
           value = *itPoints;
-          if(value > 0.0)
+          if(colorMap == MAP_LAST)
           {
-            opacity = static_cast<int>(value/maxPlotValue*255.0);
-            if(opacity > 255)
-              opacity = 255;
-            image.setPixel(x, y-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+            // use the given positive and negative color with transparency
+            if(value > 0.0)
+            {
+              opacity = static_cast<int>(value/maxPlotValue*255.0);
+              if(opacity > 255)
+                opacity = 255;
+              image.setPixel(x, y-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+            }
+            else
+            {
+              opacity = static_cast<int>(value/minPlotValue*255.0);
+              if(opacity > 255)
+                opacity = 255;
+              image.setPixel(x, y-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+            }
           }
           else
           {
-            opacity = static_cast<int>(value/minPlotValue*255.0);
-            if(opacity > 255)
-              opacity = 255;
-            image.setPixel(x, y-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+            // use the given color map
+            double mapValue = (value - minPlotValue)/(maxPlotValue - minPlotValue);
+            if(mapValue < 0.0)
+              mapValue = 0.0;
+            else if(mapValue > 1.0)
+              mapValue = 1.0;
+            image.setPixel(x, y-1, mapColor(mapValue).rgb());
           }
           itPoints += numPoints.z();
         }
       }
-      //image.save("test-XY-"+QString::number(index)+".png", "PNG");
+      colorMap = currentMap;
       return image;
     }
 
     case PLANE_XZ: // varying y-index
     {
       assert(index < numPoints.y());
-      QImage image(numPoints.z(), numPoints.x(), 32);
+      QImage image(numPoints.x(), numPoints.z(), 32);
       image.setAlphaBuffer(true);
       std::vector<double>::const_iterator itPoints = densityValues.begin();
       for(unsigned int x = 0; x < numPoints.x(); x++)
@@ -407,27 +426,40 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
             itPoints += numPoints.z();
           else
           {
-            for(unsigned int z = 0; z < numPoints.z(); z++)
+            for(unsigned int z = numPoints.z(); z > 0; z--)
             {
               value = *itPoints++;
-              if(value > 0.0)
+              if(colorMap == MAP_LAST)
               {
-                opacity = static_cast<int>(value/maxPlotValue*255.0);
-                if(opacity > 255)
-                  opacity = 255;
-                image.setPixel(z, x, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+                if(value > 0.0)
+                {
+                  opacity = static_cast<int>(value/maxPlotValue*255.0);
+                  if(opacity > 255)
+                    opacity = 255;
+                  image.setPixel(x, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+                }
+                else
+                {
+                  opacity = static_cast<int>(value/minPlotValue*255.0);
+                  if(opacity > 255)
+                    opacity = 255;
+                  image.setPixel(x, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+                }
               }
               else
               {
-                opacity = static_cast<int>(value/minPlotValue*255.0);
-                if(opacity > 255)
-                  opacity = 255;
-                image.setPixel(z, x, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+                double mapValue = (value - minPlotValue)/(maxPlotValue - minPlotValue);
+                if(mapValue < 0.0)
+                  mapValue = 0.0;
+                else if(mapValue > 1.0)
+                  mapValue = 1.0;
+                image.setPixel(x, z, mapColor(mapValue).rgb());
               }
             }
           }
         }
       }
+      colorMap = currentMap;
       return image;
     }
 
@@ -441,26 +473,37 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
       for(unsigned int y = 0; y < numPoints.y(); y++)
       {
         for(unsigned int z = numPoints.z(); z > 0; z--)
-        //for(unsigned int z = 0; z < numPoints.z(); z++)
         {
           value = *itPoints++;
-          if(value > 0.0)
+          if(colorMap == MAP_LAST)
           {
-            opacity = static_cast<int>(value/maxPlotValue*255.0);
-            if(opacity > 255)
-              opacity = 255;
-            image.setPixel(y, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+            if(value > 0.0)
+            {
+              opacity = static_cast<int>(value/maxPlotValue*255.0);
+              if(opacity > 255)
+                opacity = 255;
+              image.setPixel(y, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+            }
+            else
+            {
+              opacity = static_cast<int>(value/minPlotValue*255.0);
+              if(opacity > 255)
+                opacity = 255;
+              image.setPixel(y, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+            }
           }
           else
           {
-            opacity = static_cast<int>(value/minPlotValue*255.0);
-            if(opacity > 255)
-              opacity = 255;
-            image.setPixel(y, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+            double mapValue = (value - minPlotValue)/(maxPlotValue - minPlotValue);
+            if(mapValue < 0.0)
+              mapValue = 0.0;
+            else if(mapValue > 1.0)
+              mapValue = 1.0;
+            image.setPixel(y, z-1, mapColor(mapValue).rgb());
           }
         }
       }
-      //image.save("test-YZ-"+QString::number(index)+".png", "PNG");
+      colorMap = currentMap;
       return image;
     }
   }

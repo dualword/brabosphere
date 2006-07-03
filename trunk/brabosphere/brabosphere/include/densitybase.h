@@ -144,8 +144,9 @@ class DensityBase : public DensityWidget
     {
       unsigned int positiveColor;       ///< The colour used to draw positive density
       unsigned int negativeColor;       ///< The color used to draw negative density
-      unsigned int backgroundColor;     ///< The background color (if not transparant)
-      bool transparant;                 ///< If the background should be transparant
+      unsigned int backgroundColor;     ///< The background color (if not transparent)
+      bool transparent;                 ///< If the background should be transparent
+      unsigned int map;                 ///< The type of color map
       unsigned int index;               ///< The index of the current slice
     };
 

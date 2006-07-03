@@ -8,8 +8,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>407</width>
-            <height>569</height>
+            <width>415</width>
+            <height>693</height>
         </rect>
     </property>
     <property name="caption">
@@ -327,18 +327,18 @@
                         </widget>
                         <spacer>
                             <property name="name">
-                                <cstring>spacer22</cstring>
+                                <cstring>spacer15</cstring>
                             </property>
                             <property name="orientation">
-                                <enum>Vertical</enum>
+                                <enum>Horizontal</enum>
                             </property>
                             <property name="sizeType">
                                 <enum>Expanding</enum>
                             </property>
                             <property name="sizeHint">
                                 <size>
-                                    <width>20</width>
-                                    <height>40</height>
+                                    <width>186</width>
+                                    <height>1</height>
                                 </size>
                             </property>
                         </spacer>
@@ -377,23 +377,6 @@
                                 </widget>
                             </hbox>
                         </widget>
-                        <spacer>
-                            <property name="name">
-                                <cstring>spacer15</cstring>
-                            </property>
-                            <property name="orientation">
-                                <enum>Horizontal</enum>
-                            </property>
-                            <property name="sizeType">
-                                <enum>Expanding</enum>
-                            </property>
-                            <property name="sizeHint">
-                                <size>
-                                    <width>40</width>
-                                    <height>0</height>
-                                </size>
-                            </property>
-                        </spacer>
                     </vbox>
                 </widget>
             </hbox>
@@ -526,6 +509,14 @@
                                         </column>
                                         <property name="name">
                                             <cstring>ListViewParameters</cstring>
+                                        </property>
+                                        <property name="sizePolicy">
+                                            <sizepolicy>
+                                                <hsizetype>7</hsizetype>
+                                                <vsizetype>7</vsizetype>
+                                                <horstretch>0</horstretch>
+                                                <verstretch>0</verstretch>
+                                            </sizepolicy>
                                         </property>
                                         <property name="allColumnsShowFocus">
                                             <bool>true</bool>
@@ -1039,7 +1030,7 @@
                             </property>
                             <widget class="QLayoutWidget">
                                 <property name="name">
-                                    <cstring>layout22</cstring>
+                                    <cstring>layout52</cstring>
                                 </property>
                                 <vbox>
                                     <property name="name">
@@ -1058,7 +1049,7 @@
                                             </property>
                                             <widget class="QLabel" row="0" column="0">
                                                 <property name="name">
-                                                    <cstring>textLabel4_2_3</cstring>
+                                                    <cstring>LabelSlicePos</cstring>
                                                 </property>
                                                 <property name="text">
                                                     <string>Positive density:</string>
@@ -1086,6 +1077,14 @@
                                                     <string>Allows changing the color used to draw the areas with positive density.</string>
                                                 </property>
                                             </widget>
+                                            <widget class="QLabel" row="1" column="0">
+                                                <property name="name">
+                                                    <cstring>LabelSliceNeg</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Negative density:</string>
+                                                </property>
+                                            </widget>
                                             <widget class="ColorButton" row="1" column="1">
                                                 <property name="name">
                                                     <cstring>ColorButtonSliceNeg</cstring>
@@ -1100,79 +1099,145 @@
                                                     <string>Allows changing the color used to draw the areas with negative density.</string>
                                                 </property>
                                             </widget>
-                                            <widget class="QLabel" row="1" column="0">
+                                            <widget class="ColorButton" row="2" column="1">
                                                 <property name="name">
-                                                    <cstring>textLabel4_2_2_2</cstring>
+                                                    <cstring>ColorButtonSliceBack</cstring>
+                                                </property>
+                                                <property name="minimumSize">
+                                                    <size>
+                                                        <width>60</width>
+                                                        <height>0</height>
+                                                    </size>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Allows settings the background color of the slice</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QCheckBox" row="3" column="1">
+                                                <property name="name">
+                                                    <cstring>CheckBoxSliceTransparent</cstring>
                                                 </property>
                                                 <property name="text">
-                                                    <string>Negative density:</string>
+                                                    <string>Transparent</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QComboBox" row="6" column="0" rowspan="1" colspan="2">
+                                                <item>
+                                                    <property name="text">
+                                                        <string></string>
+                                                    </property>
+                                                    <property name="pixmap">
+                                                        <pixmap>image0</pixmap>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string></string>
+                                                    </property>
+                                                    <property name="pixmap">
+                                                        <pixmap>image1</pixmap>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string></string>
+                                                    </property>
+                                                    <property name="pixmap">
+                                                        <pixmap>image2</pixmap>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string></string>
+                                                    </property>
+                                                    <property name="pixmap">
+                                                        <pixmap>image3</pixmap>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string></string>
+                                                    </property>
+                                                    <property name="pixmap">
+                                                        <pixmap>image4</pixmap>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string></string>
+                                                    </property>
+                                                    <property name="pixmap">
+                                                        <pixmap>image5</pixmap>
+                                                    </property>
+                                                </item>
+                                                <property name="name">
+                                                    <cstring>ComboBoxSliceMap</cstring>
+                                                </property>
+                                                <property name="minimumSize">
+                                                    <size>
+                                                        <width>160</width>
+                                                        <height>22</height>
+                                                    </size>
                                                 </property>
                                             </widget>
                                             <widget class="QLabel" row="2" column="0">
                                                 <property name="name">
-                                                    <cstring>textLabel1_3</cstring>
+                                                    <cstring>LabelSliceBack</cstring>
                                                 </property>
                                                 <property name="text">
                                                     <string>Background:</string>
                                                 </property>
                                             </widget>
-                                            <widget class="QLayoutWidget" row="2" column="1">
+                                            <widget class="QLayoutWidget" row="5" column="0" rowspan="1" colspan="3">
                                                 <property name="name">
-                                                    <cstring>layout17</cstring>
+                                                    <cstring>layout51</cstring>
                                                 </property>
-                                                <vbox>
+                                                <hbox>
                                                     <property name="name">
                                                         <cstring>unnamed</cstring>
                                                     </property>
-                                                    <widget class="QRadioButton">
+                                                    <widget class="QLabel">
                                                         <property name="name">
-                                                            <cstring>RadioButtonSliceTransparant</cstring>
+                                                            <cstring>LabelSliceMap2</cstring>
                                                         </property>
                                                         <property name="text">
-                                                            <string>Transparant</string>
-                                                        </property>
-                                                        <property name="checked">
-                                                            <bool>true</bool>
-                                                        </property>
-                                                        <property name="whatsThis" stdset="0">
-                                                            <string>This option causes no background to be drawn</string>
+                                                            <string>min</string>
                                                         </property>
                                                     </widget>
-                                                    <widget class="QLayoutWidget">
+                                                    <spacer>
                                                         <property name="name">
-                                                            <cstring>layout16</cstring>
+                                                            <cstring>spacer34</cstring>
                                                         </property>
-                                                        <hbox>
-                                                            <property name="name">
-                                                                <cstring>unnamed</cstring>
-                                                            </property>
-                                                            <widget class="QRadioButton">
-                                                                <property name="name">
-                                                                    <cstring>RadioButtonSliceColor</cstring>
-                                                                </property>
-                                                                <property name="sizePolicy">
-                                                                    <sizepolicy>
-                                                                        <hsizetype>0</hsizetype>
-                                                                        <vsizetype>0</vsizetype>
-                                                                        <horstretch>0</horstretch>
-                                                                        <verstretch>0</verstretch>
-                                                                    </sizepolicy>
-                                                                </property>
-                                                                <property name="text">
-                                                                    <string></string>
-                                                                </property>
-                                                            </widget>
-                                                            <widget class="ColorButton">
-                                                                <property name="name">
-                                                                    <cstring>ColorButtonSliceBack</cstring>
-                                                                </property>
-                                                                <property name="whatsThis" stdset="0">
-                                                                    <string>Allows settings the background color of the slice</string>
-                                                                </property>
-                                                            </widget>
-                                                        </hbox>
+                                                        <property name="orientation">
+                                                            <enum>Horizontal</enum>
+                                                        </property>
+                                                        <property name="sizeType">
+                                                            <enum>Expanding</enum>
+                                                        </property>
+                                                        <property name="sizeHint">
+                                                            <size>
+                                                                <width>40</width>
+                                                                <height>20</height>
+                                                            </size>
+                                                        </property>
+                                                    </spacer>
+                                                    <widget class="QLabel">
+                                                        <property name="name">
+                                                            <cstring>LabelSliceMap3</cstring>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>max</string>
+                                                        </property>
                                                     </widget>
-                                                </vbox>
+                                                </hbox>
+                                            </widget>
+                                            <widget class="QLabel" row="4" column="0" rowspan="1" colspan="2">
+                                                <property name="name">
+                                                    <cstring>LabelSliceMap1</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Color Map</string>
+                                                </property>
                                             </widget>
                                         </grid>
                                     </widget>
@@ -1270,7 +1335,7 @@
                                         <property name="sizeHint">
                                             <size>
                                                 <width>20</width>
-                                                <height>30</height>
+                                                <height>50</height>
                                             </size>
                                         </property>
                                     </spacer>
@@ -1584,11 +1649,29 @@
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
         </sizepolicy>
-        <pixmap>image0</pixmap>
+        <pixmap>image6</pixmap>
     </customwidget>
 </customwidgets>
 <images>
     <image name="image0">
+        <data format="XPM.GZ" length="9239">789cedd4376f63471405e05ebf82d0ed04e3eecb01860be59c1325c3c5bcc4203188a4a2e1ffbeda1b66ea2d0d0c5ef5353cc0b973f863a3d7bf38ed6dfc585baecc6a54f7eaa159f4369ad7c9e4f3ef7ffefa776d3d4ca35e14f5c234ec45eb7facad5fae7a75ef6c366d7f01e11b100441d2756423aec4153b8cc4b5b81437e24edcb2a34cdc891bf1801d6bde506cc42376128ac7e242fc24d6bc6776aa7913712d9eb2b3583c136bde9c9d6bde8b38172fc4ad78c92e52f14aac79afec52f3dec4dad73bdb04e20fb1e67d8a35ef8b5d69dea658efb3c5aef53edb62cddb61379ab72bd6bef6c47a9f7d76abf739106bde21bbd3bc23b1dc07e45e5d17c4e491b5210fd561401e58e7e4ce9ade27b4ea282537d635b956c7f4b8a1b22ec9469d701e58731e5af31e4a759a900beb8a9cab33cac3cc9af230b5e67e12759e9163eb861ca90bce0bad392f509721f9d1ba203f58735e5f6d38efde9afac23b7545f7c15b6bba0fdea86bcebbb6e6bc2b6beeeb52ddd07df0c29af3ced52de79d5973dea9baa3fbe08935dd078fadf93df0febfd715f03d79ffc69af61f06d6b4ff30b7a6fd87ad35ed3f4aad69ff516d4dfb8f236bda7f5c5ad3fe139747fb4f5c1eed3f7179b4ff34b1a6fda79535ed3f7379b4ffcce5d1feb3ce9af69f67d6b4ffbcb1a6fd172e8ff65fb83cda7f195ad3fecbc29af65fba3cdabf7179b47fe3faa27b55ee3e74cfcadd87ee5dbb3c7a0fb5cba3f752bbbee83d35ee3ef4de1a9747efb17579f45e5b9747efb973f7a1f7deb9fbd01e3a9b67e87edf4ac42b71255eb2c348bc1097e217b1fede9c1d65e299b8114fd9b1e64dc446fccc4e42f193b8108fc59a3762a79a3714d7e2013b8bc59d58f35a76ae798d3817d7e2565cb18b546cc49a07ec52f3502c7d41c9fe8e671762c9835c2c7990b12bc983542cf781845dcb7d20166b5ec46e342f144b5f1088e53ef0c86ee53ef020d6bc3ebbd3bc7bb1dce772e5bfdff9b833043458618d0db6d8e1008738c2313ee1334e708a339ce30b2e70892b7cc5377cc70ffcc42fdcc42ddcc61ddcc53ddcc7033cc4233cc6133cc5333cc70bbcc42bbcc61bbcc53bbcc73e3ee023061862843126986286391658020280810a6a68a0850e063084118ce1099e61025398c11c5e60014b58c12bbcc13b7cc0277cc1266cc136ecc02eecc13e1cc0211cc1319cc0299cc1395cc0255cc135dcc02ddcc13df4e1011e218010228821811432c8a180d2a001634c656ad398efbf32333043333263f3649ecdc44ccdcccccd8b5998a5599957df99efcc77e63bf39df9ce7c67be33df99efcc77e63bf39df9ce7c67be33df99efcc77e63bf39df9cefeaf9df9ef77bef5fffe5cfb0900977aa1</data>
+    </image>
+    <image name="image1">
+        <data format="XPM.GZ" length="9239">789cedd4476b24571405e0bd7e45a3bb13e64e5775458c17ca3967192f5e25754b9d8392f17f1fcd4db59ea5e151ab0f441f38f71dfdd8e83c5c9c76367eac2d966e39283b65dfcd3b1bd56a34fafcfb9fbffe5d5b0fe2b013869d200e3ae1fa1f6beb97cb4ed9399b8ceb5f70ab6f40b7db8d9a86bc1417e2053b08c573712e9e891bf1941d26e289b8128fd93dcd1b899d78c88e02f1ab3813bf88356fc08e35af2f2ec5cfeca4276ec49a57b353cdabc4a9b814d7e2829dc56227d63c60e79a8762e90b72b6eb8a33b1e4412a963c48d885e4412c96fb40c42ee53ed0136b5ec8ae342f104b5fd015cb7de0895dcb7de051ac790fec46f3eec5721f907b354db7471e9a1d79a40ebae4b139254fccf43e61aa0e63f2cc5c92e7ea1e3d6e589873f2521d71decacc796f66ce7b57c711f9c35c903fd509e77d99396fd3cc7d6ca9d384bc6daec83bea8cf376cd9cb7a7ce03f2be39231f9839ef50ed38efc8cc7d1dab0bbecf8999ef73aa2e39efcccc79e766eeeb425df17d2ecd9c77a5ae39efdacc7937ea86ef736be6fbdc99398ff7ffbdae2eff3defdf9969ff41d74cfb0f5233ed3fa8cdb4ff3036d3fec3d24cfbef8566da7f2f37d3fea3368ff61fb579b4ffc8f290f61f4766da7f5c9869ff89e521ed3fb13ca4fd278d99f69f2666da7f5a9969ff599b47fbcfda3cda7f1e9869ff7966a6fde76d1eeddfb579b47f677d21ddabb0fb20ddb3b0fb20ddbb6cf3e83d946d1ebd97b2ed8bde5365f7417a6f559b47efb16ef3e8bdd66d1ebde7c6ee83f4de1bbb0fd21e9a368feef7ad48ecc485b86007a1b814e7e24aacbf57b3c344dc882bf133bba7797db1130fd851207e1167e257b1e60dd9b1e68dc4a578cc4e7ae28958f3a6ec54f366e2543c17d7e2053b8bc54bb1e6add8b9e6bd89b5af77f6773cfb43ac799f62cdfb62179ab729d6fb6cb14bbdcfb658f376d895e6ed8ab5af3db1de679f5deb7d0ec49a77c86e34ef482cf7b95cfaef773eee0c011d165862853536f88c7d1ce00bbee2104738c6094e7186735ce01257f886eff8819ff8859bb885dbb883bbb887fb7880877884c77882a77886e77881977885d77883b77887f7f8808ff8845d0c30c41e4618638229669803028083024aa8a086069ea10f0378815718c208c6308129cc600e0b58c20adee01d3ee013be6013b6601b766017f6601f0ee0108ee0184ee014cee01c2ee012aee01a6ee016eee01e1ee0119ea00b0184d08308624820850c72870e9c73852b5de5beff95b967d77703f7e25eddd08ddcd84ddcd4cddcdc2ddcd2ad7c67be33df99efcc77e63bf39df9ce7c67be33df99efcc77e63bf39df9ce7c67be33df99efcc77e63bfbbf76e6bfdff9d6fffb73ed2761137aa1</data>
+    </image>
+    <image name="image2">
+        <data format="XPM.GZ" length="9239">789cedd4c76ee3481006e0bb9f4270dd8c450d73c0620fce39c8d95eeca1c92625d996642b380df6dd5753a1799ee3024d9e3ed441bf7e54f1c746effee2b4b7f1636dbe308b51ddab8766d6dbb0cbf1f8ebef7ffefab9b61ea6512f8a7a611af6a2f53fd6d6fb8b5edd3b9b4e9a5f405801825f4f4636ea302457ce15b9564729d93ab7e4461d97e4569d24e48133fffe509d16e4913aa3b0f8e45c939fd539e77d51179c77eccc7927ea92f34e9d39efabda70de3775159367ce9c77aeae39ef426d39efd299f3beab1bcefba16e39efa733e7fd12672de7fb66878178536cc45bec28116f8b5bf10e3b2ec5bbec2416ef89ad789f9de6e20376168a0fc5b5f8889d6bde6376a1794fc49af7945d6ade3371233e671bcd7bc1ae346f5fac792fd9b5e6bd625bcd7b2dd6bc37ec46f3deb25bcd7b2796bc20fbd7b601ed0f8c9c793e5487b43f305047b43fd03a5b72a38e73b25527b43f503bd3fe40a54e697fc0a8b3800cce868cea9cf7bd74e6ff57a80bdef75c5df2be67ce941753b5a1bc98a82bdef7d899f73d52d7bcefa1da525e0c9c292f3eaa1bfe3e3c3873de7b75cbfdf2fda7abfef9fff3fdb7ce74ff61e94cf71fc5ce74ff9175a6fb8f7367baff2472a6fb4f6a67baff3473a6fbcf0267baffcc38d3fde75d5ebaffbccb4bf75f7479e9fecb2e2fdd7fd9e5a5fb375d5ebaffaacb4bf75f7579e9feeb2e2fddbfedf2d2fddb2e2fdd7f9338d3fd375d5ebaffb6cb4bfbb4521cf0bee7e24ce6a5d806bcff193b0c786e505c84f43d85546c640eec68f5d03c11273237e23ae27b89c592cf54ec388bf97e227129f39a9d0409e70dc5b1ccadb84ae8fb0c81d8cabc61a7ab87e68fe25ce6ad78f5d2fc819d85321f88cb8cf7fb5e5ccb7cc8cee39cfbbd134bbf6624b639f77bcb2eb4df27f1eaa1f98d58fb7d669751c9fd5e8bb5df17715d72bf57e246e663b6c90cf77b29d67e27ec2aa8b8dfbe58fb9d8a4dc5dfaf0bb1f6fbcaaed39afb3d176bbf6fe2d54bf333b6d57e67e2d272bfa762ed77ce6ee286fb3d116bbf0bb16db8df6376abfd2ec545cbfd1e89a5dffec2bfbff372670868b0c21a2d36d8e2008738c2277cc6171ce304a7f88a6f38c3392e7089eff8819ff885dfb8895bb88d3bb88b7bb88f07788847788c27788a67788e17d8c74bbcc26bbcc15bbcc37b7cc0470c30c408634c30c50c732cb00404000315d460a18116063084113cc133bcc01826308557788319cc61014b78870ff8842ff8864dd8826dd8815dd8837d388043388263388153388373b8803e5cc2155cc30ddcc21ddcc3033c420021441043022964904301a54103c6ac0ea236d634a63503333423f3649ecd8b199b89999a57f36666666e1666e93bf39df9ce7c67be33df99efcc77e63bf39df9ce7c67be33df99efcc77e63bf39df9ce7c67be33dfd9ffb533fffecebbfeef9f6bff01225d73ab</data>
+    </image>
+    <image name="image3">
+        <data format="XPM.GZ" length="9239">789cedd4c76e1b491405d0bdbe82d0db0983e7ce018359284752a4b264cca23a3188392819f3ef43bf505e7b69a0ba57070590171775fbdb5eeba9db6eed7ddb59adcd7a58b6ca8159b6f6aacd64f2f9fddf7f7eececfa71d00a82961ffbad60f7af9ddddeba55b63ab369fd1366b305783f9f84bc56fb3e79655d9097ea20262fac1bf25c1de6e4993a8ac8536bfeff893acec863754261cdab75491ea953ce3b54679c7760cd79fbea9cf336d69cb7561bce5ba98b905c5a73de425d725ea3ae382f58735e54d794177275437921b3a6bc908a9386f241c2f63d712c36e2881d44e250dc880376988b7d76148a3d71257e61c7a9f8999df8e22771297e64a79af7819d69de7bb1e6bd63e79af7565c8b6fd846f3f6d885e6ed8a35ef35bbd4bc1d76a579db62cd7bc5ae35ef25bbd1bc1762cd2bf7af693cba3f30b6e6f389daa7fb03537540f70766d61579ae0e53f2421dd1fd81a535dd1f58a963be3f6b75e29137d686fca64e39efbb35e7fd50679cf7539d73de2f6bcebbaf369cf7405d70de436bce7ba42e39efb1bae2bc27d69cf7545dd3f701ceac39efb9bae1bcbcff78db3fff1eefbfb1a6fdfbb935ed3f08ad69ff41654dfb0f536bda7f1458d3fea3d29af61f27d6b4ffc4b3a6fd27c69af69fdabc48fb4f6d5ea4fd67362fd2fe739b1769ffb9cd8bb47f63f322edbfb07991f65fd8bc48fb2f6d5ea4fd57362fd2fe2b9b1769ff75644dfbaf7fe5a5fd37bff2d27dda2af4e8fee0a73891f37771e5d17dc22fb6efc9f99b38f3e97b8afb6223e71b76b07dc807e248ced7e232a0fb878762cdb762874948f7118fc4b99c2fd99117b18fc5a19c2fc44544df673c1157723e67c7db877c2a4ee57c26debee43376e2cbf9549c2774bff15c5ccaf9849d8629f77b21d67ec7e22ae57e2fd999f6fb2ade3ee42bb1f63b62e741cefdb6c5daef505ce6dc6f475ccbf9806d12c3fd5e8bb5df3ebbf00a7657acfd366253d0f7007b62edb7669771c9fdde88b5df4abc7dc9b7ec4afb2dc579c5fdde89b5df825d8735f77b2fd67e8db8aab9df0776a3fd82386bb8df47b1f4db5bbbf7775eee0c010d165862853536d8c7010e7184af38c6094e7186735ce01257b8c60dbee13b7ee0277ee13e1ee0211ee1319ee0299ee1395ee0255e611b3b788d5dece10ddee21ddee3033ee2133ee30b7ae86380214618638229669803028081024aa8a08606fa3080218ce015c6308129cc600e0b58c20ad6b0813778870ff8842fd8870338842338861338853338870bb8842b684307aea10b3db8815bb8837b78804778826778010f7c08208408624820850c7283068cd90ea23495a94d63fa66608666645ecdd84cccd4ccccdc2cccd2acccda6c5c67ae33d799ebcc75e63a739db9ce5c67ae33d799ebcc75e63a739db9ce5c67ae33d799ebcc75e63afb533b73efefbcbbfffdbdf33f2a4573ab</data>
+    </image>
+    <image name="image4">
+        <data format="XPM.GZ" length="9239">789cedd6c94e23591085e13d4f617176a55694d3b3d5ea05f33c98195abdb8ce011bb00db6194bfdee4d9e5046ac6bd9d255aebecd15e71781f8f9a376737a54fbf17365b10ccb715a4b47615efb91bd4e269f7ffff3d7af95d5a4dda8351ab5a49dd41aab7facac0e96b5b4763c9be62504df40bd51af17051de8b67948f7cd299d9a33ba30e7a593a6b9a03be67b3a984774661e97fefe712a3fd02df323dd353fd143f384cecdd3d2cdc43ca37ddf33dd33bfd0fede9cf67d8bd22defb5a47ddf2bedbdde68eff55ebaedfb3e68eff549fbbe2fda7badd1de6bbd74c7f76dd0de6b93f67d5bb4efdba6bdd74ee9aeefdba5bdd71eedfbf669df77407bafc3d23ddf77447baf63dadf3ba17ddf69e9bef71ad0beef8cf65ee7b4f7baa07ddf65e9e0bdae68df774d7baf1bda7bddd2beefaef4d07bd569df97d0beaf417baf66e9d4f7b568efd5a67d5f87f67d5dda7bf54a67beaf4f5b2f086def81f79fd93ef0fe33eb05de7f6efbc0fbcfad1778ffb9f502ef3fb77de0fde7d60bbcffc2f681f75f582ff0fe0beb05de7f61fb02efabf87eafce3f6661696ed30b739f9e9b53fac5acef3d574e9af4ccdca1a7e6404fcc19fd54b951a71fcd2dfac1dca5c7e6213d32f3ef71b8afdc4ce8c2acfb72738fceccfa5e6ad67dc3ca2ded15ccba0f66ed2566f642bf729bfbd033b317ba66ee43c7cc5e689bd90badca1dee43d3cc5e6898b90f8999fb5037b317ee2a77b90fb766f6c28d99fb706dd67d5766fd7dbbacdcd37d1766f6c2b959df3b33ebbe41e5bef63a35ebbe13b3f63a366baf23b3ee3bac1cb4d78159f7ed9bb5d79e597bed9a75df4ee5a1f6da36ebbe2db3eedb346baf8dcaa9ee5b376baf35b3eefb32ebbe4fb3f6faa89ce9be77b3f67a33eb7b76ff99eeb3fbcfb497dd7faefbecfe73ed65f79f6b2fbbff5cf7d9fde7dacbeebfd07d76ff85f6b2fb2fb497dd7fc17d8365fc7ee7d366020932945432c9a5907b19c9581ee4519e64225399c9b3bcc85c16b29457799377f9904ff9923559970dd9942dd9961dd9953dd997033994233996133995819cc9b95cc8a55cc9b5dcc8addc495d126948535ad2968e74a5277d088080215264c851e01e238cf180473c6182296678c60be658608957bce11d1ff8c417d6b08e0d6c620bdbd8c12ef6b08f031ce208c738c1290638c3392e70892b5ce306b7b8431d091a68a285363ae8a2f7fdcf8b04841086210d59c84311eec3288cc343780c4f6112a661169ec34b9887455886d7d82c368bcd62b3d82c368bcd62b3d82c368bcd62b3d82c368bcd62b3d82c368bcd62b3d82c36fbbf368bdfef7cabfffeb9f21f28aa7ab9</data>
+    </image>
+    <image name="image5">
+        <data format="XPM.GZ" length="9239">789cedd6c94e23591484e13d4f6111bb52eb94e741ad5e30cf8399a1d58b6b67263660031e984afdee4dc651c65dd7b2a554aebecd15f14bc7e2e78fcacde951e5c7cf95f9222cc6c3ca701466951fc97232f9fcfb9fbf7eadacd65af54abd5ea9b56a95faea1f2babfd456558397e9ea639c2f21ba8d6abd52ca317744b9ed33d79460fe5573a935f72d71af233dd96a774902774223fe5fefe730a3fd24df981eec8637a208fe854becfdda8c9191df7a574574ee8f8de908efb06b99bb157a0e33ed0b197d1ea855eee96f6a14bab173ab4f6a14dab175ab47aa199bbad7d68d0ea853aad7da8d1da872aad5eb8cbddd13edcd2ea851b5afb704dc77d57b47ae1327737eebba0d50be7747cef8c8efbfab97bb1d7291df79dd0b1d7311d7b1dd171df61ee107b1dd071df3e1d7bedd1b1d72e1df7ede41ec45edb74dcb745c77d9b74ecb5917b18f7add3b1d71a1df77dd171df271d7b7de44ee2be773af67aa3e37bbcff24eee3fd27b117ef3f8dfb78ff69ecc5fb4f632fde7f1af7f1fed3d88bf79fc57dbcff2cf6e2fd67b117ef3fd33ee37d65dfef55f96366416ed103b9470fe5219dc8fe5e5ab8d6a033b94ddfcb811ec9093d2e5cafd20f72937e943bf4933ca027327f8f6d5ab851a39f65dff72277e957d9df9bc9be6f5eb8e9bd16b2ef5bcadeeb4df65eef855bbeef43f65e9fb2effb92bdd79aecbdd60bb77ddf86ecbd3665dfb725fbbe6dd97bed14eef8be5dd97bedc9be6f5ff67d07b2f73a2cdcf57d47b2f73a96fdbd13d9f79d16ee79afbeecfbce64ef752e7baf0bd9f75d160edeeb4af67dd7b2f7ba91bdd7adecfbee0a0fbc5755f67d35d9f7d565efd5283cf47d4dd97bb564dfd7967d5f47f65eddc289efebc9ec0593f91e74ff09f741f79fb01774ff29f741f79fb21774ff297b41f79f721f74ffa9fffee8fe33ee83ee3f632fe8fe33f682ee3fe3befea2fc7ee7f366060b36b0a125965a66f736b2b13dd8a33dd9c4a6f66c2ff66a339bdbc296f666eff6619ff6656bb66e1bb6695bb66d3bb66b7bb66f07766847766c27766a7d3bb373bbb04bbbb26bbbb15bbbb3aad5ac6e0d6b5acbdad6b1aef5600002061822418a0cf718618c073ce209134cf18c17bc6286391658e20deff8c027beb086756c60135bd8c60e76b1877d1ce0104738c6094ed1c719ce71814b5ce11a37b8c51daaa8a18e069a68a18d0ebadfffbc584008611086210969c8c27d18857178088fe1294cc2343c8797f01a66611e166159362b9b95cdca6665b3b259d9ac6c56362b9b95cdca6665b3b259d9ac6c56362b9b95cdca6665b3b2d9ffb559f9fdceb7faef9f2bff01eaaa7ab9</data>
+    </image>
+    <image name="image6">
         <data format="XPM.GZ" length="4462">789c9d97c76e24490e86effd1442f3d65870d2451a0ce6206f5adeb4cc620f8c34f2553225b5a4c1befb46927fe6a1d4c0ccac4287fa8a0c2623e8b27efbb670b6bfb3f0edb72fcf33995dd70bf5953c2d7c6b5eeeefdffffd9f3ffefcf2354916faff385a48befeebcbd783d942bdb03b9db43d3005a048ff948f94937ef54cd72367ca3272ae4c2397ba3f1e59940f47ae958f476e7a9645e56c789ec8c866ff7d64dd2f4be0ccfc91d9c82aa7ab91d53e1be7fd52fd1de532b0d9bb5796f08df99f28375117eb7dd047cf711496f977074ee254e58572d22f95ff504e6307fb9391d51fda5776710efd0f70093e03070f7af60fca795ce1fe5f06367d72e0dafc61e372602a95252c3bff09b8c6f9ce95ebb8313955c6496272b91dd9fc3b556e1367f6a5ed390873d8df554e922276eacf09b834a675e53269b07fd3388d20d7fb4d24e94cee6be3348e0ae5e9c816af03659fc6d8bf074ec12bca759ac49a8ff45db90b72cbcf149cc56a8f347e699c56c69c8125ae947f2a17591c195f2a97fdd2f310b8337dd91ed99ebfda7348cfdaec8be6679664ade993e663e6025b3e7b70175b3eabbdac7615ea2957ee9c37b96cf4ec225781b7c090d321b806eb7e4d478db7d778bac475967f5c19e711ea55efcfa5791c6bfff01d18f5ec9b91554ef1c049acfc044e6d3f6bfeb96cd0970b6597a7c67e32b0e5a3d7fb76799e997fb20c76e63f697c5c913bd48fdeafabf212e78906c6fd6afe39c92bd8eb064e34dfbdf63fe77341bd5c0e6c723a06fbd8cea7fdc3d583dcdf283739ea5156c10dce773730eca7239bbef617d78ecf3b027bbb3f79000ffde27660f387ed3c5dbf54dfe2dd057b56df35b8357daff997c7458cfadf07a31f90f6db3c2b52f3475ec05962fd660b9c23dfb5fe7317e4365f56c18817af80a12f7a9f795e840ea2fb6fc069a2fd85b53ef3a2407ce459598adc98357ff3a65fba9f95dba2c1f3f647d6f38af6cb222f4bdc6f06ae20d7fe59146591587fd80097765ef1239bfc0d8cfdbc36b2f5c365b0c0bee657d83ec8b57e0ae997b2cec3b21f4fe6bff6d7b2df6ef7adf12babaac6f92e8c25b27ecc1f239b7f3a5fca5a86fbd4f95a3681cddf257066f9458f039bbe987e27696af7cfe02cb5f368bcaa28e85b7d5d80f3c4ceb308aee0dfdec8362ff5fc552ce85fbc0e16f8b33c30e2a5f7512552c1bf73b04fb49f7a19d99eaff75565fd527e3516975a3d6a3cab5cd06fa933f691c557349e55e123cc8f4d708c7e1f8d6cf22d30e68fa781e18ff6d3aa1cf4650f9c245e9faff3aeaa7c8679b6087698ff3a0f2af131fa6b0346bf15cde7ca0ffed3043cd46f0c76b87fedcf551dd8fcdb00a33ef90c5ca0beedfe9af07cf3ff10ec30cf96c0c3fcdf0157e0d3916d1e18b7beb47aa007b020dfdb914d5febadea7c9459fc2fc195dd9f2460c13cd4792651b06ffde5192c96af5c823de2a9f927b1cfcc1f99822bdb2f4760d43317608f7ad47c92a45faaaff725a96f501f6b239b7fdaff259433faa9f673913a43fee97c93a6f6c87f7dff91b6aed13f749e48e7dbdcde07b59ffbc877b9e5bbc6df87173e63d1fbf3499321dfa381e1bf3edf87d795c2e6c101d839abcf17700ed6f87a37e8f314ecf07ced0fbe08af3f169f47700ef933b8003f8c6ce79b814bb0f64f5ffa5a341efc643cca1fc195b1d77ee59ba6453c75fef836b0ded7c1ac5f4c7fbd0e66833e0b7baeb9e1f617abe34bbeb21da61f3e79bee61bbee53bbee7094ff9811ff9899fc39af10bbff2cf39fd3a68bff13b7ff0222ff132aff02aaff13a6ff0266ff177de9ed36f782768eff21eeff3011ff25158c77cc23ff894cfc2aef339fd36787211b4238e8376c22967ecc2a798732eb8e4ea93fe3d2f862f88843cd5d4504b1d5dd2155dd30dddfec2fe8497e82e48ef6942537aa0477aa2679a050b2ff44af3e76d794a6ff44e1fc1f6222dd132ad04cd555aa3f5606383363fe93fd056907ca76ddaa15dda0bdafbbc46077418be3da2e34ffa4f74c247f4834ee94c6d0b9dd305451407fd84d24ffa8f94f131b970ca3c681754861d95b084ca142ff5677fa491960fa5934bb9926bb9915b3e923bb997894ce5615e5f1ee5499e83fe4c5ee4557eca9bbccb872cca922ccb8aacfec2fe9aaccb46886b2c9bb225df655b7682f692ecca9eeccfe97772c09b722847722c27c1f3eb70f66bf9116c9fca999ccbc59cfe25bf4a147e32869f591226a384d72b29a5f2ecc98bf77efebc572163b77de35bdff94b7fe5affd8dbff577b2eaeffdc44ffdfc79ffe6fafff4fffe8e7f5ceffffdfdcbff005562c408</data>
     </image>
 </images>

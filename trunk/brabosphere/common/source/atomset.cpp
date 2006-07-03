@@ -1014,6 +1014,23 @@ bool AtomSet::needsExtendedFormat()
          boxMin->x() <= -10.0 || boxMin->y() <= -10.0 || boxMin->z() <= -10.0);
 }
 
+///// ramSize /////////////////////////////////////////////////////////////////
+unsigned int AtomSet::ramSize() const
+/// Returns the size of the class in bytes
+{
+  unsigned int result = sizeof(this);
+  result += numAtoms * (sizeof(Point3D<double>) + sizeof(QColor));
+  if(forces != NULL)
+    result += numAtoms * sizeof(Point3D<double>);
+  result += bonds1.size() * 2 * sizeof(unsigned int);
+  if(chargesMulliken != NULL)
+    result += numAtoms * sizeof(double);
+  if(chargesStockholder != NULL)
+    result += numAtoms * sizeof(double);
+  qDebug("AtomSet::ramSize: returning %d bytes (%d KB, %d MB)", result, result/1024, result/(1024*1024));
+  return result;
+}
+
 //// loadCML //////////////////////////////////////////////////////////////////
 void AtomSet::loadCML(const QDomElement* root)
 /// Reads all atom data from a QDomElement.

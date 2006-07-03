@@ -76,7 +76,7 @@ class DensityGrid
     double getMaximumDensity() const;               // returns the most positive value of the density
     double getMinimumDensity() const;               // returns the most negative value of the density
     QImage getSlice(const unsigned int plane, const unsigned int index, const QColor& positiveColor, const QColor& negativeColor, 
-                    const double maxPlotValue, const double minPlotValue) const;// Returns an image to be used as a slice
+                    const double maxPlotValue, const double minPlotValue, const unsigned int colorMap = MAP_LAST) const;// Returns an image to be used as a slice
 
   private:
 	  ///// private structs
@@ -110,7 +110,7 @@ class DensityGrid
     vector< vector<Point3D<float> >* > verticesList;///< an easily accessible list of vertices for each calculated surface
     vector< vector<unsigned int>* > triangleIndices;///< an easily accessible list of vertex indices for each calculated surface
     vector< vector<float>* > normals;     ///< a list of normals for each calculated surface
-    unsigned int colorMap;                ///< holds the current color map type
+    mutable unsigned int colorMap;        ///< holds the current color map type (temporarily mutated only in getSlice)
     double maxDensity, minDensity;        ///< hold the extrema of the density values
     double maxMapValue, minMapValue;      ///< hold the extrema between which the mapping colors have to be interpolated
 

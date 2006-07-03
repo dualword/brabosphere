@@ -234,8 +234,7 @@ void GLSimpleMoleculeView::setLabels(const bool element, const bool number, cons
 
 ///// setParameters ///////////////////////////////////////////////////////////
 void GLSimpleMoleculeView::setParameters(GLMoleculeParameters params)
-/// Updates the OpenGL parameters and
-/// makes sure they are adapted at the next call to updateGL()
+/// Updates the OpenGL molecule parameters.
 {
   moleculeParameters = params;
   //staticUpdateIndex++; //assume a call to GLView::setParameters has also been done
@@ -538,12 +537,12 @@ void GLSimpleMoleculeView::changeObjects(const GLuint startList, const int numSl
 
   ///// Atom //////////////////////////
   glNewList(startList, GL_COMPILE);
-    gluSphere(qobj, 1.0f, numSlices, numSlices);
+    gluSphere(qobj, 1.0f, numSlices*2, numSlices);
   glEndList();
 
   ///// first part of bond ////////////
   glNewList(startList + 1, GL_COMPILE);
-    gluCylinder(qobj, 1.0f, 1.0f, cylinderHeight, numSlices, 1);
+    gluCylinder(qobj, 1.0f, 1.0f, cylinderHeight, numSlices*2, 1);
   glEndList();
 
   ///// force arrow in Lines style ////
@@ -574,11 +573,11 @@ void GLSimpleMoleculeView::changeObjects(const GLuint startList, const int numSl
     glTranslatef(0.0f, 0.0f, -0.9f*cylinderHeight);
     gluCylinder(qobj, 1.0f, 0.2f, 0.9f*cylinderHeight, numSlices, 1);
     */
-    gluCylinder(qobj, 1.0f, 1.0f, cylinderHeight - 2.4f, numSlices, 1); // 2.4 = 2 * 1.2
+    gluCylinder(qobj, 1.0f, 1.0f, cylinderHeight - 2.4f, numSlices*2, 1); // 2.4 = 2 * 1.2
     glTranslatef(0.0f, 0.0f, cylinderHeight - 2.4f);
-    gluCylinder(qobj, 1.2f, 0.0f, 2.4f, numSlices, 1);
+    gluCylinder(qobj, 1.2f, 0.0f, 2.4f, numSlices*2, 1);
     gluQuadricOrientation(qobj, GLU_INSIDE);
-    gluDisk(qobj, 0.0f, 1.2f, numSlices, 1);
+    gluDisk(qobj, 0.0f, 1.2f, numSlices*2, 1);
   glEndList();
 
   gluDeleteQuadric(qobj);
@@ -1347,6 +1346,6 @@ void GLSimpleMoleculeView::drawSelections()
 ///////////////////////////////////////////////////////////////////////////////
 
 const float GLSimpleMoleculeView::cylinderHeight = 10.0f;
-GLMoleculeParameters GLSimpleMoleculeView::moleculeParameters = {5, 1.0f, 0.2f, 0.2f, BallAndStick, Tubes, 1000, false, true,
-0x00FF00, 0x00FFFF, 0xFFFF00, 50, 0xFFFF0, false, 100};
+GLSimpleMoleculeView::GLMoleculeParameters GLSimpleMoleculeView::moleculeParameters = {5, 1.0f, 0.2f, 0.2f, BallAndStick, Tubes, 1000, false, true,
+                                                                                       0x00FF00, 0x00FFFF, 0xFFFF00, 50, 0xFFFF0, false, 100};
 
