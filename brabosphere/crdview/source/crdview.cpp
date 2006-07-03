@@ -53,7 +53,6 @@
 #include "atomset.h"
 #include "crdfactory.h"
 #include "crdview.h"
-#include "iconsets.h"
 #include "glsimplemoleculeview.h"
 #include "moleculepropertieswidget.h"
 #include "textviewwidget.h"
@@ -519,8 +518,8 @@ void CrdView::readSettings()
   QString prefix = unixPrefix + "preferences/";
 
   ///// Molecule
-  GLBaseParameters glBaseParameters;
-  GLMoleculeParameters glMoleculeParameters;
+  GLView::GLBaseParameters glBaseParameters;
+  GLSimpleMoleculeView::GLMoleculeParameters glMoleculeParameters;
   glMoleculeParameters.defaultMoleculeStyle = settings.readNumEntry(prefix + "style_molecule", 3); // Ball & Stick
   glMoleculeParameters.defaultForcesStyle   = settings.readNumEntry(prefix + "style_forces", 2); // Tubes
   glMoleculeParameters.fastRenderLimit      = settings.readNumEntry(prefix + "fast_render_limit", 1000);

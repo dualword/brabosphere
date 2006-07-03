@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>590</width>
-            <height>457</height>
+            <height>467</height>
         </rect>
     </property>
     <property name="maximumSize">
@@ -36,7 +36,7 @@
         </property>
         <widget class="QLayoutWidget">
             <property name="name">
-                <cstring>layout30</cstring>
+                <cstring>layout33</cstring>
             </property>
             <hbox>
                 <property name="name">
@@ -45,7 +45,7 @@
                 <widget class="QIconView">
                     <item>
                         <property name="text">
-                            <string>BRABO</string>
+                            <string>General</string>
                         </property>
                         <property name="pixmap">
                             <pixmap>image0</pixmap>
@@ -61,7 +61,7 @@
                     </item>
                     <item>
                         <property name="text">
-                            <string>Visuals</string>
+                            <string>OpenGL</string>
                         </property>
                         <property name="pixmap">
                             <pixmap>image0</pixmap>
@@ -69,7 +69,7 @@
                     </item>
                     <item>
                         <property name="text">
-                            <string>OpenGL</string>
+                            <string>BRABO</string>
                         </property>
                         <property name="pixmap">
                             <pixmap>image0</pixmap>
@@ -1180,7 +1180,7 @@
                                     <cstring>GroupBoxApplication</cstring>
                                 </property>
                                 <property name="title">
-                                    <string>Application</string>
+                                    <string>Visuals</string>
                                 </property>
                                 <vbox>
                                     <property name="name">
@@ -1353,6 +1353,128 @@
                                     </widget>
                                 </vbox>
                             </widget>
+                            <widget class="QButtonGroup">
+                                <property name="name">
+                                    <cstring>ButtonGroupUndoRedo</cstring>
+                                </property>
+                                <property name="title">
+                                    <string>Undo/redo stack size</string>
+                                </property>
+                                <vbox>
+                                    <property name="name">
+                                        <cstring>unnamed</cstring>
+                                    </property>
+                                    <widget class="QRadioButton">
+                                        <property name="name">
+                                            <cstring>RadioButtonUndo1</cstring>
+                                        </property>
+                                        <property name="text">
+                                            <string>Unlimited size</string>
+                                        </property>
+                                    </widget>
+                                    <widget class="QLayoutWidget">
+                                        <property name="name">
+                                            <cstring>layout34</cstring>
+                                        </property>
+                                        <hbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLayoutWidget">
+                                                <property name="name">
+                                                    <cstring>layout32</cstring>
+                                                </property>
+                                                <grid>
+                                                    <property name="name">
+                                                        <cstring>unnamed</cstring>
+                                                    </property>
+                                                    <widget class="QSpinBox" row="1" column="1">
+                                                        <property name="name">
+                                                            <cstring>SpinBoxUndoRAM</cstring>
+                                                        </property>
+                                                        <property name="enabled">
+                                                            <bool>false</bool>
+                                                        </property>
+                                                        <property name="suffix">
+                                                            <string> MB</string>
+                                                        </property>
+                                                        <property name="maxValue">
+                                                            <number>999</number>
+                                                        </property>
+                                                        <property name="minValue">
+                                                            <number>1</number>
+                                                        </property>
+                                                        <property name="value">
+                                                            <number>5</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton" row="0" column="0">
+                                                        <property name="name">
+                                                            <cstring>RadioButtonUndo2</cstring>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Limited number of levels per application:</string>
+                                                        </property>
+                                                        <property name="checked">
+                                                            <bool>true</bool>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QSpinBox" row="0" column="1">
+                                                        <property name="name">
+                                                            <cstring>SpinBoxUndoLevels</cstring>
+                                                        </property>
+                                                        <property name="suffix">
+                                                            <string> levels</string>
+                                                        </property>
+                                                        <property name="maxValue">
+                                                            <number>999</number>
+                                                        </property>
+                                                        <property name="minValue">
+                                                            <number>1</number>
+                                                        </property>
+                                                        <property name="value">
+                                                            <number>100</number>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QRadioButton" row="1" column="0">
+                                                        <property name="name">
+                                                            <cstring>RadioButtonUndo3</cstring>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Limited amount of RAM per calculation:</string>
+                                                        </property>
+                                                    </widget>
+                                                </grid>
+                                            </widget>
+                                            <spacer>
+                                                <property name="name">
+                                                    <cstring>spacer17_2</cstring>
+                                                </property>
+                                                <property name="orientation">
+                                                    <enum>Horizontal</enum>
+                                                </property>
+                                                <property name="sizeType">
+                                                    <enum>Expanding</enum>
+                                                </property>
+                                                <property name="sizeHint">
+                                                    <size>
+                                                        <width>40</width>
+                                                        <height>20</height>
+                                                    </size>
+                                                </property>
+                                            </spacer>
+                                        </hbox>
+                                    </widget>
+                                    <widget class="QRadioButton">
+                                        <property name="name">
+                                            <cstring>RadioButtonUndo4</cstring>
+                                        </property>
+                                        <property name="text">
+                                            <string>Disabled (no undo/redo functionality)</string>
+                                        </property>
+                                    </widget>
+                                </vbox>
+                            </widget>
                             <spacer>
                                 <property name="name">
                                     <cstring>spacer10</cstring>
@@ -1366,7 +1488,7 @@
                                 <property name="sizeHint">
                                     <size>
                                         <width>20</width>
-                                        <height>16</height>
+                                        <height>80</height>
                                     </size>
                                 </property>
                             </spacer>
@@ -1385,7 +1507,7 @@
                             </property>
                             <widget class="QLayoutWidget">
                                 <property name="name">
-                                    <cstring>layout31</cstring>
+                                    <cstring>layout29</cstring>
                                 </property>
                                 <grid>
                                     <property name="name">
@@ -1434,172 +1556,6 @@
                                                 </property>
                                             </widget>
                                         </vbox>
-                                    </widget>
-                                    <widget class="QGroupBox" row="0" column="0">
-                                        <property name="name">
-                                            <cstring>groupBox7</cstring>
-                                        </property>
-                                        <property name="title">
-                                            <string>Quality</string>
-                                        </property>
-                                        <vbox>
-                                            <property name="name">
-                                                <cstring>unnamed</cstring>
-                                            </property>
-                                            <widget class="QGroupBox">
-                                                <property name="name">
-                                                    <cstring>groupBox9</cstring>
-                                                </property>
-                                                <property name="title">
-                                                    <string>Atoms and bonds quality</string>
-                                                </property>
-                                                <vbox>
-                                                    <property name="name">
-                                                        <cstring>unnamed</cstring>
-                                                    </property>
-                                                    <widget class="QSlider">
-                                                        <property name="name">
-                                                            <cstring>SliderQuality</cstring>
-                                                        </property>
-                                                        <property name="minValue">
-                                                            <number>3</number>
-                                                        </property>
-                                                        <property name="maxValue">
-                                                            <number>49</number>
-                                                        </property>
-                                                        <property name="pageStep">
-                                                            <number>1</number>
-                                                        </property>
-                                                        <property name="value">
-                                                            <number>22</number>
-                                                        </property>
-                                                        <property name="orientation">
-                                                            <enum>Horizontal</enum>
-                                                        </property>
-                                                        <property name="tickmarks">
-                                                            <enum>NoMarks</enum>
-                                                        </property>
-                                                        <property name="whatsThis" stdset="0">
-                                                            <string>Allows changing the quality with which atoms and bonds/forces are drawn in the Ball &amp; Stick and Tubes visualization modes. Increasing the slider will give a higher quality but a decreased drawing speed and vice versa.</string>
-                                                        </property>
-                                                    </widget>
-                                                </vbox>
-                                            </widget>
-                                            <widget class="QCheckBox">
-                                                <property name="name">
-                                                    <cstring>CheckBoxAA</cstring>
-                                                </property>
-                                                <property name="text">
-                                                    <string>Antialiasing</string>
-                                                </property>
-                                                <property name="checked">
-                                                    <bool>true</bool>
-                                                </property>
-                                                <property name="whatsThis" stdset="0">
-                                                    <string>Enables the use of anti-aliasing (currently only for lines and points). Full screen antialiasing has to be forced through the drivers of the graphics card.</string>
-                                                </property>
-                                            </widget>
-                                            <widget class="QCheckBox">
-                                                <property name="name">
-                                                    <cstring>CheckBoxSmooth</cstring>
-                                                </property>
-                                                <property name="text">
-                                                    <string>Smooth shading</string>
-                                                </property>
-                                                <property name="checked">
-                                                    <bool>true</bool>
-                                                </property>
-                                                <property name="whatsThis" stdset="0">
-                                                    <string>Enables atoms and bonds/forces to appear more smooth.</string>
-                                                </property>
-                                            </widget>
-                                            <widget class="QCheckBox">
-                                                <property name="name">
-                                                    <cstring>CheckBoxDepthCue</cstring>
-                                                </property>
-                                                <property name="text">
-                                                    <string>Depth cue</string>
-                                                </property>
-                                                <property name="whatsThis" stdset="0">
-                                                    <string>Increases the perception of depth in the scene by fading distant objects.</string>
-                                                </property>
-                                            </widget>
-                                        </vbox>
-                                    </widget>
-                                    <widget class="QGroupBox" row="1" column="0">
-                                        <property name="name">
-                                            <cstring>groupBox10</cstring>
-                                        </property>
-                                        <property name="title">
-                                            <string>Material</string>
-                                        </property>
-                                        <grid>
-                                            <property name="name">
-                                                <cstring>unnamed</cstring>
-                                            </property>
-                                            <widget class="QSlider" row="0" column="1">
-                                                <property name="name">
-                                                    <cstring>SliderSpecular</cstring>
-                                                </property>
-                                                <property name="maxValue">
-                                                    <number>100</number>
-                                                </property>
-                                                <property name="value">
-                                                    <number>80</number>
-                                                </property>
-                                                <property name="orientation">
-                                                    <enum>Horizontal</enum>
-                                                </property>
-                                                <property name="tickmarks">
-                                                    <enum>Below</enum>
-                                                </property>
-                                                <property name="tickInterval">
-                                                    <number>25</number>
-                                                </property>
-                                                <property name="whatsThis" stdset="0">
-                                                    <string>Allows changing the intensity of specular highlights on the objects in the scene.</string>
-                                                </property>
-                                            </widget>
-                                            <widget class="QLabel" row="0" column="0">
-                                                <property name="name">
-                                                    <cstring>textLabel4</cstring>
-                                                </property>
-                                                <property name="text">
-                                                    <string>Specular intensity</string>
-                                                </property>
-                                            </widget>
-                                            <widget class="QLabel" row="1" column="0">
-                                                <property name="name">
-                                                    <cstring>textLabel4_2</cstring>
-                                                </property>
-                                                <property name="text">
-                                                    <string>Shininess</string>
-                                                </property>
-                                            </widget>
-                                            <widget class="QSlider" row="1" column="1">
-                                                <property name="name">
-                                                    <cstring>SliderShininess</cstring>
-                                                </property>
-                                                <property name="maxValue">
-                                                    <number>127</number>
-                                                </property>
-                                                <property name="value">
-                                                    <number>100</number>
-                                                </property>
-                                                <property name="orientation">
-                                                    <enum>Horizontal</enum>
-                                                </property>
-                                                <property name="tickmarks">
-                                                    <enum>Below</enum>
-                                                </property>
-                                                <property name="tickInterval">
-                                                    <number>32</number>
-                                                </property>
-                                                <property name="whatsThis" stdset="0">
-                                                    <string>Allows changing the shininess of the objects in the scene.</string>
-                                                </property>
-                                            </widget>
-                                        </grid>
                                     </widget>
                                     <widget class="QGroupBox" row="0" column="1">
                                         <property name="name">
@@ -1785,6 +1741,211 @@
                                                         </property>
                                                     </widget>
                                                 </hbox>
+                                            </widget>
+                                        </vbox>
+                                    </widget>
+                                    <widget class="QGroupBox" row="1" column="0">
+                                        <property name="name">
+                                            <cstring>groupBox10</cstring>
+                                        </property>
+                                        <property name="title">
+                                            <string>Material</string>
+                                        </property>
+                                        <grid>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QSlider" row="0" column="1">
+                                                <property name="name">
+                                                    <cstring>SliderSpecular</cstring>
+                                                </property>
+                                                <property name="maxValue">
+                                                    <number>100</number>
+                                                </property>
+                                                <property name="value">
+                                                    <number>80</number>
+                                                </property>
+                                                <property name="orientation">
+                                                    <enum>Horizontal</enum>
+                                                </property>
+                                                <property name="tickmarks">
+                                                    <enum>Below</enum>
+                                                </property>
+                                                <property name="tickInterval">
+                                                    <number>25</number>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Allows changing the intensity of specular highlights on the objects in the scene.</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel" row="0" column="0">
+                                                <property name="name">
+                                                    <cstring>textLabel4</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Specular intensity</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QLabel" row="1" column="0">
+                                                <property name="name">
+                                                    <cstring>textLabel4_2</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Shininess</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QSlider" row="1" column="1">
+                                                <property name="name">
+                                                    <cstring>SliderShininess</cstring>
+                                                </property>
+                                                <property name="maxValue">
+                                                    <number>127</number>
+                                                </property>
+                                                <property name="value">
+                                                    <number>100</number>
+                                                </property>
+                                                <property name="orientation">
+                                                    <enum>Horizontal</enum>
+                                                </property>
+                                                <property name="tickmarks">
+                                                    <enum>Below</enum>
+                                                </property>
+                                                <property name="tickInterval">
+                                                    <number>32</number>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Allows changing the shininess of the objects in the scene.</string>
+                                                </property>
+                                            </widget>
+                                        </grid>
+                                    </widget>
+                                    <widget class="QGroupBox" row="0" column="0">
+                                        <property name="name">
+                                            <cstring>groupBox7</cstring>
+                                        </property>
+                                        <property name="title">
+                                            <string>Quality</string>
+                                        </property>
+                                        <vbox>
+                                            <property name="name">
+                                                <cstring>unnamed</cstring>
+                                            </property>
+                                            <widget class="QLayoutWidget">
+                                                <property name="name">
+                                                    <cstring>layout28</cstring>
+                                                </property>
+                                                <grid>
+                                                    <property name="name">
+                                                        <cstring>unnamed</cstring>
+                                                    </property>
+                                                    <widget class="QSlider" row="1" column="1">
+                                                        <property name="name">
+                                                            <cstring>SliderSlices</cstring>
+                                                        </property>
+                                                        <property name="minValue">
+                                                            <number>4</number>
+                                                        </property>
+                                                        <property name="maxValue">
+                                                            <number>8</number>
+                                                        </property>
+                                                        <property name="pageStep">
+                                                            <number>1</number>
+                                                        </property>
+                                                        <property name="value">
+                                                            <number>7</number>
+                                                        </property>
+                                                        <property name="orientation">
+                                                            <enum>Horizontal</enum>
+                                                        </property>
+                                                        <property name="tickmarks">
+                                                            <enum>NoMarks</enum>
+                                                        </property>
+                                                        <property name="whatsThis" stdset="0">
+                                                            <string>Allows changing the quality with which atoms and bonds/forces are drawn in the Ball &amp; Stick and Tubes visualization modes. Increasing the slider will give a higher quality but a decreased drawing speed and vice versa.</string>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QSlider" row="0" column="1">
+                                                        <property name="name">
+                                                            <cstring>SliderQuality</cstring>
+                                                        </property>
+                                                        <property name="minValue">
+                                                            <number>2</number>
+                                                        </property>
+                                                        <property name="maxValue">
+                                                            <number>41</number>
+                                                        </property>
+                                                        <property name="pageStep">
+                                                            <number>1</number>
+                                                        </property>
+                                                        <property name="value">
+                                                            <number>22</number>
+                                                        </property>
+                                                        <property name="orientation">
+                                                            <enum>Horizontal</enum>
+                                                        </property>
+                                                        <property name="tickmarks">
+                                                            <enum>NoMarks</enum>
+                                                        </property>
+                                                        <property name="whatsThis" stdset="0">
+                                                            <string>Allows changing the quality with which atoms and bonds/forces are drawn in the Ball &amp; Stick and Tubes visualization modes. Increasing the slider will give a higher quality but a decreased drawing speed and vice versa.</string>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QLabel" row="0" column="0">
+                                                        <property name="name">
+                                                            <cstring>textLabel1_6</cstring>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Atoms &amp; bonds</string>
+                                                        </property>
+                                                    </widget>
+                                                    <widget class="QLabel" row="1" column="0">
+                                                        <property name="name">
+                                                            <cstring>textLabel2_4</cstring>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Volumes &amp; slices</string>
+                                                        </property>
+                                                    </widget>
+                                                </grid>
+                                            </widget>
+                                            <widget class="QCheckBox">
+                                                <property name="name">
+                                                    <cstring>CheckBoxAA</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Antialiasing</string>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Enables the use of anti-aliasing (currently only for lines and points). Full screen antialiasing has to be forced through the drivers of the graphics card.</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QCheckBox">
+                                                <property name="name">
+                                                    <cstring>CheckBoxSmooth</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Smooth shading</string>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Enables atoms and bonds/forces to appear more smooth.</string>
+                                                </property>
+                                            </widget>
+                                            <widget class="QCheckBox">
+                                                <property name="name">
+                                                    <cstring>CheckBoxDepthCue</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Depth cue</string>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Increases the perception of depth in the scene by fading distant objects.</string>
+                                                </property>
                                             </widget>
                                         </vbox>
                                     </widget>

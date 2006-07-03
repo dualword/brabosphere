@@ -54,6 +54,7 @@ class Command
     virtual bool execute(bool fromBackup = false) = 0;      // Executes the command
     virtual bool revert() = 0;          // Reverts the effects of executing the command.
     virtual bool combine(Command* command);       // Combines the command with another one
+    virtual unsigned int ramSize() const;         // Returns the RAM size needed in bytes
     bool isRepeatable() const;          // Returns whether the command can be repeated
 
   protected:
@@ -162,6 +163,7 @@ class CommandCoordinates : public Command
     bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.    
     virtual bool combine(Command* command);       // Combines the command with another one.
+    virtual unsigned int ramSize() const;         // Returns the needed RAM size in bytes
     virtual bool initialRun() = 0;      // Gets called in execute when fromBackup == false by subclasses
 
   protected:
@@ -179,7 +181,14 @@ class CommandReadCoordinates : public CommandCoordinates
     virtual CommandReadCoordinates* clone() const;// virtual copy constructor
 
     ///// public member functions
-    virtual bool initialRun();          // Reads coordinates using a file selection dialog
+    bool execute(bool fromBackup = false);        // Executes the command
+    bool revert();                      // Reverts the effects of executing the command.    
+    virtual bool initialRun();          // Duplicate in this subclass
+
+  private:
+    ///// private member variables
+    float oldX, oldY, oldZ;             // values of the translation vector as they are reset when reading new coordinates
+    Quaternion<float> oldRotation;      // value of the rotation quaternion (also reset)
 };
 
 ///// class CommandAddAtoms ///////////////////////////////////////////////////
@@ -314,6 +323,7 @@ class CommandSelection : public Command
     ///// public member functions
     bool execute(bool fromBackup = false);        // Executes the command
     bool revert();                      // Reverts the effects of executing the command.    
+    virtual unsigned int ramSize() const;         // Returns the needed RAM size in bytes
     virtual bool initialRun() = 0;      // Gets called in execute when fromBackup == false by subclasses
 
   private:

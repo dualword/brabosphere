@@ -48,8 +48,6 @@ HEADERS += $$COMMONDIR/include/atomset.h \
            $$COMMONDIR/include/colorbutton.h \
            $$COMMONDIR/include/crdfactory.h \
            $$COMMONDIR/include/domutils.h \
-           $$COMMONDIR/include/glbaseparameters.h \
-           $$COMMONDIR/include/glmoleculeparameters.h \
            $$COMMONDIR/include/glsimplemoleculeview.h \
            $$COMMONDIR/include/glview.h \
            $$COMMONDIR/include/icons-shared.h \

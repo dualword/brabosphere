@@ -109,6 +109,13 @@ bool Command::combine(Command* command)
   return false;
 }
 
+///// ramSize /////////////////////////////////////////////////////////////////
+unsigned int Command::ramSize() const
+/// Returns the size needed for storing this class in RAM (approximately)
+{
+  return sizeof(this); // this value should change when called from a subclass
+}
+
 ///// isRepeatable ////////////////////////////////////////////////////////////
 bool Command::isRepeatable() const
 /// Returns whether the command can be executed repeatedly. The default value is false.
@@ -398,11 +405,26 @@ bool CommandCoordinates::revert()
   return true;
 }
 
+///// combine /////////////////////////////////////////////////////////////////
 bool CommandCoordinates::combine(Command* command)
 /// The default implementation of combining 2 Commands returns false so it does
 /// not need to be reimplmented by all subclasses.
 {
   return false;
+}
+
+///// ramSize /////////////////////////////////////////////////////////////////
+unsigned int CommandCoordinates::ramSize() const
+/// Returns the size needed for storing this class in RAM (approximately). 
+/// Overridden from Command::ramSize
+{
+  unsigned int result = sizeof(this); // not calling the base class version as I think it might return the size of the base class
+  if(oldAtoms != NULL)
+    result += oldAtoms->ramSize();
+  if(newAtoms != NULL)
+    result += newAtoms->ramSize();
+  result += (oldSelectionList.size() + newSelectionList.size()) * sizeof(unsigned int);
+  return result;
 }
 
 
@@ -429,6 +451,59 @@ bool CommandReadCoordinates::initialRun()
 /// Reads a new set of atoms for the given calculation.
 {
   return view->moleculeReadCoordinates();
+}
+
+///// execute /////////////////////////////////////////////////////////////////
+bool CommandReadCoordinates::execute(bool fromBackup)
+/// Reads a new set of atoms for the given calculation. 
+{
+  if(view->isRunning())
+    return false;
+
+  assert(oldAtoms == NULL); // should be zero at start and after a 'revert' operation.
+  oldAtoms = new AtomSet(view->currentAtomSet()); // backup current situation
+  oldSelectionList = view->moleculeView()->selectionList;
+  oldX = view->moleculeView()->xPos;
+  oldY = view->moleculeView()->yPos;
+  oldZ = view->moleculeView()->zPos;
+  oldRotation = *(view->moleculeView()->orientationQuaternion);
+
+  if(!fromBackup)
+  {
+    // this is the first call of execute.
+    assert(newAtoms == NULL);
+    return initialRun();
+  }
+  else
+  {
+    assert(newAtoms != NULL); // fromBackup version is only called for 'redo' so revert should have been called 
+    view->setAtomSet(newAtoms);
+    view->moleculeView()->resetView(); // this is also done by initialRun();
+    newAtoms = NULL; // ownership transfered to XbraboView
+    return true;
+  }
+}
+
+///// revert //////////////////////////////////////////////////////////////////
+bool CommandReadCoordinates::revert()
+/// Restores the previous set of atoms.
+{
+  if(view->isRunning())
+    return false;
+
+  assert(oldAtoms != NULL); // execute should have been called
+  assert(newAtoms == NULL); // always NULL after a run of execute and at start
+
+  newAtoms = new AtomSet(view->currentAtomSet()); // backup current situation
+  
+  view->moleculeView()->selectionList = oldSelectionList;
+  view->moleculeView()->xPos = oldX;
+  view->moleculeView()->yPos = oldY;
+  view->moleculeView()->zPos = oldZ;
+  *(view->moleculeView()->orientationQuaternion) = oldRotation;
+  view->setAtomSet(oldAtoms);
+  oldAtoms = NULL; // ownership transfered to XbraboView;
+  return true;
 }
 
 
@@ -743,6 +818,13 @@ bool CommandSelection::revert()
   view->moleculeView()->selectionList = oldSelectionList;
   view->moleculeView()->updateGL();
   return true;
+}
+
+///// ramSize /////////////////////////////////////////////////////////////////
+unsigned int CommandSelection::ramSize() const
+/// Returns the size needed for storing this class in RAM (approximately)
+{
+  return sizeof(this) + (oldSelectionList.size() + newSelectionList.size()) * sizeof(unsigned int);
 }
 
 

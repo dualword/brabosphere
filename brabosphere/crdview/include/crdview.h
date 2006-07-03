@@ -31,8 +31,6 @@ class QPopupmenu;
 class AtomSet;
 class GLSimpleMoleculeView;
 class PreferencesCV;
-#include "glbaseparameters.h"
-#include "glmoleculeparameters.h"
 #include "iconsets.h"
 
 // CrdView base class header file

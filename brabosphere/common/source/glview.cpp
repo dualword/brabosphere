@@ -259,7 +259,7 @@ void GLView::saveImage()
   QString format = selectedFilter.left(selectedFilter.find(" "));
 
   // generate an image from the OpenGL view
-  // -> It is possible to get a transparant image when using grabFrameBuffer(true)
+  // -> It is possible to get a transparent image when using grabFrameBuffer(true)
   QImage image = grabFrameBuffer();
 
   // save it
@@ -317,7 +317,7 @@ void GLView::initializeGL()
   glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
   //glEnable(GL_POINT_SMOOTH);
 
-  // transparancy setup
+  // transparency setup
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   ///// Fog setup
@@ -773,6 +773,6 @@ const float GLView::fieldOfView = 60.0f;
 ///// are used for the members of (non)aggregates. Should be fixed in .NET 2003
 //  OpenGLParameters GLMoleculeView::parameters = {1.0, 1.0, 1.0, QColor(255, 255, 255), 0.80, 100.0,
 //                                                 QColor(0, 0, 0), false, true, true, 5, true, 0, 0.2, 3.0};
-GLBaseParameters GLView::baseParameters = {1.0f, 1.0f, 1.0f, 0xffffff, 0.80f, 100.0f,
-                                           0x000000, false, true, false, true};
+GLView::GLBaseParameters GLView::baseParameters = {1.0f, 1.0f, 1.0f, 0xffffff, 0.80f, 100.0f,
+                                                   0x000000, false, true, false, true};
 

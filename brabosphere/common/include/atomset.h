@@ -97,6 +97,7 @@ class AtomSet
     bool hasForces() const;             // returns if forces are present
     Point3D<float> rotationCenter() const;        // returns the center around which the molecule can best be rotated
     bool needsExtendedFormat();         // returns true if the coordinates need to be written in BRABO's extended format in order to prevent clipping
+    unsigned int ramSize() const;       // returns the size of the class in bytes
 
     // public member functions for doing IO
     void loadCML(const QDomElement* root);        // loads coordinates from a CML file

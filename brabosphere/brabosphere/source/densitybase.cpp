@@ -103,6 +103,10 @@ DensityBase::DensityBase(DensityGrid* grid, QWidget* parent, const char* name, b
   ColorButtonSlicePos->setColor(QColor(0, 0, 255));
   ColorButtonSliceNeg->setColor(QColor(255, 0, 0));
   ColorButtonSliceBack->setColor(QColor(255, 255, 255));
+  LabelSliceMap1->hide();
+  LabelSliceMap2->hide();
+  LabelSliceMap3->hide();
+  ComboBoxSliceMap->hide();
   // Density mapping
   mappingWidget = new MappedSurfaceWidget(this, 0, true);
 
@@ -724,94 +728,141 @@ void DensityBase::updateOpacity()
 
 ///// setSingleColor //////////////////////////////////////////////////////////
 void DensityBase::setSingleColor()
-/// Sets the use of single coors for the visualization of the isosurfaces.
+/// Sets the use of single colors for the visualization of the isosurfaces and
+/// slices.
 {
+  // common stuff
   PushButtonSingleColor->setOn(true);
   PushButtonMapped->setOn(false);
-  ColorButtonLevel->setEnabled(true);
+
+  switch(ComboBoxVisualizationType->currentItem())
+  {
+    case ISOSURFACES:
+      ColorButtonLevel->setEnabled(true);
+      break;
+    case SLICE:
+      // show the single color widgets
+      LabelSlicePos->show();
+      LabelSliceNeg->show();
+      LabelSliceBack->show();
+      ColorButtonSlicePos->show();
+      ColorButtonSliceNeg->show();
+      ColorButtonSliceBack->show();
+      CheckBoxSliceTransparent->show();
+      // hide the  mapping widgets
+      LabelSliceMap1->hide();
+      LabelSliceMap2->hide();
+      LabelSliceMap3->hide();
+      ComboBoxSliceMap->hide();
+      break;
+  }
   checkUpdate();
 }
 
 ///// setMapping //////////////////////////////////////////////////////////////
 void DensityBase::setMapping()
-/// Sets the use of another density for color mapping the isosurfaces.
+/// Sets the use of another density for color mapping the isosurfaces or changes
+/// the mapping options for slices.
 {
-  ///// setup the mapping widget
-  // the source density
-  QString currentDensity = mappingWidget->ComboBoxSource->currentText();
-  mappingWidget->ComboBoxSource->clear();
-  if(!densityPointsA.empty())
-    mappingWidget->ComboBoxSource->insertItem(tr("Density A"));
-  if(!densityPointsB.empty())
-    mappingWidget->ComboBoxSource->insertItem(tr("Density B"));
-  mappingWidget->ComboBoxSource->setCurrentItem(0);
-  bool noChange = false;
-  for(int i = 0; i < mappingWidget->ComboBoxSource->count(); i++)
+  switch(ComboBoxVisualizationType->currentItem())
   {
-    if(currentDensity == mappingWidget->ComboBoxSource->text(i))
+    case ISOSURFACES:
     {
-      mappingWidget->ComboBoxSource->setCurrentItem(i);
-      noChange = true;
+      // the source density
+      QString currentDensity = mappingWidget->ComboBoxSource->currentText();
+      mappingWidget->ComboBoxSource->clear();
+      if(!densityPointsA.empty())
+        mappingWidget->ComboBoxSource->insertItem(tr("Density A"));
+      if(!densityPointsB.empty())
+        mappingWidget->ComboBoxSource->insertItem(tr("Density B"));
+      mappingWidget->ComboBoxSource->setCurrentItem(0);
+      bool noChange = false;
+      for(int i = 0; i < mappingWidget->ComboBoxSource->count(); i++)
+      {
+        if(currentDensity == mappingWidget->ComboBoxSource->text(i))
+        {
+          mappingWidget->ComboBoxSource->setCurrentItem(i);
+          noChange = true;
+        }
+      }
+
+      // the maximum plot values
+      if(!noChange)
+      {
+        bool update = CheckBoxUpdate->isOn();
+        CheckBoxUpdate->setChecked(false); // prevent automatic update
+        resetMappedMaxima(); // the current source density has changed so reset to the maximum values
+        CheckBoxUpdate->setChecked(update);
+      }
+      
+      // save the original values
+      const int oldDensity = mappingWidget->ComboBoxSource->currentItem();
+      const QString oldMax = mappingWidget->LineEditMaxPos->text();
+      const QString oldMin = mappingWidget->LineEditMaxNeg->text();
+      const int oldMap = mappingWidget->ComboBoxMap->currentItem();
+      
+      // show it
+      if(mappingWidget->exec() == QDialog::Rejected)
+      {
+        // reset to the old values and return
+        mappingWidget->ComboBoxSource->setCurrentItem(oldDensity);
+        mappingWidget->LineEditMaxPos->setText(oldMax);
+        mappingWidget->LineEditMaxNeg->setText(oldMin);
+        mappingWidget->ComboBoxMap->setCurrentItem(oldMap);
+        if(PushButtonSingleColor->isOn())
+          PushButtonMapped->setOn(false);
+        return;
+      }
+      
+      // update the DensityGrid
+      std::vector<double>* points;
+      if(mappingWidget->ComboBoxSource->currentText() == tr("Density A"))
+        points = &densityPointsA;
+      else
+        points = &densityPointsB;
+      densityGrid->setMappingParameters(points, mappingWidget->ComboBoxMap->currentItem(),
+                                        mappingWidget->LineEditMaxPos->text().toFloat(), 
+                                        mappingWidget->LineEditMaxNeg->text().toFloat());
+      mappingChanged = true;
+
+      // update the isosurface's colors in the ListView
+      columnColourWidth = ListViewParameters->columnWidth(COLUMN_COLOUR);
+      QPixmap pm(*(mappingWidget->ComboBoxMap->pixmap(mappingWidget->ComboBoxMap->currentItem())));
+      QListViewItemIterator it(ListViewParameters);
+      if(it.current() && pm.height() > it.current()->height() - 2)
+        pm.resize(pm.width(), it.current()->height() - 2); // assume all rows have equal height
+      while(it.current())
+      {
+        it.current()->setPixmap(COLUMN_COLOUR, pm);
+        it++;
+      }
+      ListViewParameters->setColumnWidth(COLUMN_COLOUR, columnColourWidth); // reset the column width 
+
+      // fix relevant button
+      ColorButtonLevel->setEnabled(false);
+    }
+
+    case SLICE:
+    {
+      // hide the single color widgets
+      LabelSlicePos->hide();
+      LabelSliceNeg->hide();
+      LabelSliceBack->hide();
+      ColorButtonSlicePos->hide();
+      ColorButtonSliceNeg->hide();
+      ColorButtonSliceBack->hide();
+      CheckBoxSliceTransparent->hide();
+      // show mapping widgets
+      LabelSliceMap1->show();
+      LabelSliceMap2->show();
+      LabelSliceMap3->show();
+      ComboBoxSliceMap->show();
     }
   }
-
-  // the maximum plot values
-  if(!noChange)
-  {
-    bool update = CheckBoxUpdate->isOn();
-    CheckBoxUpdate->setChecked(false); // prevent automatic update
-    resetMappedMaxima(); // the current source density has changed so reset to the maximum values
-    CheckBoxUpdate->setChecked(update);
-  }
-  
-  // save the original values
-  const int oldDensity = mappingWidget->ComboBoxSource->currentItem();
-  const QString oldMax = mappingWidget->LineEditMaxPos->text();
-  const QString oldMin = mappingWidget->LineEditMaxNeg->text();
-  const int oldMap = mappingWidget->ButtonGroup->selectedId();
-  
-  // show it
-  if(mappingWidget->exec() == QDialog::Rejected)
-  {
-    // reset to the old values and return
-    mappingWidget->ComboBoxSource->setCurrentItem(oldDensity);
-    mappingWidget->LineEditMaxPos->setText(oldMax);
-    mappingWidget->LineEditMaxNeg->setText(oldMin);
-    mappingWidget->ButtonGroup->find(oldMap)->setDown(true);
-    if(PushButtonSingleColor->isOn())
-      PushButtonMapped->setOn(false);
-    return;
-  }
-  
-  // update the DensityGrid
-  std::vector<double>* points;
-  if(mappingWidget->ComboBoxSource->currentText() == tr("Density A"))
-    points = &densityPointsA;
-  else
-    points = &densityPointsB;
-  densityGrid->setMappingParameters(points, mappingWidget->ButtonGroup->selectedId(), 
-                                    mappingWidget->LineEditMaxPos->text().toFloat(), 
-                                    mappingWidget->LineEditMaxNeg->text().toFloat());
-  mappingChanged = true;
-
-  // update the isosurface's colors in the ListView
-  columnColourWidth = ListViewParameters->columnWidth(COLUMN_COLOUR);
-  QPixmap pm(*(mappingWidget->ButtonGroup->selected()->pixmap()));
-  QListViewItemIterator it(ListViewParameters);
-  if(it.current() && pm.height() > it.current()->height() - 2)
-    pm.resize(pm.width(), it.current()->height() - 2); // assume all rows have equal height
-  while(it.current())
-  {
-    it.current()->setPixmap(COLUMN_COLOUR, pm);
-    it++;
-  }
-  ListViewParameters->setColumnWidth(COLUMN_COLOUR, columnColourWidth); // reset the column width 
 
   ///// fix relevant buttons
   PushButtonMapped->setOn(true);
   PushButtonSingleColor->setOn(false);
-  ColorButtonLevel->setEnabled(false);
-
   checkUpdate();
 }
 
@@ -916,7 +967,8 @@ void DensityBase::makeConnections()
   connect(ColorButtonSlicePos, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
   connect(ColorButtonSliceNeg, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
   connect(ColorButtonSliceBack, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
-  connect(ButtonGroupSlice, SIGNAL(clicked(int)), this, SLOT(checkUpdate()));
+  connect(CheckBoxSliceTransparent, SIGNAL(clicked()), this, SLOT(checkUpdate()));
+  connect(ComboBoxSliceMap, SIGNAL(activated(int)), this, SLOT(checkUpdate()));
   connect(LineEditSlicePos, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
   connect(LineEditSliceNeg, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
   connect(SliderSlice, SIGNAL(valueChanged(int)), this, SLOT(checkUpdate()));
@@ -1304,8 +1356,9 @@ void DensityBase::enableWidgets()
   PushButtonUpdate->setEnabled(hasDensity);
   CheckBoxUpdate->setEnabled(hasDensity);
 
-  ///// only enable the mapping functionality if 2 identical grids are present
-  PushButtonMapped->setEnabled(hasDensity && identicalGrids());
+  ///// only enable the mapping functionality if 2 identical grids are present for isosurfaces or when slices are selected
+  PushButtonMapped->setEnabled((ComboBoxVisualizationType->currentItem() == ISOSURFACES && hasDensity && identicalGrids())
+                               || ComboBoxVisualizationType->currentItem() == SLICE);
 
   ///// only enable the 'Add pair' widget if the density contains both positive and negative values
   PushButtonAdd2->setEnabled(hasDensity && LabelMax->text().toDouble() > deltaLevel && LabelMin->text().toDouble() < -deltaLevel);
@@ -1459,7 +1512,8 @@ bool DensityBase::updateSlice()
   bool changed = ColorButtonSlicePos->color().rgb() != sliceProperties.positiveColor ||
                  ColorButtonSliceNeg->color().rgb() != sliceProperties.negativeColor ||
                  ColorButtonSliceBack->color().rgb() != sliceProperties.backgroundColor ||
-                 RadioButtonSliceTransparant->isOn() != sliceProperties.transparant ||
+                 CheckBoxSliceTransparent->isChecked() != sliceProperties.transparent ||
+                 ComboBoxSliceMap->currentItem() != sliceProperties.map ||
                  SliderSlice->value() != sliceProperties.index;
 
   // notify that the slice needs to be updated
@@ -1472,7 +1526,8 @@ bool DensityBase::updateSlice()
     sliceProperties.positiveColor = ColorButtonSlicePos->color().rgb();
     sliceProperties.negativeColor = ColorButtonSliceNeg->color().rgb();
     sliceProperties.backgroundColor = ColorButtonSliceBack->color().rgb();
-    sliceProperties.transparant = RadioButtonSliceTransparant->isOn();
+    sliceProperties.transparent = CheckBoxSliceTransparent->isChecked();
+    sliceProperties.map = ComboBoxSliceMap->currentItem();
     sliceProperties.index = SliderSlice->value();
   }
 

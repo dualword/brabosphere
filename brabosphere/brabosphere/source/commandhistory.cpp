@@ -48,7 +48,6 @@
 ///// constructor /////////////////////////////////////////////////////////////
 CommandHistory::CommandHistory(QObject* parent, const char* name) : QObject(parent, name),
   currentPosition(commandList.end()),
-  maxSize(100),
   lastActionAdded(false)
 /// The default constructor.
 {
@@ -97,7 +96,8 @@ void CommandHistory::addCommand(Command* command)
   lastActionAdded = true;
 
   // Enforce the maximum size
-  enforceSize();
+  enforceSize(); // not called when setting a new maximum size, so overriding the maximum size 
+                 // will only be fixed after adding a new command
 
   // Reposition
   currentPosition = commandList.end();
@@ -200,15 +200,29 @@ QString CommandHistory::repeatText() const
     return QString::null;
 }
 
-///// setMaxSize //////////////////////////////////////////////////////////////
-void CommandHistory::setMaxSize(const unsigned int size)
-/// Sets the maximum allowed number of entries in the history.
+///// setMaxLevels ////////////////////////////////////////////////////////////
+void CommandHistory::setMaxLevels(const int levels)
+/// Sets the maximum allowed number of entries in the history. Setting it to zero
+/// disables the history and a negative value sets is to unlimited.
 {
-  maxSize = size;
-  if(maxSize < 1)
-    maxSize = 1;
+  maxLevels = levels;
+  if(maxLevels > 0)
+    maxRAM = -1;
+  else if(maxLevels == 0)
+    maxRAM = 0;
+}
 
-  enforceSize();
+///// setMaxRAM ///////////////////////////////////////////////////////////////
+void CommandHistory::setMaxRAM(const int mb)
+/// Sets the maximum memory size of the history to the given number of megabytes.
+/// Setting it to zero disables the history and a negative value sets is to
+/// unlimited.
+{
+  maxRAM = mb;
+  if(maxRAM > 0)
+    maxLevels = -1;
+  else if(maxRAM == 0)
+    maxLevels = 0;
 }
 
 ///// pruneCoordinates ////////////////////////////////////////////////////////
@@ -253,11 +267,45 @@ void CommandHistory::pruneCoordinates()
 
 ///// enforceSize /////////////////////////////////////////////////////////////
 void CommandHistory::enforceSize()
-/// Truncates the size of the history so it's not larger than the set maximum size.
+/// Truncates the size of the history so it's not larger than the set maximum 
+/// sizes.
 {
-  while(commandList.size() > maxSize)
+  // possible cases: - unlimited:      maxLevels < 0, maxRAM < 0
+  //                 - limited levels: maxLevels > 0, maxRAM < 0
+  //                 - limited RAM:    maxLevels < 0, maxRAM > 0
+  //                 - disabled:       maxLevels = 0, maxRAM = 0
+  if(maxLevels < 0 && maxRAM < 0)
+    return; // unlimited size
+
+  ///// limit the maximum number of levels
+  if(maxLevels >= 0)
   {
-    delete commandList.front();
-    commandList.pop_front();
+    while(commandList.size() > maxLevels)
+    {
+      delete commandList.front();
+      commandList.pop_front();
+    }
   }
+  if(maxRAM > 0) // if maxRAM == 0, maxLevels should be zero too and the list will have been cleared above
+  {
+    // get the total size of the history
+    unsigned int totalSize = 0;
+    for(std::list<Command*>::iterator it = commandList.begin(); it != commandList.end(); it++)
+      totalSize += (*it)->ramSize();
+    // limit it
+    while(totalSize > maxRAM*1024*1024) // totalSize is in bytes, maxRAM in megabytes
+    {
+      totalSize -= commandList.front()->ramSize();
+      delete commandList.front();
+      commandList.pop_front();
+    }
+  } 
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+///// Static variables                                                    /////
+///////////////////////////////////////////////////////////////////////////////
+
+int CommandHistory::maxLevels = 100;
+int CommandHistory::maxRAM = -1;
