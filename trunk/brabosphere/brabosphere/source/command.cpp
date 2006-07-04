@@ -22,7 +22,7 @@
          Undo/Redo stack.
 
   The Command class itself is an abstract base class for the subclasses also
-  present in this file. The implementation is such as to allow a stack for each 
+  present in this file. The implementation is such as to allow a stack for each
   calculation.
   The list of classes: Command (abstract)
                          CommandCoordinates (abstract)
@@ -102,7 +102,7 @@ QString Command::description() const
 }
 
 ///// combine /////////////////////////////////////////////////////////////////
-bool Command::combine(Command* command)
+bool Command::combine(Command*)
 /// The default implementation of combining 2 Commands returns false so it does
 /// not need to be reimplmented by all subclasses.
 {
@@ -145,7 +145,7 @@ CommandNewCalculation* CommandNewCalculation::clone() const
 
 ///// execute /////////////////////////////////////////////////////////////////
 bool CommandNewCalculation::execute(bool)
-/// Creates a new calculation. The procedure is the same whether it's executed 
+/// Creates a new calculation. The procedure is the same whether it's executed
 /// for the first time or following an undo operation.
 {
   view = mainWindow->createCalculation();
@@ -182,7 +182,7 @@ CommandOpenCalculation* CommandOpenCalculation::clone() const
 
 ///// execute /////////////////////////////////////////////////////////////////
 bool CommandOpenCalculation::execute(bool)
-/// Opens an existing calculation. The procedure is the same whether it's executed 
+/// Opens an existing calculation. The procedure is the same whether it's executed
 /// for the first time or following an undo operation because 'fileName' is never
 /// empty.
 {
@@ -339,9 +339,9 @@ bool CommandStatusBar::revert()
 CommandCoordinates::CommandCoordinates(XbraboView* parent, const QString description) : Command(parent, description),
   oldAtoms(NULL),
   newAtoms(NULL)
-/// The default constructor. 
+/// The default constructor.
 {
- 
+
 }
 
 ///// destructor //////////////////////////////////////////////////////////////
@@ -376,7 +376,7 @@ bool CommandCoordinates::execute(bool fromBackup)
   }
   else
   {
-    assert(newAtoms != NULL); // fromBackup version is only called for 'redo' so revert should have been called 
+    assert(newAtoms != NULL); // fromBackup version is only called for 'redo' so revert should have been called
     view->moleculeView()->selectionList = newSelectionList;
     view->setAtomSet(newAtoms);
     newAtoms = NULL; // ownership transfered to XbraboView
@@ -406,7 +406,7 @@ bool CommandCoordinates::revert()
 }
 
 ///// combine /////////////////////////////////////////////////////////////////
-bool CommandCoordinates::combine(Command* command)
+bool CommandCoordinates::combine(Command*)
 /// The default implementation of combining 2 Commands returns false so it does
 /// not need to be reimplmented by all subclasses.
 {
@@ -415,7 +415,7 @@ bool CommandCoordinates::combine(Command* command)
 
 ///// ramSize /////////////////////////////////////////////////////////////////
 unsigned int CommandCoordinates::ramSize() const
-/// Returns the size needed for storing this class in RAM (approximately). 
+/// Returns the size needed for storing this class in RAM (approximately).
 /// Overridden from Command::ramSize
 {
   unsigned int result = sizeof(this); // not calling the base class version as I think it might return the size of the base class
@@ -434,7 +434,7 @@ unsigned int CommandCoordinates::ramSize() const
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandReadCoordinates::CommandReadCoordinates(XbraboView* parent, const QString description) : CommandCoordinates(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -455,7 +455,7 @@ bool CommandReadCoordinates::initialRun()
 
 ///// execute /////////////////////////////////////////////////////////////////
 bool CommandReadCoordinates::execute(bool fromBackup)
-/// Reads a new set of atoms for the given calculation. 
+/// Reads a new set of atoms for the given calculation.
 {
   if(view->isRunning())
     return false;
@@ -476,7 +476,7 @@ bool CommandReadCoordinates::execute(bool fromBackup)
   }
   else
   {
-    assert(newAtoms != NULL); // fromBackup version is only called for 'redo' so revert should have been called 
+    assert(newAtoms != NULL); // fromBackup version is only called for 'redo' so revert should have been called
     view->setAtomSet(newAtoms);
     view->moleculeView()->resetView(); // this is also done by initialRun();
     newAtoms = NULL; // ownership transfered to XbraboView
@@ -495,7 +495,7 @@ bool CommandReadCoordinates::revert()
   assert(newAtoms == NULL); // always NULL after a run of execute and at start
 
   newAtoms = new AtomSet(view->currentAtomSet()); // backup current situation
-  
+
   view->moleculeView()->selectionList = oldSelectionList;
   view->moleculeView()->xPos = oldX;
   view->moleculeView()->yPos = oldY;
@@ -512,10 +512,10 @@ bool CommandReadCoordinates::revert()
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandAddAtoms::CommandAddAtoms(XbraboView* parent, const QString description, NewAtomBase* newAtomDialog) : 
+CommandAddAtoms::CommandAddAtoms(XbraboView* parent, const QString description, NewAtomBase* newAtomDialog) :
   CommandCoordinates(parent, description),
   newAtomBase(newAtomDialog)
-/// The default constructor. 
+/// The default constructor.
 {
   assert(newAtomBase != 0);
 }
@@ -529,7 +529,7 @@ CommandAddAtoms* CommandAddAtoms::clone() const
 
 ///// initialRun //////////////////////////////////////////////////////////////
 bool CommandAddAtoms::initialRun()
-/// Adds atoms to the current molecular system. 
+/// Adds atoms to the current molecular system.
 {
   newAtomBase->addAtom();
   return true;
@@ -540,11 +540,11 @@ bool CommandAddAtoms::initialRun()
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandDeleteAtoms::CommandDeleteAtoms(XbraboView* parent, const QString description) : 
+CommandDeleteAtoms::CommandDeleteAtoms(XbraboView* parent, const QString description) :
   CommandCoordinates(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
- 
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -556,7 +556,7 @@ CommandDeleteAtoms* CommandDeleteAtoms::clone() const
 
 ///// initialRun //////////////////////////////////////////////////////////////
 bool CommandDeleteAtoms::initialRun()
-/// Deletes the selected atoms from the current molecular system. 
+/// Deletes the selected atoms from the current molecular system.
 {
   return view->moleculeView()->deleteSelectedAtoms();
 }
@@ -566,11 +566,11 @@ bool CommandDeleteAtoms::initialRun()
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandAlterCartesian::CommandAlterCartesian(XbraboView* parent, const QString description) : 
+CommandAlterCartesian::CommandAlterCartesian(XbraboView* parent, const QString description) :
   CommandCoordinates(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -589,10 +589,10 @@ bool CommandAlterCartesian::initialRun()
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandAlterCartesian::combine(Command* command)
-/// Combines 2 changes of cartesian coordinates. 
+/// Combines 2 changes of cartesian coordinates.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandAlterCartesian*>(command) != NULL; 
+  return dynamic_cast<CommandAlterCartesian*>(command) != NULL;
 }
 
 
@@ -601,11 +601,11 @@ bool CommandAlterCartesian::combine(Command* command)
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandAlterInternal::CommandAlterInternal(XbraboView* parent, const QString description) : 
+CommandAlterInternal::CommandAlterInternal(XbraboView* parent, const QString description) :
   CommandCoordinates(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -624,10 +624,10 @@ bool CommandAlterInternal::initialRun()
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandAlterInternal::combine(Command* command)
-/// Combines 2 changes of internal coordinates. 
+/// Combines 2 changes of internal coordinates.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandAlterInternal*>(command) != NULL; 
+  return dynamic_cast<CommandAlterInternal*>(command) != NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -635,11 +635,11 @@ bool CommandAlterInternal::combine(Command* command)
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandTranslateSelectionXY::CommandTranslateSelectionXY(XbraboView* parent, const QString description, const int amountX, const int amountY) : 
+CommandTranslateSelectionXY::CommandTranslateSelectionXY(XbraboView* parent, const QString description, const int amountX, const int amountY) :
   CommandCoordinates(parent, description),
     incX(amountX),
     incY(amountY)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -660,10 +660,10 @@ bool CommandTranslateSelectionXY::initialRun()
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandTranslateSelectionXY::combine(Command* command)
-/// Combines 2 translations of cartesian coordinates. 
+/// Combines 2 translations of cartesian coordinates.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandTranslateSelectionXY*>(command) != NULL; 
+  return dynamic_cast<CommandTranslateSelectionXY*>(command) != NULL;
 }
 
 
@@ -672,10 +672,10 @@ bool CommandTranslateSelectionXY::combine(Command* command)
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandTranslateSelectionZ::CommandTranslateSelectionZ(XbraboView* parent, const QString description, const int amountZ) : 
+CommandTranslateSelectionZ::CommandTranslateSelectionZ(XbraboView* parent, const QString description, const int amountZ) :
   CommandCoordinates(parent, description),
     incZ(amountZ)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -696,10 +696,10 @@ bool CommandTranslateSelectionZ::initialRun()
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandTranslateSelectionZ::combine(Command* command)
-/// Combines 2 translations of cartesian coordinates. 
+/// Combines 2 translations of cartesian coordinates.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandTranslateSelectionZ*>(command) != NULL; 
+  return dynamic_cast<CommandTranslateSelectionZ*>(command) != NULL;
 }
 
 
@@ -708,12 +708,12 @@ bool CommandTranslateSelectionZ::combine(Command* command)
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandRotateSelection::CommandRotateSelection(XbraboView* parent, const QString description, const double amountX, const double amountY, const double amountZ) : 
+CommandRotateSelection::CommandRotateSelection(XbraboView* parent, const QString description, const double amountX, const double amountY, const double amountZ) :
   CommandCoordinates(parent, description),
     incX(amountX),
     incY(amountY),
     incZ(amountZ)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -734,10 +734,10 @@ bool CommandRotateSelection::initialRun()
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandRotateSelection::combine(Command* command)
-/// Combines 2 translations of cartesian coordinates. 
+/// Combines 2 translations of cartesian coordinates.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandRotateSelection*>(command) != NULL; 
+  return dynamic_cast<CommandRotateSelection*>(command) != NULL;
 }
 
 
@@ -746,10 +746,10 @@ bool CommandRotateSelection::combine(Command* command)
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandChangeIC::CommandChangeIC(XbraboView* parent, const QString description, const int range) : 
+CommandChangeIC::CommandChangeIC(XbraboView* parent, const QString description, const int range) :
   CommandCoordinates(parent, description),
   amount(range)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -770,12 +770,12 @@ bool CommandChangeIC::initialRun()
 
 ///// combine /////////////////////////////////////////////////////////////////
 bool CommandChangeIC::combine(Command* command)
-/// Combines 2 changes of the selected internal coordinate. 
+/// Combines 2 changes of the selected internal coordinate.
 {
   // as long as the other command is the same type nothing more has to be done.
   // -> maybe check for an identical selection... (not needed if all selections are also
   //    put in the undo/redo stack
-  return dynamic_cast<CommandChangeIC*>(command) != NULL; 
+  return dynamic_cast<CommandChangeIC*>(command) != NULL;
 }
 
 
@@ -785,9 +785,9 @@ bool CommandChangeIC::combine(Command* command)
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSelection::CommandSelection(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
- 
+
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
@@ -834,9 +834,9 @@ unsigned int CommandSelection::ramSize() const
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSelectAll::CommandSelectAll(XbraboView* parent, const QString description) : CommandSelection(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
- 
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -862,9 +862,9 @@ bool CommandSelectAll::initialRun()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSelectNone::CommandSelectNone(XbraboView* parent, const QString description) : CommandSelection(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
- 
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -890,9 +890,9 @@ bool CommandSelectNone::initialRun()
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSelectEntity::CommandSelectEntity(XbraboView* parent, const QString description, const unsigned int id) : CommandSelection(parent, description),
   glID(id)
-/// The default constructor. 
+/// The default constructor.
 {
- 
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -917,7 +917,7 @@ bool CommandSelectEntity::initialRun()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandDisplayMode::CommandDisplayMode(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -955,7 +955,7 @@ bool CommandDisplayMode::execute(bool fromBackup)
   {
     view->moleculeView()->setDisplayStyle(GLSimpleMoleculeView::Molecule, newStyleMolecule);
     view->moleculeView()->setDisplayStyle(GLSimpleMoleculeView::Forces, newStyleForces);
-    view->moleculeView()->setLabels(newShowElements, newShowNumbers, newChargeType);    
+    view->moleculeView()->setLabels(newShowElements, newShowNumbers, newChargeType);
     view->moleculeView()->updateGL();
     return true;
   }
@@ -994,9 +994,9 @@ bool CommandDisplayMode::revert()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandTranslation::CommandTranslation(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
@@ -1041,7 +1041,7 @@ bool CommandTranslation::revert()
 CommandTranslateXY::CommandTranslateXY(XbraboView* parent, const QString description, const int amountX, const int amountY) : CommandTranslation(parent, description),
   incX(amountX),
   incY(amountY)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -1068,7 +1068,7 @@ bool CommandTranslateXY::combine(Command* command)
 /// Combines 2 translations in the plane of the screen.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandTranslateXY*>(command) != NULL; 
+  return dynamic_cast<CommandTranslateXY*>(command) != NULL;
 }
 
 
@@ -1078,9 +1078,9 @@ bool CommandTranslateXY::combine(Command* command)
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandCenterView::CommandCenterView(XbraboView* parent, const QString description) : CommandTranslation(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -1104,9 +1104,9 @@ bool CommandCenterView::initialRun()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandZoom::CommandZoom(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
@@ -1146,7 +1146,7 @@ bool CommandZoom::revert()
 ///// constructor /////////////////////////////////////////////////////////////
 CommandTranslateZ::CommandTranslateZ(XbraboView* parent, const QString description, const int amount) : CommandZoom(parent, description),
   incZ(amount)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -1174,7 +1174,7 @@ bool CommandTranslateZ::combine(Command* command)
 /// Combines 2 zoom actions.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandTranslateZ*>(command) != NULL; 
+  return dynamic_cast<CommandTranslateZ*>(command) != NULL;
 }
 
 
@@ -1184,7 +1184,7 @@ bool CommandTranslateZ::combine(Command* command)
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandZoomFit::CommandZoomFit(XbraboView* parent, const QString description) : CommandZoom(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
 
 }
@@ -1211,9 +1211,9 @@ bool CommandZoomFit::initialRun()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandRotation::CommandRotation(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// execute /////////////////////////////////////////////////////////////////
@@ -1237,7 +1237,7 @@ bool CommandRotation::revert()
 /// Restores the previous rotation.
 {
   newRotation = *(view->moleculeView()->orientationQuaternion);
-  
+
   *(view->moleculeView()->orientationQuaternion) = oldRotation;
   view->moleculeView()->updateGL();
   return true;
@@ -1249,12 +1249,12 @@ bool CommandRotation::revert()
 ///////////////////////////////////////////////////////////////////////////////
 
 ///// constructor /////////////////////////////////////////////////////////////
-CommandRotate::CommandRotate(XbraboView* parent, const QString description, const float amountX, const float amountY, const float amountZ) : 
+CommandRotate::CommandRotate(XbraboView* parent, const QString description, const float amountX, const float amountY, const float amountZ) :
   CommandRotation(parent, description),
   incX(amountX),
   incY(amountY),
   incZ(amountZ)
-/// The default constructor. 
+/// The default constructor.
 {
   repeatable = true;
 }
@@ -1279,7 +1279,7 @@ bool CommandRotate::combine(Command* command)
 /// Combines 2 rotate actions.
 {
   // as long as the other command is the same type nothing more has to be done.
-  return dynamic_cast<CommandRotate*>(command) != NULL; 
+  return dynamic_cast<CommandRotate*>(command) != NULL;
 }
 
 
@@ -1289,9 +1289,9 @@ bool CommandRotate::combine(Command* command)
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandResetOrientation::CommandResetOrientation(XbraboView* parent, const QString description) : CommandRotation(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -1315,9 +1315,9 @@ bool CommandResetOrientation::initialRun()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandResetView::CommandResetView(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -1347,8 +1347,8 @@ bool CommandResetView::execute(bool fromBackup)
     view->moleculeView()->zPos = newZ;
     *(view->moleculeView()->orientationQuaternion) = newRotation;
     view->moleculeView()->updateGL();
-    return true;
   }
+  return true;
 }
 
 ///// revert //////////////////////////////////////////////////////////////////
@@ -1375,9 +1375,9 @@ bool CommandResetView::revert()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSetupGlobal::CommandSetupGlobal(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -1429,9 +1429,9 @@ bool CommandSetupGlobal::revert()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSetupBrabo::CommandSetupBrabo(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
@@ -1483,9 +1483,9 @@ bool CommandSetupBrabo::revert()
 
 ///// constructor /////////////////////////////////////////////////////////////
 CommandSetupRelax::CommandSetupRelax(XbraboView* parent, const QString description) : Command(parent, description)
-/// The default constructor. 
+/// The default constructor.
 {
-  
+
 }
 
 ///// copy constructor ////////////////////////////////////////////////////////
