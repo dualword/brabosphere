@@ -67,7 +67,7 @@ GLOrbitalView::GLOrbitalView(QWidget* parent, const char* name) : GLView(parent,
 GLOrbitalView::~GLOrbitalView()
 /// The default destructor.
 {
-  
+
 }
 
 ///// updateColors ////////////////////////////////////////////////////////////
@@ -100,16 +100,16 @@ void GLOrbitalView::setMaximumRadius(const double radius)
 /// polar coordinates.
 {
   maximumRadius = radius;
-  scaleFactor = 10.0f/maximumRadius; // scale the radius of the bounding sphere to 10.0f  
+  scaleFactor = 10.0f/maximumRadius; // scale the radius of the bounding sphere to 10.0f
   zoomFit(false); // doesn't work correctly if called with (true), possibly calls updateGL() of base class
-  updateGL(); 
+  updateGL();
 }
 
 /*//// updateValues ////////////////////////////////////////////////////////////
 void GLOrbitalView::updateValues(int atom, int n, int l, int m, QColor pos, QColor neg, int type, int resolution, float probability, int dots)
 {
   ///// Public member function. Updates the variables defining the type of orbital
-  
+
   //qDebug("updating GLorbitalView with atom = %d, n = %d, l = %d, m = %d, type = %d, res = %d, prob = %f, dots = %d", atom, n, l, m, type, resolution, probability, dots);
   atomNumber = static_cast<unsigned int>(atom);
   qnPrincipal = static_cast<unsigned int>(n);
@@ -117,7 +117,7 @@ void GLOrbitalView::updateValues(int atom, int n, int l, int m, QColor pos, QCol
   qnMomentum = static_cast<int>(m);
   ASSERT(qnOrbital - abs(qnMomentum) >= 0);
   ASSERT(qnPrincipal > qnOrbital);
-  
+
   colorPositive = pos;
   colorNegative = neg;
 
@@ -141,7 +141,7 @@ void GLOrbitalView::updateValues(int atom, int n, int l, int m, QColor pos, QCol
       neededPrecision = PRECISION_LONG_DOUBLE;
   }
   else
-  {     
+  {
     ///// PRECISION CHECKS FOR ANGULAR PART
     // check whether the largest possible number ((2l)!) can be represented by a float
     if(factorial<float>(2*qnOrbital) != HUGE_VAL)
@@ -168,7 +168,7 @@ void GLOrbitalView::updateValues(int atom, int n, int l, int m, QColor pos, QCol
 
   allowedToQuit = false;
   cancelRequested = false;
-  qDebug("starting calc");    
+  qDebug("starting calc");
 
   switch(type)
   {
@@ -185,9 +185,9 @@ void GLOrbitalView::updateValues(int atom, int n, int l, int m, QColor pos, QCol
   allowedToQuit = true;
   qDebug("maximum radius = %f (= %f n^2)", maximumRadius, maximumRadius/(n*n));
   if(maximumRadius < 0.1f) maximumRadius = 0.1f;
-  scaleFactor = 10.0f/maximumRadius; // scale the radius of the bounding sphere to 10.0f  
+  scaleFactor = 10.0f/maximumRadius; // scale the radius of the bounding sphere to 10.0f
   zoomFit(false); // doesn't work correctly if called with (true), possibly calls updateGL() of base class
-  updateGL();  
+  updateGL();
 }
 */
 
@@ -203,8 +203,8 @@ void GLOrbitalView::drawScene()
 {
   // scale if the boundaries exceed 100.0f (the far z-value)
   glScalef(scaleFactor, scaleFactor, scaleFactor);
-  
-  //*  
+
+  //*
   ///// draw the precalculated isoprobability points
   glDisable(GL_LIGHTING);
 
@@ -230,7 +230,7 @@ void GLOrbitalView::drawScene()
   // loop over the indices
   const unsigned int maxPoints = qnOrbital == 0 ? 2*qnPrincipal -1 : 2*(qnPrincipal - qnOrbital);
   const unsigned int resolution = 20;
-  
+
   for(unsigned int i = 1; i <= maxPoints; i++)
   {
     // get 360/resolution phi's and draw a looped lines around them
@@ -258,11 +258,11 @@ void GLOrbitalView::drawScene()
         itX++;
         itY++;
         itZ++;
-        itP++;        
-        itI++;                
+        itP++;
+        itI++;
       }
       glEnd();
-    }    
+    }
   }
   // other lines (180/resolution theta)
   for(unsigned int i = 1; i <= maxPoints; i++)
@@ -270,7 +270,7 @@ void GLOrbitalView::drawScene()
     // fill some vectors with the data for the current point
     std::vector<float> lcoordsX, lcoordsY, lcoordsZ;
     std::vector<bool> lphase;
-            
+
     std::vector<float>::iterator itX = coordsX.begin();
     std::vector<float>::iterator itY = coordsY.begin();
     std::vector<float>::iterator itZ = coordsZ.begin();
@@ -283,20 +283,20 @@ void GLOrbitalView::drawScene()
         lcoordsX.push_back(*itX);
         lcoordsY.push_back(*itY);
         lcoordsZ.push_back(*itZ);
-        lphase.push_back(*itP);        
+        lphase.push_back(*itP);
       }
       itX++;
       itY++;
       itZ++;
       itP++;
-      itI++;    
+      itI++;
     }
 
     std::vector<float>::iterator itlX = lcoordsX.begin();
     std::vector<float>::iterator itlY = lcoordsY.begin();
     std::vector<float>::iterator itlZ = lcoordsZ.begin();
     std::vector<bool>::iterator itlP = lphase.begin();
-    
+
     for(unsigned int startPoint = 0; startPoint < resolution; startPoint++)
     {
       // start at each point and draw the line
@@ -315,29 +315,29 @@ void GLOrbitalView::drawScene()
             qglColor(QColor(255, 255, 0));
           else
             qglColor(QColor(0, 255, 255));
-          
+
           glVertex3f(*itlX2, *itlY2, *itlZ2);
         }
         itlX2++;
         itlY2++;
         itlZ2++;
-        itlP2++;        
+        itlP2++;
       }
       glEnd();
       itlX++;
       itlY++;
       itlZ++;
       itlP++;
-      if(itlX == lcoordsX.end()) break;      
-    }   
+      if(itlX == lcoordsX.end()) break;
+    }
   }
-  */      
+  */
 }
 
 ///// boundingSphereRadius ////////////////////////////////////////////////////
 float GLOrbitalView::boundingSphereRadius()
 /// Implementation of the pure virtual GLView::boundingSphereRadius().
 {
-  return static_cast<float>(maximumRadius*scaleFactor); 
+  return static_cast<float>(maximumRadius*scaleFactor);
 }
 

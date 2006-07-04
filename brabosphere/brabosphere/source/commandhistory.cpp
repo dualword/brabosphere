@@ -22,8 +22,8 @@
          Undo/Redo stack.
 
   It holds a list of all Commands that have been run so they can be undone/redone.
-  The 'currentPosition' pointer holds the current situation as its name suggest. 
-  When its equal to list.end(), the last entry of the list was executed and no 
+  The 'currentPosition' pointer holds the current situation as its name suggest.
+  When its equal to list.end(), the last entry of the list was executed and no
   'redo' is available. If it's equal to list.begin(), no 'undo' is available.
 */
 /// \file
@@ -96,7 +96,7 @@ void CommandHistory::addCommand(Command* command)
   lastActionAdded = true;
 
   // Enforce the maximum size
-  enforceSize(); // not called when setting a new maximum size, so overriding the maximum size 
+  enforceSize(); // not called when setting a new maximum size, so overriding the maximum size
                  // will only be fixed after adding a new command
 
   // Reposition
@@ -227,7 +227,7 @@ void CommandHistory::setMaxRAM(const int mb)
 
 ///// pruneCoordinates ////////////////////////////////////////////////////////
 void CommandHistory::pruneCoordinates()
-/// Removes all Commands that alter the coordinates. To be used when the 
+/// Removes all Commands that alter the coordinates. To be used when the
 /// coordinates are updated from a calculation.
 {
   if(commandList.empty())
@@ -267,7 +267,7 @@ void CommandHistory::pruneCoordinates()
 
 ///// enforceSize /////////////////////////////////////////////////////////////
 void CommandHistory::enforceSize()
-/// Truncates the size of the history so it's not larger than the set maximum 
+/// Truncates the size of the history so it's not larger than the set maximum
 /// sizes.
 {
   // possible cases: - unlimited:      maxLevels < 0, maxRAM < 0
@@ -280,7 +280,7 @@ void CommandHistory::enforceSize()
   ///// limit the maximum number of levels
   if(maxLevels >= 0)
   {
-    while(commandList.size() > maxLevels)
+    while(commandList.size() > static_cast<unsigned int>(maxLevels))
     {
       delete commandList.front();
       commandList.pop_front();
@@ -293,13 +293,13 @@ void CommandHistory::enforceSize()
     for(std::list<Command*>::iterator it = commandList.begin(); it != commandList.end(); it++)
       totalSize += (*it)->ramSize();
     // limit it
-    while(totalSize > maxRAM*1024*1024) // totalSize is in bytes, maxRAM in megabytes
+    while(totalSize > static_cast<unsigned int>(maxRAM)*1024*1024) // totalSize is in bytes, maxRAM in megabytes
     {
       totalSize -= commandList.front()->ramSize();
       delete commandList.front();
       commandList.pop_front();
     }
-  } 
+  }
 }
 
 
