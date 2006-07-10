@@ -385,6 +385,8 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               opacity = static_cast<int>(value/maxPlotValue*255.0);
               if(opacity > 255)
                 opacity = 255;
+              opacity = opacity > 25 ? 255 : 0;
+              //opacity = 255;
               image.setPixel(x, y-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
             }
             else
@@ -392,6 +394,8 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               opacity = static_cast<int>(value/minPlotValue*255.0);
               if(opacity > 255)
                 opacity = 255;
+              opacity = opacity > 25 ? 255 : 0;
+              //opacity = 255;
               image.setPixel(x, y-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
             }
           }
@@ -436,6 +440,8 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
                   opacity = static_cast<int>(value/maxPlotValue*255.0);
                   if(opacity > 255)
                     opacity = 255;
+                  opacity = opacity > 25 ? 255 : 0;
+                  //opacity = 255;
                   image.setPixel(x, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
                 }
                 else
@@ -443,6 +449,8 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
                   opacity = static_cast<int>(value/minPlotValue*255.0);
                   if(opacity > 255)
                     opacity = 255;
+                  opacity = opacity > 25 ? 255 : 0;
+                  //opacity = 255;
                   image.setPixel(x, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
                 }
               }
@@ -482,6 +490,8 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               opacity = static_cast<int>(value/maxPlotValue*255.0);
               if(opacity > 255)
                 opacity = 255;
+              opacity = opacity > 25 ? 255 : 0;
+              //opacity = 255;
               image.setPixel(y, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
             }
             else
@@ -489,6 +499,8 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               opacity = static_cast<int>(value/minPlotValue*255.0);
               if(opacity > 255)
                 opacity = 255;
+              opacity = opacity > 25 ? 255 : 0;
+              //opacity = 255;
               image.setPixel(y, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
             }
           }
