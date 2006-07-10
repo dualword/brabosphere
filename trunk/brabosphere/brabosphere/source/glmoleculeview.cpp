@@ -35,6 +35,8 @@
 // STL header files
 #include <algorithm>
 
+#include <windows.h>
+
 // Qt header files
 #include <qcheckbox.h>
 #include <qcombobox.h>
@@ -63,6 +65,12 @@
 #include "quaternion.h"
 #include "vector3d.h"
 #include "xbraboview.h"
+
+#ifdef WIN32
+  typedef void (APIENTRY * PGLTEXTURE3DEXT) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*);
+  PGLTEXTURE3DEXT glTexImage3DEXT;
+  #define GL_TEXTURE_3D_EXT 0x806F 
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///// Public Member Functions                                             /////
@@ -892,6 +900,10 @@ void GLMoleculeView::updateVolume()
   QImage image, glImage;
   GLuint textureID;
 
+  if(!densityDialog->surfaceMapping())
+  {
+    glEnable(GL_TEXTURE_2D);
+
   ///// Allocate enough display lists to hold all textured quads
   if(numVolumeObjects < numPoints.x() + numPoints.y() + numPoints.z())
   {
@@ -992,8 +1004,91 @@ void GLMoleculeView::updateVolume()
       glEnd();
     glEndList();
   }
-  
   reorderShapes();
+  
+  }
+  else
+  {
+
+  ///// Attempt at using a 3D texture
+  // get the first slices in order to know the dimensions of the 3D texture
+  image = densityGrid->getSlice(DensityGrid::PLANE_YZ, 0, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+  glImage = glSlice(image);
+  unsigned int sizeY = glImage.width();
+  unsigned int sizeZ = glImage.height();
+  image = densityGrid->getSlice(DensityGrid::PLANE_XZ, 0, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+  glImage = glSlice(image);
+  unsigned int sizeX = glImage.width();
+  qDebug("sizeXYZ = (%d, %d, %d)", sizeX, sizeY, sizeZ);
+
+  unsigned char* gridData = new unsigned char[4 * sizeX * sizeY * sizeZ]; // 4 because of RGBA / 32 bit
+  ///// transparent slices for the first half of unused slices
+  image = densityGrid->getSlice(DensityGrid::PLANE_YZ, 0, positiveColor, negativeColor, 1000.0, -1000.0); // a fully transparent slice
+  QImage glImageT = glSlice(image);
+  for(unsigned int x = 0; x < (sizeX-numPoints.x())/2; ++x)
+  {
+    // add transparent slices
+    memcpy((void*)(gridData + x * 4 * sizeY * sizeZ), glImageT.bits(), 4 * sizeY * sizeZ);
+  }
+
+  ///// central numPoints.x() used slices
+  for(unsigned int x = (sizeX-numPoints.x())/2; x < (sizeX-numPoints.x())/2 + numPoints.x(); ++x)
+  {
+    // add filled slices
+    image = densityGrid->getSlice(DensityGrid::PLANE_YZ, x - (sizeX-numPoints.x())/2, positiveColor, negativeColor, maxPlotValue, minPlotValue);
+    glImage = glSlice(image);
+    memcpy((void*)(gridData + x * 4 * sizeY * sizeZ), glImage.bits(), 4 * sizeY * sizeZ);
+  }
+
+  // again transparent slices for the rest
+  for(unsigned int x = (sizeX-numPoints.x())/2 + numPoints.x(); x < sizeX; ++x)
+  {
+    // add transparent slices
+    memcpy((void*)(gridData + x * 4 * sizeY * sizeZ), glImageT.bits(), 4 * sizeY * sizeZ);
+  }
+
+  // create a texture from it
+  glEnable(GL_TEXTURE_3D_EXT);
+  glTexImage3DEXT = (PGLTEXTURE3DEXT) wglGetProcAddress("glTexImage3DEXT");
+  if(glTexImage3DEXT == NULL)
+    qFatal("pointer = NULL");
+  glGenTextures(1, &textureID);
+  glBindTexture(GL_TEXTURE_3D_EXT, textureID);
+  volumeObjects = textureID;
+  glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0, GL_RGBA, sizeY, sizeZ, sizeX, 0, GL_RGBA, GL_UNSIGNED_BYTE, gridData);
+	glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP); // don't repeat the textures
+	glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D_EXT, 8072, GL_CLAMP); // GL_TEXTURE_WRAP_R = 8072
+
+  /*if(numVolumeObjects != 1)
+  {
+    volumeObjects = glGenLists(1);
+    numVolumeObjects = 1;
+  }*/
+  
+  //glNewList(volumeObjects, GL_COMPILE);
+    glBindTexture(GL_TEXTURE_3D_EXT, textureID);
+    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  /*  glBegin(GL_QUADS);
+      for(float x = 0.0f; x <= 1.0f; x += 1.0f/sizeX)
+      //float x = 0.5f;
+      {
+        glTexCoord3f(x, 0.0f, 0.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y(), origin.z());
+        glTexCoord3f(x, 0.0f, 1.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+        glTexCoord3f(x, 1.0f, 1.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+        glTexCoord3f(x, 1.0f, 0.0f);
+        glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+      }
+    glEnd();
+  glEndList();
+  */
+  reorderShapes();
+
+  }
 
   ///// old code which reloaded textures upon changes in the viewing direction 
   ///// -> noticable interruptions when changing directions
@@ -1653,27 +1748,15 @@ void GLMoleculeView::drawVolume()
 
   glColor3f(1.0f, 1.0f, 1.0f); // needed so the colors are blended with white
 
-  ///// get the current direction as the largest value of the dot product of the view vector
-  ///// with the scene rotated primary axes
-  //unsigned int currentDirection = getDirection();
   unsigned int numX = densityGrid->getNumPoints().x(), numY = densityGrid->getNumPoints().y(), numZ = densityGrid->getNumPoints().z();
-  // update if the number of slices has to be changed
-  /*if(numX + numY + numZ != numVolumeObjects)
-  {
-    qDebug("extra call to updateVolume() from drawVolume()");
-    updateVolume(); // needed apparently
-  }*/
 
-  // update if the direction changed
-  /*if(currentDirection != direction)
+  if(!densityDialog->surfaceMapping())
   {
-    direction = currentDirection;
-    updateVolume();
-  }*/
 
   ///// The display lists are updated so now just call them from back to front 
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE); // now the backsides can be visible
+  //glDepthMask(GL_FALSE);
   switch(getDirection())
   {
     case DIRECTION_POSX: for(unsigned int x = 0; x < numX; x++)
@@ -1700,8 +1783,580 @@ void GLMoleculeView::drawVolume()
                            glCallList(volumeObjects + numX + numY + numZ-1 - z);
                          break;
   } 
+  //glDepthMask(GL_TRUE);
   glEnable(GL_CULL_FACE);
   glEnable(GL_LIGHTING);
+  
+  }
+  else
+  {
+
+  ///// New technique for volume rendering: each gridelement is rendered as a quad
+  ///// oriented in the XY-plane the size of the gridelement (delta.x() * delta.y()) 
+  ///// with a transparency value related to the density value.
+  ///// On rotation all quads are rotated around their own axes to always face the viewer.
+  ///// => first attempt is waaay too slow (less than 2 FPS) but kinda works (still needs Z-ordering)
+  /*
+  std::vector<double>* values = &(densityDialog->densityPointsA); // the grid
+  Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
+  double minDensity = densityGrid->getMinimumDensity();
+  double maxDensity = densityGrid->getMaximumDensity();
+  Point3D<float> origin = densityGrid->getOrigin();
+  Point3D<float> delta = densityGrid->getDelta();
+  double opacity;
+
+  Vector3D<float> axis;
+  float angle;
+  orientationQuaternion->getAxisAngle(axis, angle);
+
+  std::vector<double>::iterator itValues = values->begin();
+  glDisable(GL_LIGHTING);
+  for(unsigned int x = 0; x < numPoints.x(); ++x)
+  {
+    for(unsigned int y = 0; y < numPoints.y(); ++y)
+    {
+      for(unsigned int z = 0; z < numPoints.z(); ++z)
+      {
+        // position
+        glPushMatrix();
+        glTranslatef(origin.x() + x*delta.x(), origin.y() + y*delta.y(), origin.z() + z*delta.z());
+        glRotatef(-angle, axis.x(), axis.y(), axis.z()); // backrotation
+
+        // set the color
+        if((*itValues) > 0.0)
+        {
+          opacity = *itValues/maxDensity;
+          if(opacity > 1.0)
+            opacity = 1.0;
+          glColor4d(0.0, 0.0, 1.0, opacity);
+        }
+        else
+        {
+          opacity = *itValues/minDensity;
+          if(opacity > 1.0)
+            opacity = 1.0;
+          glColor4d(1.0, 0.0, 0.0, opacity);
+        }
+
+        // draw the quad
+        glBegin(GL_QUADS);
+          glVertex3f(0.0f, 0.0f, 0.0f);
+          glVertex3f(1.0f, 0.0f, 0.0f);
+          glVertex3f(1.0f, 1.0f, 0.0f);
+          glVertex3f(0.0f, 1.0f, 0.0f);
+        glEnd();
+        ++itValues;
+        glPopMatrix();
+      }
+    }
+  }
+  glEnable(GL_LIGHTING);
+  return;
+  */
+
+  ///// Yet another technique for volume rendering: each gridelement is rendered
+  ///// by 3 quads: the bottom XZ-plane, the left YZ-plane and the back XY-plane.
+  ///// This doesn't need back-rotation of the voxels and doesn't produce any gaps.
+  ///// => also very slow and doesn't really work atm due to missing ordering
+  /*
+  std::vector<double>* values = &(densityDialog->densityPointsA); // the grid
+  Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
+  double minDensity = densityGrid->getMinimumDensity();
+  double maxDensity = densityGrid->getMaximumDensity();
+  Point3D<float> origin = densityGrid->getOrigin();
+  Point3D<float> delta = densityGrid->getDelta();
+  double opacity;
+
+  std::vector<double>::iterator itValues = values->begin();
+  glDisable(GL_LIGHTING);
+  double posx = origin.x(), posy, posz;
+  for(unsigned int x = 0; x < numPoints.x(); ++x)
+  {
+    posy = origin.y();
+    for(unsigned int y = 0; y < numPoints.y(); ++y)
+    {
+      posz = origin.z();
+      for(unsigned int z = 0; z < numPoints.z(); ++z)
+      { 
+        // set the color
+        if((*itValues) > 0.0)
+        {
+          opacity = *itValues/maxDensity;
+          if(opacity > 1.0)
+            opacity = 1.0;
+          opacity = 1.0;
+          glColor4d(0.0, 0.0, 1.0, opacity);
+        }
+        else
+        {
+          opacity = *itValues/minDensity;
+          if(opacity > 1.0)
+            opacity = 1.0;
+          opacity = 1.0;
+          glColor4d(1.0, 0.0, 0.0, opacity);
+        }
+
+        glBegin(GL_QUADS);
+          // draw the XY-quad
+          glVertex3f(posx,             posy,             posz);
+          glVertex3f(posx + delta.x(), posy,             posz);
+          glVertex3f(posx + delta.x(), posy + delta.y(), posz);
+          glVertex3f(posx,             posy + delta.y(), posz);
+          // draw the XZ-quad
+          glVertex3f(posx,             posy, posz);
+          glVertex3f(posx + delta.x(), posy, posz);
+          glVertex3f(posx + delta.x(), posy, posz + delta.z());
+          glVertex3f(posx,             posy, posz + delta.z());
+          // draw the YZ-quad
+          glVertex3f(posx, posy,             posz);
+          glVertex3f(posx, posy + delta.y(), posz);
+          glVertex3f(posx, posy + delta.y(), posz + delta.z());
+          glVertex3f(posx, posy,             posz + delta.z());
+        glEnd();
+        ++itValues;
+        glPopMatrix();
+        posz += delta.z();
+      }
+      posy += delta.y();
+    }
+    posx += delta.x();
+  }
+  glEnable(GL_LIGHTING);
+  return;
+  */
+
+  /*
+  ///// And another technique for volume rendering, based on the current implementation.
+  ///// All sets of textures are shown but are given a global alpha value depending 
+  ///// on the amount of orientation into the viewing direction.
+  ///// => gives exactly the same problems when crossing boundaries and is a bit slower
+  /////    it also fades too much along the boundaries
+
+  // first get the coincidence of the primary axes with the viewing direction
+  // (similar to getDirection()) -> get the angles
+
+  // get the axis/angle representation of the current scene orientation
+  Vector3D<float> orientationVector, axis;
+  float orientationAngle;
+  orientationQuaternion->getAxisAngle(orientationVector, orientationAngle); 
+  orientationAngle = -orientationAngle; // we need opposite rotation from the OpenGL one.
+
+  // the view vector (not needed anymore because of the shortcut in calculating the dot product, 
+  // namely a dot product with (0, 0, 1) is always equal to the Z-component of the other argument)
+  //Vector3D<float> view(0.0f, 0.0f, 1.0f); // we're looking into the negative Z-direction so the normal 
+                                          // of the plane we want to see points towards us into the positive Z-direction
+
+  // rotate a unit vector along the positive X-axis
+  axis.setValues(1.0f, 0.0f, 0.0f);
+  axis.rotate(orientationVector, orientationAngle);
+  // get the dot product with the view vector
+  // as the view vector is (0, 0, 1), the dot product is always equal to the Z-component of the axis 
+  float dotX = axis.z(); // = axis.dot(view); with view = Vector3D(0.0f, 0.0f, 1.0f);
+
+  // rotate a unit vector along the positive Y-axis
+  axis.setValues(0.0f, 1.0f, 0.0f);
+  axis.rotate(orientationVector, orientationAngle);
+  // get the dot product with the view vector
+  float dotY = axis.z();
+
+  // rotate a unit vector along the positive Z-axis
+  axis.setValues(0.0f, 0.0f, 1.0f);
+  axis.rotate(orientationVector, orientationAngle);
+  // get the dot product with the view vector
+  float dotZ = axis.z(); 
+
+  // the dot products are cosines of the angles with the viewing vector
+  float xAngle = Point3D<float>::PI/2.0f - acos(abs(dotX));
+  float yAngle = Point3D<float>::PI/2.0f - acos(abs(dotY)); 
+  float zAngle = Point3D<float>::PI/2.0f - acos(abs(dotZ));
+  qDebug("dots:   %f, %f, %f", dotX, dotY, dotZ);
+  qDebug("angles: %f, %f, %f (sum = %f)", xAngle*180.0f/Point3D<float>::PI, yAngle*180.0f/Point3D<float>::PI, zAngle*180.0f/Point3D<float>::PI, (xAngle+yAngle+zAngle)*180.0f/Point3D<float>::PI);
+
+  float xAlpha = abs(xAngle)/(xAngle+yAngle+zAngle); // an angle of zero is fully aligned
+  float yAlpha = abs(yAngle)/(xAngle+yAngle+zAngle);
+  float zAlpha = abs(zAngle)/(xAngle+yAngle+zAngle);
+
+  ///// The display lists are updated so now just call them from back to front 
+  glDisable(GL_LIGHTING);
+  glDisable(GL_CULL_FACE); // now the backsides can be visible
+  //glDepthMask(GL_FALSE);
+
+  unsigned int numX = densityGrid->getNumPoints().x(), numY = densityGrid->getNumPoints().y(), numZ = densityGrid->getNumPoints().z();
+
+  glColor3f(1.0f, 1.0f, 1.0f);
+  if(xAlpha > yAlpha && xAlpha > zAlpha)
+  {
+    glColor4f(1.0f, 1.0f, 1.0f, xAlpha);
+    if(dotX > 0.0f)
+    {
+      for(unsigned int x = 0; x < numX; x++)
+        glCallList(volumeObjects + x);
+    }
+    else
+    {
+      for(unsigned int x = 0; x < numX; x++)
+        glCallList(volumeObjects + numX-1 - x);
+    }
+
+    if(yAlpha > zAlpha)
+    {
+      glColor4f(1.0f, 1.0f, 1.0f, yAlpha);
+      if(dotY > 0.0f)
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + y);
+      }
+      else
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + numY-1 - y);
+      }
+      glColor4f(1.0f, 1.0f, 1.0f, zAlpha);
+      if(dotZ > 0.0f)
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + z);
+      }
+      else
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + numZ-1 - z);
+      }
+    }
+    else
+    {
+      glColor4f(1.0f, 1.0f, 1.0f, zAlpha);
+      if(dotZ > 0.0f)
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + z);
+      }
+      else
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + numZ-1 - z);
+      }
+      glColor4f(1.0f, 1.0f, 1.0f, yAlpha);
+      if(dotY > 0.0f)
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + y);
+      }
+      else
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + numY-1 - y);
+      }
+    }
+  }
+  else if(yAlpha > xAlpha && yAlpha > zAlpha)
+  {
+    glColor4f(1.0f, 1.0f, 1.0f, yAlpha);
+    if(dotY > 0.0f)
+    {
+      for(unsigned int y = 0; y < numY; y++)
+        glCallList(volumeObjects + numX + y);
+    }
+    else
+    {
+      for(unsigned int y = 0; y < numY; y++)
+        glCallList(volumeObjects + numX + numY-1 - y);
+    }
+
+    if(xAlpha > zAlpha)
+    {
+      glColor4f(1.0f, 1.0f, 1.0f, xAlpha);
+      if(dotX > 0.0f)
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + x);
+      }
+      else
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + numX-1 - x);
+       }
+      glColor4f(1.0f, 1.0f, 1.0f, zAlpha);
+      if(dotZ > 0.0f)
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + z);
+      }
+      else
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + numZ-1 - z);
+      }
+    }
+    else
+    {
+      glColor4f(1.0f, 1.0f, 1.0f, zAlpha);
+      if(dotZ > 0.0f)
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + z);
+      }
+      else
+      {
+        for(unsigned int z = 0; z < numZ; z++)
+          glCallList(volumeObjects + numX + numY + numZ-1 - z);
+      }
+      glColor4f(1.0f, 1.0f, 1.0f, xAlpha);
+      if(dotX > 0.0f)
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + x);
+      }
+      else
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + numX-1 - x);
+      }
+    }
+  }
+  else
+  {
+    glColor4f(1.0f, 1.0f, 1.0f, zAlpha);
+    if(dotZ > 0.0f)
+    {
+      for(unsigned int z = 0; z < numZ; z++)
+        glCallList(volumeObjects + numX + numY + z);
+    }
+    else
+    {
+      for(unsigned int z = 0; z < numZ; z++)
+        glCallList(volumeObjects + numX + numY + numZ-1 - z);
+    }
+
+    if(xAlpha > yAlpha)
+    {
+      glColor4f(1.0f, 1.0f, 1.0f, xAlpha);
+      if(dotX > 0.0f)
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + x);
+      }
+      else
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + numX-1 - x);
+      }
+      glColor4f(1.0f, 1.0f, 1.0f, yAlpha);
+      if(dotY > 0.0f)
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + y);
+      }
+      else
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + numY-1 - y);
+      }
+    }
+    else
+    {
+      glColor4f(1.0f, 1.0f, 1.0f, yAlpha);
+      if(dotY > 0.0f)
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + y);
+      }
+      else
+      {
+        for(unsigned int y = 0; y < numY; y++)
+          glCallList(volumeObjects + numX + numY-1 - y);
+      }
+      glColor4f(1.0f, 1.0f, 1.0f, xAlpha);
+      if(dotX > 0.0f)
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + x);
+      }
+      else
+      {
+        for(unsigned int x = 0; x < numX; x++)
+          glCallList(volumeObjects + numX-1 - x);
+      }
+    }
+  }
+  //glDepthMask(GL_TRUE);
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_LIGHTING);
+  return;
+  */
+
+  ///// 3D texturing attempt (created in updateVolume)
+  // data regarding the density grid
+  Point3D<float> origin = densityGrid->getOrigin();
+  Point3D<float> delta = densityGrid->getDelta();
+  Point3D<unsigned int> numPoints = densityGrid->getNumPoints();
+
+  glDisable(GL_LIGHTING);
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_TEXTURE_3D_EXT);
+  glBindTexture(GL_TEXTURE_3D_EXT, volumeObjects);
+
+  ///// view aligned slices
+  // back-rotate the texture itself
+  Vector3D<float> axis;
+  float angle;
+  orientationQuaternion->getAxisAngle(axis, angle);
+  glMatrixMode(GL_TEXTURE);
+  glLoadIdentity();
+  glTranslatef(0.5f, 0.5f, 0.5f);//*static_cast<float>(numPoints.x())/128.0f); // so the rotation is over the center of the texture
+  //glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+  //glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
+  glRotatef(-120.0f, 1.0f, 1.0f, 1.0f); // rotate so the (s,t,r) texture coordinates coincide with the (x,y,z) coordinates
+  glRotatef(-angle, axis.x(), axis.y(), axis.z()); // backrotation
+  glScalef(numPoints.x()/128.0f, 1.0f, 1.0f); // scale the texture up in the x-direction so the filled slices span s = -0.5 to s = 0.5
+  // setup the model view as in GLView::paintGL(), but don't rotate
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  if(baseParameters.perspectiveProjection)
+    gluLookAt(0.0f, 0.0f, zPos, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+  else
+    resizeGL(width(), height());
+  glTranslatef(xPos, yPos, 0.0f);
+
+  // draw the slices
+  glBegin(GL_QUADS);
+    for(float z = 0.0f; z < 1.0f; z += 1.0f/128.0f) // 128 slices
+    {
+      glTexCoord3f(-0.5f, -0.5f, -0.5f + z);
+      //glTexCoord3f(-0.5f, -0.5f, -0.5f + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
+      glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * 128.0f * delta.z());
+
+      glTexCoord3f(-0.5f, 0.5f, -0.5f + z);
+      //glTexCoord3f(-0.5f, 0.5f, -0.5f + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
+      glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * 128.0f * delta.z());
+
+      glTexCoord3f(0.5f, 0.5f, -0.5f + z);
+      //glTexCoord3f(0.5f, 0.5f, -0.5f + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
+      glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * 128.0f * delta.z());
+
+      glTexCoord3f(0.5f, -0.5f, -0.5f + z);
+      //glTexCoord3f(0.5f, -0.5f, -0.5f  + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
+      glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * 128.0f * delta.z());
+    }
+  glEnd();
+  // add a view aligned quad in the center spot
+  glDisable(GL_TEXTURE_3D_EXT);
+  glColor3f(1.0f, 0.0f, 0.0f);
+  float d = 0.5f;
+  glBegin(GL_LINE_LOOP);
+      glVertex3f(origin.x()-d,                                 origin.y()-d,                                 origin.z() + d + numPoints.z() * delta.z());
+      glVertex3f(origin.x()-d,                                 origin.y()+d + (numPoints.y()-1) * delta.y(), origin.z() + d + numPoints.z() * delta.z());
+      glVertex3f(origin.x()+d + (numPoints.x()-1) * delta.x(), origin.y()+d + (numPoints.y()-1) * delta.y(), origin.z() + d + numPoints.z() * delta.z());
+      glVertex3f(origin.x()+d + (numPoints.x()-1) * delta.x(), origin.y()-d,                                 origin.z() + d + numPoints.z() * delta.z());
+  glEnd();
+  glPopMatrix();
+  glMatrixMode(GL_TEXTURE);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+
+  
+  // this method suffers from the same skipping behaviour => need view aligned slices
+  /*
+  switch(getDirection())
+  {
+    case DIRECTION_POSX: glBegin(GL_QUADS);
+                           for(unsigned int x = 0; x < numX; ++x)
+                           {
+                             glTexCoord3f(0.0f, 0.0f, 0.5f*static_cast<float>(x)/static_cast<float>(numX));
+                             glVertex3f(origin.x() + x * delta.x(), origin.y(), origin.z());
+                             glTexCoord3f(0.0f, 1.0f, 0.5f*static_cast<float>(x)/static_cast<float>(numX));
+                             glVertex3f(origin.x() + x * delta.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                             glTexCoord3f(1.0f, 1.0f, 0.5f*static_cast<float>(x)/static_cast<float>(numX));
+                             glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                             glTexCoord3f(1.0f, 0.0f, 0.5f*static_cast<float>(x)/static_cast<float>(numX));
+                             glVertex3f(origin.x() + x * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+                           }
+                         glEnd();
+                         break;
+
+    case DIRECTION_NEGX: 
+                         glBegin(GL_QUADS);
+                         for(unsigned int x = numX; x > 0; --x)
+                         {
+                           glTexCoord3f(0.0f, 0.0f, 0.5f*static_cast<float>(x-1)/static_cast<float>(numX));
+                           glVertex3f(origin.x() + (x-1) * delta.x(), origin.y(), origin.z());
+                           glTexCoord3f(0.0f, 1.0f, 0.5f*static_cast<float>(x-1)/static_cast<float>(numX));
+                           glVertex3f(origin.x() + (x-1) * delta.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                           glTexCoord3f(1.0f, 1.0f, 0.5f*static_cast<float>(x-1)/static_cast<float>(numX));
+                           glVertex3f(origin.x() + (x-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                           glTexCoord3f(1.0f, 0.0f, 0.5f*static_cast<float>(x-1)/static_cast<float>(numX));
+                           glVertex3f(origin.x() + (x-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+                         }
+                         glEnd();
+                         break;
+
+    case DIRECTION_POSY: glBegin(GL_QUADS);
+                           for(unsigned int y = 0; y < numY; ++y)
+                           { 
+                             glTexCoord3f(static_cast<float>(y)/static_cast<float>(numY), 0.0f, 0.0f);
+                             glVertex3f(origin.x(), origin.y() + y * delta.y(), origin.z());
+                             glTexCoord3f(static_cast<float>(y)/static_cast<float>(numY), 0.0f, 0.5f);
+                             glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z());
+                             glTexCoord3f(static_cast<float>(y)/static_cast<float>(numY), 1.0f, 0.5f);
+                             glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                             glTexCoord3f(static_cast<float>(y)/static_cast<float>(numY), 1.0f, 0.0f);
+                             glVertex3f(origin.x(), origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                           }
+                         glEnd();
+                         break;
+
+    case DIRECTION_NEGY: glBegin(GL_QUADS);
+                           for(unsigned int y = numY; y > 0; --y)
+                           { 
+                             glTexCoord3f(static_cast<float>(y-1)/static_cast<float>(numY), 0.0f, 0.0f);
+                             glVertex3f(origin.x(), origin.y() + (y-1) * delta.y(), origin.z());
+                             glTexCoord3f(static_cast<float>(y-1)/static_cast<float>(numY), 0.0f, 0.5f);
+                             glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (y-1) * delta.y(), origin.z());
+                             glTexCoord3f(static_cast<float>(y-1)/static_cast<float>(numY), 1.0f, 0.5f);
+                             glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (y-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                             glTexCoord3f(static_cast<float>(y-1)/static_cast<float>(numY), 1.0f, 0.0f);
+                             glVertex3f(origin.x(), origin.y() + (y-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+                           }
+                         glEnd();
+                         break;
+  } 
+  */
+
+  ///// draw the bounding box in white
+  glBindTexture(GL_TEXTURE_3D_EXT, 0);
+  glColor3f(1.0f, 1.0f, 1.0f);
+  // YZ-plane on x=0
+  glBegin(GL_LINE_LOOP);
+    glVertex3f(origin.x(), origin.y(), origin.z());
+    glVertex3f(origin.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+  glEnd();
+  // YZ-plane on x=numX
+  glBegin(GL_LINE_LOOP);
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y(), origin.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+  glEnd();
+  // connecting lines
+  glBegin(GL_LINES);
+    glVertex3f(origin.x(), origin.y(), origin.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y(), origin.z());
+    glVertex3f(origin.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
+    glVertex3f(origin.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());    
+  glEnd();
+
+  }
 }
 
 ///// drawSlice ///////////////////////////////////////////////////////////////
@@ -1709,6 +2364,7 @@ void GLMoleculeView::drawSlice()
 /// Draws a 2D slice
 {
   qDebug("calling drawSlice");
+  assert(densityDialog != NULL);
 
   if(densityDialog->CheckBoxSliceTransparent->isOn())
     glColor3f(1.0f, 1.0f, 1.0f); // for tranparent slices blend the color with white
@@ -1806,22 +2462,23 @@ QImage GLMoleculeView::glSlice(const QImage& image) const
   {
     // round to the nearest larger power of 2
     //newSize.setWidth(static_cast<int>pow(2.0,ceil(log2(static_cast<double>(newSize.width())))))); // doesn't work as Visual C++ 2003 doesn't define log2
-    double log2 = log10(static_cast<double>(newSize.width()))/log(2.0); // log2(x) = log10(x)/log(2)
+    double log2 = log10(static_cast<double>(newSize.width()))/log10(2.0); // log2(x) = log10(x)/log10(2)
     newSize.setWidth(static_cast<int>(pow(2.0,ceil(log2))));
   }
 
   // the same for the height
   if(newSize.height() < 16) 
     newSize.setHeight(16); 
-  else if(newSize.height() > 256)
-    newSize.setHeight(256);
+  else if(newSize.height() > textureParameters.maximumSize)
+    newSize.setHeight(textureParameters.maximumSize);
   else
   {
-    double log2 = log10(static_cast<double>(newSize.height()))/log(2.0);
+    double log2 = log10(static_cast<double>(newSize.height()))/log10(2.0);
     newSize.setHeight(static_cast<int>(pow(2.0,ceil(log2))));
   }
 
-  //qDebug("image size (%d,%d) was rounded to (%d,%d)", image.width(), image.height(), newSize.width(), newSize.height());
+  //qDebug("image size (%d,%d) was rounded to (%d,%d) (maximum size = %d)", image.width(), image.height(), 
+  //       newSize.width(), newSize.height(), textureParameters.maximumSize);
   return QGLWidget::convertToGLFormat(image.smoothScale(newSize));
 }
 

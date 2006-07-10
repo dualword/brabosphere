@@ -1358,7 +1358,8 @@ void DensityBase::enableWidgets()
 
   ///// only enable the mapping functionality if 2 identical grids are present for isosurfaces or when slices are selected
   PushButtonMapped->setEnabled((ComboBoxVisualizationType->currentItem() == ISOSURFACES && hasDensity && identicalGrids())
-                               || ComboBoxVisualizationType->currentItem() == SLICE);
+                               //|| ComboBoxVisualizationType->currentItem() == SLICE);
+                               || ComboBoxVisualizationType->currentItem() != ISOSURFACES);
 
   ///// only enable the 'Add pair' widget if the density contains both positive and negative values
   PushButtonAdd2->setEnabled(hasDensity && LabelMax->text().toDouble() > deltaLevel && LabelMin->text().toDouble() < -deltaLevel);

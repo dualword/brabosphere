@@ -1012,7 +1012,7 @@ void PreferencesBase::initOpenGL()
   // setup the slider
   SliderSlices->setMaxValue(maxSize);
 
-  /*
+  //*
   qDebug("Renderer: %s",(const char*)glGetString(GL_RENDERER));
   qDebug("Vendor: %s",(const char*)glGetString(GL_VENDOR));
   qDebug("Version: %s",(const char*)glGetString(GL_VERSION));

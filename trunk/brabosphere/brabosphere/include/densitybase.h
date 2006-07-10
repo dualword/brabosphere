@@ -99,7 +99,7 @@ class DensityBase : public DensityWidget
     void checkUpdate();                 // calls updateAll if automatic updates are enabled
 
   private:
-    friend class GLMoleculeView; // temporary for volume rendering test
+    friend class GLMoleculeView; // temporary for volume rendering test2
     ///// private enums
     enum Columns{COLUMN_VISIBLE, COLUMN_ID, COLUMN_RGB, COLUMN_LEVEL, COLUMN_COLOUR, COLUMN_OPACITY, COLUMN_TYPE}; ///< Indices of each column in the ListView
 
