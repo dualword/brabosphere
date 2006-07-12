@@ -69,7 +69,7 @@
 #ifdef WIN32
   typedef void (APIENTRY * PGLTEXTURE3DEXT) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*);
   PGLTEXTURE3DEXT glTexImage3DEXT;
-  #define GL_TEXTURE_3D_EXT 0x806F 
+  #define GL_TEXTURE_3D_EXT 0x806F
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -281,7 +281,7 @@ bool GLMoleculeView::alterInternal()
 
 ///// deleteSelectedAtoms /////////////////////////////////////////////////////
 bool GLMoleculeView::deleteSelectedAtoms()
-/// Deletes all selected atoms. This function does the actual work and is called 
+/// Deletes all selected atoms. This function does the actual work and is called
 /// only from CommandDeleteAtoms.
 {
   if(selectionList.empty())
@@ -337,7 +337,7 @@ void GLMoleculeView::alterCartesianCommand()
 
 ///// alterInternalCommand ////////////////////////////////////////////////////
 void GLMoleculeView::alterInternalCommand()
-/// Creates a Command to alter the internal coordinate formed by the selected 
+/// Creates a Command to alter the internal coordinate formed by the selected
 /// atoms. This Command will call alterInternal.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
@@ -346,7 +346,7 @@ void GLMoleculeView::alterInternalCommand()
 
 ///// deleteSelectedAtomsCommand //////////////////////////////////////////////
 void GLMoleculeView::deleteSelectedAtomsCommand()
-/// Creates a Command to delete all selected atoms. This Command will call 
+/// Creates a Command to delete all selected atoms. This Command will call
 /// deleteSelectedAtoms.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
@@ -379,7 +379,7 @@ void GLMoleculeView::centerViewCommand()
 
 ///// resetOrientationCommand /////////////////////////////////////////////////
 void GLMoleculeView::resetOrientationCommand()
-/// Creates a Command to reset the orientation of the view. This Command will 
+/// Creates a Command to reset the orientation of the view. This Command will
 /// call resetOrientation.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
@@ -557,8 +557,8 @@ void GLMoleculeView::mouseMoveEvent(QMouseEvent* e)
 void GLMoleculeView::keyPressEvent(QKeyEvent* e)
 /// Overridden from GLSimpleMoleculeView::keyPressEvent. Handles key presses for manipulating
 /// selections.
-/// \arg <ctrl>+<shift>+<left>: change internal coordinate of selection (smaller). 
-/// \arg <ctrl>+<shift>+<right>: change internal coordinate of selection (larger). 
+/// \arg <ctrl>+<shift>+<left>: change internal coordinate of selection (smaller).
+/// \arg <ctrl>+<shift>+<right>: change internal coordinate of selection (larger).
 {
   unsigned int selectionType = getSelectionType();
   if(selectionType != SELECTION_NONE && (manipulateSelection || e->state() & Qt::AltButton) && !(e->state() & Qt::ShiftButton && e->state() & Qt::ControlButton))
@@ -669,19 +669,19 @@ void GLMoleculeView::processSelectionCommand(const unsigned int id)
 
 ///// translateCommand ////////////////////////////////////////////////////////
 void GLMoleculeView::translateCommand(const int amountX, const int amountY, const int amountZ)
-/// Creates a Command to translate the scene in the X, Y or Z direction. 
+/// Creates a Command to translate the scene in the X, Y or Z direction.
 /// Overridden from GLView::translateCommand.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
   if(amountZ != 0)
-    view->getCommandHistory()->addCommand(new CommandTranslateZ(view, "Zoom", amountZ));    
+    view->getCommandHistory()->addCommand(new CommandTranslateZ(view, "Zoom", amountZ));
   else
     view->getCommandHistory()->addCommand(new CommandTranslateXY(view, "Translate", amountX, amountY));
 }
 
 ///// rotateCommand ///////////////////////////////////////////////////////////
 void GLMoleculeView::rotateCommand(const float amountX, const float amountY, const float amountZ)
-/// Creates a Command to rotate the scene in the X, Y or Z direction. 
+/// Creates a Command to rotate the scene in the X, Y or Z direction.
 /// Overridden from GLView::rotateCommand.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
@@ -690,7 +690,7 @@ void GLMoleculeView::rotateCommand(const float amountX, const float amountY, con
 
 ///// translateSelectionCommand /////////////////////////////////////////////////////////
 void GLMoleculeView::translateSelectionCommand(const int amountX, const int amountY, const int amountZ)
-/// Creates a Command to translate the selected atoms in the X, Y or Z direction. 
+/// Creates a Command to translate the selected atoms in the X, Y or Z direction.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
   if(amountZ != 0)
@@ -701,7 +701,7 @@ void GLMoleculeView::translateSelectionCommand(const int amountX, const int amou
 
 ///// rotateSelectionCommand //////////////////////////////////////////////////
 void GLMoleculeView::rotateSelectionCommand(const double amountX, const double amountY, const double amountZ)
-/// Creates a Command to rotate the selected atoms in the X, Y or Z direction. 
+/// Creates a Command to rotate the selected atoms in the X, Y or Z direction.
 {
   XbraboView* view = (XbraboView*)(parentWidget()->parentWidget());
   view->getCommandHistory()->addCommand(new CommandRotateSelection(view, "Rotate Selection", amountX, amountY, amountZ));
@@ -880,7 +880,7 @@ void GLMoleculeView::updateScene()
 
 ///// updateVolume ////////////////////////////////////////////////////////////
 void GLMoleculeView::updateVolume()
-/// Recalculates the stack of slices for viewing the volumetric rendering of 
+/// Recalculates the stack of slices for viewing the volumetric rendering of
 /// the active density grid.
 {
   makeCurrent();
@@ -973,7 +973,7 @@ void GLMoleculeView::updateVolume()
         glVertex3f(origin.x(),                                 origin.y() + y * delta.y(), origin.z() + (numPoints.z()-1) * delta.z());
       glEnd();
     glEndList();
-  } 
+  }
 
   ///// Create the textured quads for the Z-direction
   for(unsigned int z = 0; z < numPoints.z(); z++)
@@ -1005,7 +1005,7 @@ void GLMoleculeView::updateVolume()
     glEndList();
   }
   reorderShapes();
-  
+
   }
   else
   {
@@ -1065,7 +1065,7 @@ void GLMoleculeView::updateVolume()
     volumeObjects = glGenLists(1);
     numVolumeObjects = 1;
   }*/
-  
+
   //glNewList(volumeObjects, GL_COMPILE);
     glBindTexture(GL_TEXTURE_3D_EXT, textureID);
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -1090,7 +1090,7 @@ void GLMoleculeView::updateVolume()
 
   }
 
-  ///// old code which reloaded textures upon changes in the viewing direction 
+  ///// old code which reloaded textures upon changes in the viewing direction
   ///// -> noticable interruptions when changing directions
   /*
   // data regarding the density grid
@@ -1111,7 +1111,7 @@ void GLMoleculeView::updateVolume()
 
   // update according to the orientation of the scene
   switch(getDirection())
-  { 
+  {
     case DIRECTION_POSX:
     {
       // make sure a sufficient number of OpenGL display lists are available
@@ -1322,7 +1322,7 @@ void GLMoleculeView::updateVolume()
       break;
     }
 
-    case DIRECTION_NEGZ: 
+    case DIRECTION_NEGZ:
     {
       // make sure a sufficient number of OpenGL display lists are available
       if(numVolumeObjects < numPoints.z())
@@ -1412,7 +1412,7 @@ void GLMoleculeView::updateSlice()
 
     // create a display list
     glNewList(sliceObject, GL_COMPILE);
-      // the texture 
+      // the texture
       glBindTexture(GL_TEXTURE_2D, textureID);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1426,7 +1426,7 @@ void GLMoleculeView::updateSlice()
         glTexCoord2f(0.0f, 1.0f);
         glVertex3f(origin.x() + x * delta.x(), origin.y(),                                 origin.z() + (numPoints.z()-1) * delta.z());
       glEnd();
-      
+
       // a rectangle in case of transparent textures
       if(densityDialog->PushButtonSingleColor->isOn() && densityDialog->CheckBoxSliceTransparent->isChecked())
       {
@@ -1753,7 +1753,7 @@ void GLMoleculeView::drawVolume()
   if(!densityDialog->surfaceMapping())
   {
 
-  ///// The display lists are updated so now just call them from back to front 
+  ///// The display lists are updated so now just call them from back to front
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE); // now the backsides can be visible
   //glDepthMask(GL_FALSE);
@@ -1782,17 +1782,17 @@ void GLMoleculeView::drawVolume()
     case DIRECTION_NEGZ: for(unsigned int z = 0; z < numZ; z++)
                            glCallList(volumeObjects + numX + numY + numZ-1 - z);
                          break;
-  } 
+  }
   //glDepthMask(GL_TRUE);
   glEnable(GL_CULL_FACE);
   glEnable(GL_LIGHTING);
-  
+
   }
   else
   {
 
   ///// New technique for volume rendering: each gridelement is rendered as a quad
-  ///// oriented in the XY-plane the size of the gridelement (delta.x() * delta.y()) 
+  ///// oriented in the XY-plane the size of the gridelement (delta.x() * delta.y())
   ///// with a transparency value related to the density value.
   ///// On rotation all quads are rotated around their own axes to always face the viewer.
   ///// => first attempt is waaay too slow (less than 2 FPS) but kinda works (still needs Z-ordering)
@@ -1877,7 +1877,7 @@ void GLMoleculeView::drawVolume()
     {
       posz = origin.z();
       for(unsigned int z = 0; z < numPoints.z(); ++z)
-      { 
+      {
         // set the color
         if((*itValues) > 0.0)
         {
@@ -1927,7 +1927,7 @@ void GLMoleculeView::drawVolume()
 
   /*
   ///// And another technique for volume rendering, based on the current implementation.
-  ///// All sets of textures are shown but are given a global alpha value depending 
+  ///// All sets of textures are shown but are given a global alpha value depending
   ///// on the amount of orientation into the viewing direction.
   ///// => gives exactly the same problems when crossing boundaries and is a bit slower
   /////    it also fades too much along the boundaries
@@ -1938,19 +1938,19 @@ void GLMoleculeView::drawVolume()
   // get the axis/angle representation of the current scene orientation
   Vector3D<float> orientationVector, axis;
   float orientationAngle;
-  orientationQuaternion->getAxisAngle(orientationVector, orientationAngle); 
+  orientationQuaternion->getAxisAngle(orientationVector, orientationAngle);
   orientationAngle = -orientationAngle; // we need opposite rotation from the OpenGL one.
 
-  // the view vector (not needed anymore because of the shortcut in calculating the dot product, 
+  // the view vector (not needed anymore because of the shortcut in calculating the dot product,
   // namely a dot product with (0, 0, 1) is always equal to the Z-component of the other argument)
-  //Vector3D<float> view(0.0f, 0.0f, 1.0f); // we're looking into the negative Z-direction so the normal 
+  //Vector3D<float> view(0.0f, 0.0f, 1.0f); // we're looking into the negative Z-direction so the normal
                                           // of the plane we want to see points towards us into the positive Z-direction
 
   // rotate a unit vector along the positive X-axis
   axis.setValues(1.0f, 0.0f, 0.0f);
   axis.rotate(orientationVector, orientationAngle);
   // get the dot product with the view vector
-  // as the view vector is (0, 0, 1), the dot product is always equal to the Z-component of the axis 
+  // as the view vector is (0, 0, 1), the dot product is always equal to the Z-component of the axis
   float dotX = axis.z(); // = axis.dot(view); with view = Vector3D(0.0f, 0.0f, 1.0f);
 
   // rotate a unit vector along the positive Y-axis
@@ -1963,11 +1963,11 @@ void GLMoleculeView::drawVolume()
   axis.setValues(0.0f, 0.0f, 1.0f);
   axis.rotate(orientationVector, orientationAngle);
   // get the dot product with the view vector
-  float dotZ = axis.z(); 
+  float dotZ = axis.z();
 
   // the dot products are cosines of the angles with the viewing vector
   float xAngle = Point3D<float>::PI/2.0f - acos(abs(dotX));
-  float yAngle = Point3D<float>::PI/2.0f - acos(abs(dotY)); 
+  float yAngle = Point3D<float>::PI/2.0f - acos(abs(dotY));
   float zAngle = Point3D<float>::PI/2.0f - acos(abs(dotZ));
   qDebug("dots:   %f, %f, %f", dotX, dotY, dotZ);
   qDebug("angles: %f, %f, %f (sum = %f)", xAngle*180.0f/Point3D<float>::PI, yAngle*180.0f/Point3D<float>::PI, zAngle*180.0f/Point3D<float>::PI, (xAngle+yAngle+zAngle)*180.0f/Point3D<float>::PI);
@@ -1976,7 +1976,7 @@ void GLMoleculeView::drawVolume()
   float yAlpha = abs(yAngle)/(xAngle+yAngle+zAngle);
   float zAlpha = abs(zAngle)/(xAngle+yAngle+zAngle);
 
-  ///// The display lists are updated so now just call them from back to front 
+  ///// The display lists are updated so now just call them from back to front
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE); // now the backsides can be visible
   //glDepthMask(GL_FALSE);
@@ -2207,8 +2207,33 @@ void GLMoleculeView::drawVolume()
   //glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
   //glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
   glRotatef(-120.0f, 1.0f, 1.0f, 1.0f); // rotate so the (s,t,r) texture coordinates coincide with the (x,y,z) coordinates
+  // scale the texture such that its dimensions coincide with the actual dimensions
+  // while taking the x-dimension as a reference (unity)
+  // x-dimension: 128/numPoints.x() due to unused slices
+  // y-dimension: sizeY / sizeX
+  // z-dimension: sizeZ / sizeX
+  Point3D<float> extent(static_cast<float>(numPoints.x()-1)*delta.x(),
+                        static_cast<float>(numPoints.y()-1)*delta.y(),
+                        static_cast<float>(numPoints.z()-1)*delta.z());
+  qDebug("extentXYZ = (%f, %f, %f)", extent.x(), extent.y(), extent.z());
+
+  // this value should be stored as a class variable...
+  float sizeX = 0;
+  if(numPoints.x() < 16)
+    sizeX = 16.0f;
+  else if(numPoints.x() > textureParameters.maximumSize)
+    sizeX = static_cast<float>(textureParameters.maximumSize);
+  else
+  {
+    double log2 = log10(static_cast<double>(numPoints.x()))/log10(2.0);
+    sizeX = pow(2.0,ceil(log2));
+  }
+
+  //glScalef(128.0f/numPoints.x(), extentY / extentX, extentZ / extentX);
+  glScalef(static_cast<float>(numPoints.x())/sizeX, extent.x() / extent.y(), extent.x() / extent.z());
+
   glRotatef(-angle, axis.x(), axis.y(), axis.z()); // backrotation
-  glScalef(numPoints.x()/128.0f, 1.0f, 1.0f); // scale the texture up in the x-direction so the filled slices span s = -0.5 to s = 0.5
+
   // setup the model view as in GLView::paintGL(), but don't rotate
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -2219,28 +2244,34 @@ void GLMoleculeView::drawVolume()
     resizeGL(width(), height());
   glTranslatef(xPos, yPos, 0.0f);
 
+  float newYorigin = origin.y() + (extent.y() - extent.x())/2.0f;
+  float newZorigin = origin.z() + (extent.z() - extent.x())/2.0f;
   // draw the slices
   glBegin(GL_QUADS);
-    for(float z = 0.0f; z < 1.0f; z += 1.0f/128.0f) // 128 slices
+    for(float z = 0.0f; z < 1.0f; z += 1.0f/sizeX) // 128 slices
     {
       glTexCoord3f(-0.5f, -0.5f, -0.5f + z);
       //glTexCoord3f(-0.5f, -0.5f, -0.5f + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
-      glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * (numPoints.z()-1) * delta.z());
+      glVertex3f(origin.x(),              newYorigin,              newZorigin + z * extent.x());
       //glVertex3f(origin.x(),                                 origin.y(),                                 origin.z() + z * 128.0f * delta.z());
 
       glTexCoord3f(-0.5f, 0.5f, -0.5f + z);
       //glTexCoord3f(-0.5f, 0.5f, -0.5f + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
-      glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * (numPoints.z()-1) * delta.z());
+       glVertex3f(origin.x(),             newYorigin + extent.x(), newZorigin + z * extent.x());
       //glVertex3f(origin.x(),                                 origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * 128.0f * delta.z());
 
       glTexCoord3f(0.5f, 0.5f, -0.5f + z);
       //glTexCoord3f(0.5f, 0.5f, -0.5f + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
-      glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * (numPoints.z()-1) * delta.z());
+      glVertex3f(origin.x() + extent.x(), newYorigin + extent.x(), newZorigin + z * extent.x());
       //glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + z * 128.0f * delta.z());
 
       glTexCoord3f(0.5f, -0.5f, -0.5f + z);
       //glTexCoord3f(0.5f, -0.5f, -0.5f  + (1.0f-numPoints.x()/128.0f)/2.0f + z*numPoints.x()/128.0f);
-      glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * (numPoints.z()-1) * delta.z());
+      //glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * (numPoints.z()-1) * delta.z());
+      glVertex3f(origin.x() + extent.x(), newYorigin,              newZorigin + z * extent.x());
       //glVertex3f(origin.x() + (numPoints.x()-1) * delta.x(), origin.y(),                                 origin.z() + z * 128.0f * delta.z());
     }
   glEnd();
@@ -2249,17 +2280,17 @@ void GLMoleculeView::drawVolume()
   glColor3f(1.0f, 0.0f, 0.0f);
   float d = 0.5f;
   glBegin(GL_LINE_LOOP);
-      glVertex3f(origin.x()-d,                                 origin.y()-d,                                 origin.z() + d + numPoints.z() * delta.z());
-      glVertex3f(origin.x()-d,                                 origin.y()+d + (numPoints.y()-1) * delta.y(), origin.z() + d + numPoints.z() * delta.z());
-      glVertex3f(origin.x()+d + (numPoints.x()-1) * delta.x(), origin.y()+d + (numPoints.y()-1) * delta.y(), origin.z() + d + numPoints.z() * delta.z());
-      glVertex3f(origin.x()+d + (numPoints.x()-1) * delta.x(), origin.y()-d,                                 origin.z() + d + numPoints.z() * delta.z());
+      glVertex3f(origin.x()-d,              newYorigin-d,              newZorigin + d + extent.x());
+      glVertex3f(origin.x()-d,              newYorigin+d + extent.x(), newZorigin + d + extent.x());
+      glVertex3f(origin.x()+d + extent.x(), newYorigin+d + extent.x(), newZorigin + d + extent.x());
+      glVertex3f(origin.x()+d + extent.x(), newYorigin-d,              newZorigin + d + extent.x());
   glEnd();
   glPopMatrix();
   glMatrixMode(GL_TEXTURE);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
 
-  
+
   // this method suffers from the same skipping behaviour => need view aligned slices
   /*
   switch(getDirection())
@@ -2279,7 +2310,7 @@ void GLMoleculeView::drawVolume()
                          glEnd();
                          break;
 
-    case DIRECTION_NEGX: 
+    case DIRECTION_NEGX:
                          glBegin(GL_QUADS);
                          for(unsigned int x = numX; x > 0; --x)
                          {
@@ -2297,7 +2328,7 @@ void GLMoleculeView::drawVolume()
 
     case DIRECTION_POSY: glBegin(GL_QUADS);
                            for(unsigned int y = 0; y < numY; ++y)
-                           { 
+                           {
                              glTexCoord3f(static_cast<float>(y)/static_cast<float>(numY), 0.0f, 0.0f);
                              glVertex3f(origin.x(), origin.y() + y * delta.y(), origin.z());
                              glTexCoord3f(static_cast<float>(y)/static_cast<float>(numY), 0.0f, 0.5f);
@@ -2312,7 +2343,7 @@ void GLMoleculeView::drawVolume()
 
     case DIRECTION_NEGY: glBegin(GL_QUADS);
                            for(unsigned int y = numY; y > 0; --y)
-                           { 
+                           {
                              glTexCoord3f(static_cast<float>(y-1)/static_cast<float>(numY), 0.0f, 0.0f);
                              glVertex3f(origin.x(), origin.y() + (y-1) * delta.y(), origin.z());
                              glTexCoord3f(static_cast<float>(y-1)/static_cast<float>(numY), 0.0f, 0.5f);
@@ -2324,7 +2355,7 @@ void GLMoleculeView::drawVolume()
                            }
                          glEnd();
                          break;
-  } 
+  }
   */
 
   ///// draw the bounding box in white
@@ -2353,7 +2384,7 @@ void GLMoleculeView::drawVolume()
     glVertex3f(origin.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
     glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z() + (numPoints.z()-1)*delta.z());
     glVertex3f(origin.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
-    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());    
+    glVertex3f(origin.x() + (numX-1) * delta.x(), origin.y() + (numPoints.y()-1) * delta.y(), origin.z());
   glEnd();
 
   }
@@ -2382,26 +2413,26 @@ void GLMoleculeView::drawSlice()
 unsigned int GLMoleculeView::getDirection() const
 /// Calculates the face of the scene (along the axes) currently most visible.
 /// This is done by calculating the dot product of the view vector with the normal
-/// of each of the six faces. The result is the cosine of the angle between the 
-/// 2 vectors. A value of 1 indicates vectors pointing in the same direction, 
+/// of each of the six faces. The result is the cosine of the angle between the
+/// 2 vectors. A value of 1 indicates vectors pointing in the same direction,
 /// a value of -1 indicates opposite direction.
 {
   // get the axis/angle representation of the current scene orientation
   Vector3D<float> orientationVector, axis;
   float orientationAngle;
-  orientationQuaternion->getAxisAngle(orientationVector, orientationAngle); 
+  orientationQuaternion->getAxisAngle(orientationVector, orientationAngle);
   orientationAngle = -orientationAngle; // we need opposite rotation from the OpenGL one.
 
-  // the view vector (not needed anymore because of the shortcut in calculating the dot product, 
+  // the view vector (not needed anymore because of the shortcut in calculating the dot product,
   // namely a dot product with (0, 0, 1) is always equal to the Z-component of the other argument)
-  //Vector3D<float> view(0.0f, 0.0f, 1.0f); // we're looking into the negative Z-direction so the normal 
+  //Vector3D<float> view(0.0f, 0.0f, 1.0f); // we're looking into the negative Z-direction so the normal
                                           // of the plane we want to see points towards us into the positive Z-direction
 
   // rotate a unit vector along the positive X-axis
   axis.setValues(1.0f, 0.0f, 0.0f);
   axis.rotate(orientationVector, orientationAngle);
   // get the dot product with the view vector
-  // as the view vector is (0, 0, 1), the dot product is always equal to the Z-component of the axis 
+  // as the view vector is (0, 0, 1), the dot product is always equal to the Z-component of the axis
   float dotX = axis.z(); // = axis.dot(view); with view = Vector3D(0.0f, 0.0f, 1.0f);
 
   // rotate a unit vector along the positive Y-axis
@@ -2414,7 +2445,7 @@ unsigned int GLMoleculeView::getDirection() const
   axis.setValues(0.0f, 0.0f, 1.0f);
   axis.rotate(orientationVector, orientationAngle);
   // get the dot product with the view vector
-  float dotZ = axis.z(); 
+  float dotZ = axis.z();
 
   // determine the general direction
   unsigned int direction = DIRECTION_NONE;
@@ -2448,13 +2479,13 @@ unsigned int GLMoleculeView::getDirection() const
 
 ///// glSlice /////////////////////////////////////////////////////////////////
 QImage GLMoleculeView::glSlice(const QImage& image) const
-/// Resizes the given image according to the maximum texture size (so it shows 
+/// Resizes the given image according to the maximum texture size (so it shows
 /// maximum detail when shown as an OpenGL texture) and returns it in OpenGL format.
 {
   QSize newSize(image.size());
 
   // make the width a power of 2
-  if(newSize.width() < 16) 
+  if(newSize.width() < 16)
     newSize.setWidth(16); // the minimum size allowed in the Preferences
   else if(newSize.width() > textureParameters.maximumSize)
     newSize.setWidth(textureParameters.maximumSize); // the maximum size as set in the Preferences
@@ -2467,8 +2498,8 @@ QImage GLMoleculeView::glSlice(const QImage& image) const
   }
 
   // the same for the height
-  if(newSize.height() < 16) 
-    newSize.setHeight(16); 
+  if(newSize.height() < 16)
+    newSize.setHeight(16);
   else if(newSize.height() > textureParameters.maximumSize)
     newSize.setHeight(textureParameters.maximumSize);
   else
@@ -2477,7 +2508,7 @@ QImage GLMoleculeView::glSlice(const QImage& image) const
     newSize.setHeight(static_cast<int>(pow(2.0,ceil(log2))));
   }
 
-  //qDebug("image size (%d,%d) was rounded to (%d,%d) (maximum size = %d)", image.width(), image.height(), 
+  //qDebug("image size (%d,%d) was rounded to (%d,%d) (maximum size = %d)", image.width(), image.height(),
   //       newSize.width(), newSize.height(), textureParameters.maximumSize);
   return QGLWidget::convertToGLFormat(image.smoothScale(newSize));
 }

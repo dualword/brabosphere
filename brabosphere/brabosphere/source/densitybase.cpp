@@ -209,7 +209,7 @@ void DensityBase::addSurface()
   ListViewParameters->blockSignals(false);
   updateListView();
   item->setText(COLUMN_ID, QString::number(++idCounter));
-  
+
   ///// save the data
   SurfaceProperties newSurface;
   newSurface.visible = true;
@@ -232,7 +232,7 @@ void DensityBase::addSurfacePair()
 /// on the currently selected surface.
 {
   ///// add 2 listview item with the parameters from GroupBoxSettings
-  
+
   ///// positive blue with level = 0.05 (or max density)
   ListViewParameters->blockSignals(true);
   QCheckListItem* item = new QCheckListItem(ListViewParameters, ListViewParameters->lastItem(), QString::null, QCheckListItem::CheckBox);
@@ -278,7 +278,7 @@ void DensityBase::addSurfacePair()
   item2->setText(COLUMN_OPACITY, QString::number(SliderOpacity->value()));
   item2->setText(COLUMN_TYPE, ComboBoxType->currentText());
   ListViewParameters->blockSignals(false);
-  
+
   ///// save the data
   newSurface.level = LineEditLevel->text().toDouble();
   newSurface.colour = red.rgb();
@@ -288,8 +288,8 @@ void DensityBase::addSurfacePair()
   ListViewParameters->setSelected(item2, true);
   updateSettings();
 
-  qDebug("RGB values for blue: " + item->text(COLUMN_RGB)); 
-  qDebug("RGB values for red:  " + item2->text(COLUMN_RGB)); 
+  qDebug("RGB values for blue: " + item->text(COLUMN_RGB));
+  qDebug("RGB values for red:  " + item2->text(COLUMN_RGB));
 
   checkUpdate();
   enableWidgets();
@@ -329,7 +329,7 @@ void DensityBase::deleteSurface()
 ///// updateAll ///////////////////////////////////////////////////////////////
 void DensityBase::updateAll()
 /// Updates all changes.
-{  
+{
   int newVisualizationType = ComboBoxVisualizationType->currentItem();
   bool changed = oldVisualizationType != newVisualizationType;
 
@@ -393,7 +393,7 @@ void DensityBase::hideEvent(QHideEvent* e)
 
 ///// updateVisualizationType /////////////////////////////////////////////////
 void DensityBase::updateVisualizationType()
-/// Does the necessary updates when a new visualization type was chosen. 
+/// Does the necessary updates when a new visualization type was chosen.
 {
   const int currentType = ComboBoxVisualizationType->currentItem();
   // show the new page
@@ -453,7 +453,7 @@ void DensityBase::updateListView()
 
 ///// updateSettings //////////////////////////////////////////////////////////
 void DensityBase::updateSettings()
-/// Updates the settings with the contents of the currently 
+/// Updates the settings with the contents of the currently
 /// selected item in ListViewParameters.
 {
   QListViewItem* item = ListViewParameters->selectedItem();
@@ -500,25 +500,25 @@ void DensityBase::updateOperation(const unsigned int op)
 /// \arg 2 : a new density was read into densityPointsB.
 {
   double maxDensity = 0.0, minDensity = 0.0;
-  
+
   ///// op = 0 => both densities are available and of the same size if currentItem > 1
   if(op == 0)
   {
     switch(ComboBoxOperation->currentItem())
     {
       case 0: // density A
-              { 
+              {
                 std::vector<double>::iterator it = std::max_element(densityPointsA.begin(), densityPointsA.end());
-                maxDensity = *it; 
+                maxDensity = *it;
                 it = std::min_element(densityPointsA.begin(), densityPointsA.end());
                 minDensity = *it;
               }
               densityGrid->setParameters(&densityPointsA, numPointsA, deltaA, originA);
               break;
       case 1: // density B
-              { 
+              {
                 std::vector<double>::iterator it = std::max_element(densityPointsB.begin(), densityPointsB.end());
-                maxDensity = *it; 
+                maxDensity = *it;
                 it = std::min_element(densityPointsB.begin(), densityPointsB.end());
                 minDensity = *it;
               }
@@ -527,39 +527,39 @@ void DensityBase::updateOperation(const unsigned int op)
       case 2: // A + B
               {
                 std::vector<double> densitySum(densityPointsA.size());
-                std::transform(densityPointsA.begin(), densityPointsA.end(), densityPointsB.begin(), densitySum.begin(), std::plus<double>());     
+                std::transform(densityPointsA.begin(), densityPointsA.end(), densityPointsB.begin(), densitySum.begin(), std::plus<double>());
                 std::vector<double>::iterator it = std::max_element(densitySum.begin(), densitySum.end());
-                maxDensity = *it; 
+                maxDensity = *it;
                 it = std::min_element(densitySum.begin(), densitySum.end());
                 minDensity = *it;
-                densityGrid->setParameters(&densitySum, numPointsA, deltaA, originA);  
+                densityGrid->setParameters(&densitySum, numPointsA, deltaA, originA);
               }
               break;
       case 3: // A - B
               {
                 std::vector<double> densityDiff(densityPointsA.size());
-                std::transform(densityPointsA.begin(), densityPointsA.end(), densityPointsB.begin(), densityDiff.begin(), std::minus<double>());     
+                std::transform(densityPointsA.begin(), densityPointsA.end(), densityPointsB.begin(), densityDiff.begin(), std::minus<double>());
                 std::vector<double>::iterator it = std::max_element(densityDiff.begin(), densityDiff.end());
-                maxDensity = *it; 
+                maxDensity = *it;
                 it = std::min_element(densityDiff.begin(), densityDiff.end());
                 minDensity = *it;
-                densityGrid->setParameters(&densityDiff, numPointsA, deltaA, originA);  
+                densityGrid->setParameters(&densityDiff, numPointsA, deltaA, originA);
               }
               break;
       case 4: // B - A
               {
                 std::vector<double> densityDiff(densityPointsA.size());
-                std::transform(densityPointsB.begin(), densityPointsB.end(), densityPointsA.begin(), densityDiff.begin(), std::minus<double>());     
+                std::transform(densityPointsB.begin(), densityPointsB.end(), densityPointsA.begin(), densityDiff.begin(), std::minus<double>());
                 std::vector<double>::iterator it = std::max_element(densityDiff.begin(), densityDiff.end());
-                maxDensity = *it; 
+                maxDensity = *it;
                 it = std::min_element(densityDiff.begin(), densityDiff.end());
                 minDensity = *it;
-                densityGrid->setParameters(&densityDiff, numPointsA, deltaA, originA);  
+                densityGrid->setParameters(&densityDiff, numPointsA, deltaA, originA);
               }
               break;
     }
   }
-  ///// op = 1 
+  ///// op = 1
   else if(op == 1)
   {
     if(densityPointsB.empty())
@@ -620,7 +620,7 @@ void DensityBase::updateOperation(const unsigned int op)
         ComboBoxOperation->insertItem(tr("Substract densities (A - B)"));
         ComboBoxOperation->insertItem(tr("Substract densities (B - A)"));
         // Qt does not recompute the optimal horizontal size for ComboBoxOperation
-        // when items are added or removed. That's why the following 2 lines are added as a hack 
+        // when items are added or removed. That's why the following 2 lines are added as a hack
         // (from http://lists.trolltech.com/qt-interest/2002-05/thread00289-0.html)
         // -> only do this for enlarging, never for shrinking again
         ComboBoxOperation->setFont(ComboBoxOperation->font()); // invalidates sizeHint
@@ -650,7 +650,7 @@ void DensityBase::updateOperation(const unsigned int op)
 
   ///// arrived here, stuff needs to be updated
   ///// and the surfaces need to be reset
-  
+
   ///// clear any defined surfaces with isoLevels outside minDensity and maxDensity
   //idCounter = 0;
   //ListViewParameters->clear();
@@ -682,7 +682,7 @@ void DensityBase::updateOperation(const unsigned int op)
 
   ///// update if requested
   checkUpdate();
-  
+
   ///// update the type of density
   LabelMax->setText(QString::number(maxDensity,'f'));
   LabelMin->setText(QString::number(minDensity,'f'));
@@ -692,7 +692,7 @@ void DensityBase::updateOperation(const unsigned int op)
   ///// update the settings for defaults if no surfaces are already defined
   if(ListViewParameters->childCount() == 0)
   {
-    if(maxDensity > 0.0) 
+    if(maxDensity > 0.0)
     {
       const double defaultLevel = maxDensity < 0.05 ? maxDensity : 0.05;
       LineEditLevel->setText(QString::number(defaultLevel,'f',3));
@@ -717,7 +717,7 @@ void DensityBase::updateOperation(const unsigned int op)
 
 ///// updateOpacity ///////////////////////////////////////////////////////////
 void DensityBase::updateOpacity()
-/// Updates LabelOpacity so its value corresponds with the position of 
+/// Updates LabelOpacity so its value corresponds with the position of
 /// SliderOpacity.
 {
   if(SliderOpacity->value() == 100)
@@ -794,13 +794,13 @@ void DensityBase::setMapping()
         resetMappedMaxima(); // the current source density has changed so reset to the maximum values
         CheckBoxUpdate->setChecked(update);
       }
-      
+
       // save the original values
       const int oldDensity = mappingWidget->ComboBoxSource->currentItem();
       const QString oldMax = mappingWidget->LineEditMaxPos->text();
       const QString oldMin = mappingWidget->LineEditMaxNeg->text();
       const int oldMap = mappingWidget->ComboBoxMap->currentItem();
-      
+
       // show it
       if(mappingWidget->exec() == QDialog::Rejected)
       {
@@ -813,7 +813,7 @@ void DensityBase::setMapping()
           PushButtonMapped->setOn(false);
         return;
       }
-      
+
       // update the DensityGrid
       std::vector<double>* points;
       if(mappingWidget->ComboBoxSource->currentText() == tr("Density A"))
@@ -821,7 +821,7 @@ void DensityBase::setMapping()
       else
         points = &densityPointsB;
       densityGrid->setMappingParameters(points, mappingWidget->ComboBoxMap->currentItem(),
-                                        mappingWidget->LineEditMaxPos->text().toFloat(), 
+                                        mappingWidget->LineEditMaxPos->text().toFloat(),
                                         mappingWidget->LineEditMaxNeg->text().toFloat());
       mappingChanged = true;
 
@@ -836,7 +836,7 @@ void DensityBase::setMapping()
         it.current()->setPixmap(COLUMN_COLOUR, pm);
         it++;
       }
-      ListViewParameters->setColumnWidth(COLUMN_COLOUR, columnColourWidth); // reset the column width 
+      ListViewParameters->setColumnWidth(COLUMN_COLOUR, columnColourWidth); // reset the column width
 
       // fix relevant button
       ColorButtonLevel->setEnabled(false);
@@ -961,7 +961,7 @@ void DensityBase::makeConnections()
   connect(ColorButtonVolumeNeg, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
   connect(LineEditVolumePos, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
   connect(LineEditVolumeNeg, SIGNAL(textChanged(const QString&)), this, SLOT(checkUpdate()));
- 
+
   ///// connections for Slice
   connect(PushButtonSliceReset, SIGNAL(clicked()), this, SLOT(resetSliceMaxima()));
   connect(ColorButtonSlicePos, SIGNAL(newColor(QColor*)), this, SLOT(checkUpdate()));
@@ -976,8 +976,8 @@ void DensityBase::makeConnections()
 
 ///// loadDensity /////////////////////////////////////////////////////////////
 void DensityBase::loadDensity(const bool densityA)
-/// Loads a new density into density A or B. 
-/// This depends on the value of \c densityA: 
+/// Loads a new density into density A or B.
+/// This depends on the value of \c densityA:
 /// \arg true : density A.
 /// \arg false : density B.
 {
@@ -1013,7 +1013,7 @@ void DensityBase::loadDensity(const bool densityA)
       return;
     } // if loading is succesful, deletion of file is taken care of by loadCubeThread
   }
-  else 
+  else
   {
     if(!loadPLT(file))
     {
@@ -1023,7 +1023,7 @@ void DensityBase::loadDensity(const bool densityA)
     } // if loading is succesful, deletion of file is taken care of by loadPLTThread
   }
 
-  enableWidgets(); 
+  enableWidgets();
 }
 
 ///// loadCube ////////////////////////////////////////////////////////////////
@@ -1033,7 +1033,7 @@ bool DensityBase::loadCube(QFile* file)
   const double AUTOANG = 1.0/1.889726342;
   QTextStream stream(file);
   stream.readLine(); // ignore the first line
-  newDescription = stream.readLine(); // the description of the type of density 
+  newDescription = stream.readLine(); // the description of the type of density
   QString line = stream.readLine();
   const int numAtoms = line.mid(0,5).toInt();
   const float originX = line.mid(5,12).toFloat() * AUTOANG;
@@ -1072,7 +1072,7 @@ bool DensityBase::loadCube(QFile* file)
 
   ///// ask which MO should be read and skip the initial values
   unsigned int numSkipValues = 0;
-  if(listMO.size() > 1) 
+  if(listMO.size() > 1)
   {
     bool ok;
     QString result = QInputDialog::getItem(tr("Select the desired MO"), tr("The file contains multiple entries for\n")+newDescription+"\nSelect the desired molecular orbital", listMO,0,false,&ok,this);
@@ -1095,7 +1095,7 @@ bool DensityBase::loadCube(QFile* file)
   ///// read all density points in a LoadCubeThread (this class takes ownership of the opened file pointer)
   const unsigned int totalPoints = numPointsX * numPointsY * numPointsZ;
   if(loadingDensityA)
-  { 
+  {
     numPointsA.setValues(numPointsX, numPointsY, numPointsZ);
     originA.setValues(originX, originY, originZ);
     deltaA.setValues(deltaX, deltaY, deltaZ);
@@ -1106,7 +1106,7 @@ bool DensityBase::loadCube(QFile* file)
     loadingThread = new LoadCubeThread(&densityPointsA, file, this, totalPoints, numSkipValues);
   }
   else
-  { 
+  {
     numPointsB.setValues(numPointsX, numPointsY, numPointsZ);
     originB.setValues(originX, originY, originZ);
     deltaB.setValues(deltaX, deltaY, deltaZ);
@@ -1127,7 +1127,7 @@ bool DensityBase::loadPLT(QFile* file)
   ///// Check the format of the PLT file (text, big endian binary or little endian binary)
   ///// by reading the magic number (=3)
   LoadPLTThread::Format pltFormat = LoadPLTThread::TextFormat;
-  
+
   // first check whether it is in text format
   QTextStream textStream(file);
   QDataStream dataStream(file);
@@ -1156,7 +1156,7 @@ bool DensityBase::loadPLT(QFile* file)
   qDebug("format = %u (hex = %X)", pltFormat, pltFormat);
   qDebug("header size in bytes: %d", file->at());
 
-  // at this point pltFormat is set and both textStream and dataStream are 
+  // at this point pltFormat is set and both textStream and dataStream are
   // positioned after the first value.
 
   ///// read the rest of the header (mirrored functionality for both streams
@@ -1189,6 +1189,7 @@ bool DensityBase::loadPLT(QFile* file)
     dataStream >> originZ >> maxZ >> originY >> maxY >> originX >> maxX;
     qDebug("origin = (%f, %f, %f)", originX, originY, originZ);
     qDebug("max = (%f, %f, %f)", maxX, maxY, maxZ);
+    qDebug("delta = (%f, %f, %f)", (maxX-originX)/(numPointsX-1), (maxY-originY)/(numPointsY-1), (maxZ-originZ)/(numPointsZ-1));
   }
 
   switch(pltType)
@@ -1273,7 +1274,7 @@ void DensityBase::updateDensity()
     enableWidgets();
     return;
   }
-  
+
   delete loadingThread;
   loadingThread = 0;
 
@@ -1374,7 +1375,7 @@ bool DensityBase::identicalGrids()
 /// Returns true if the densities A and B are located
 /// on the same grid. If true these densities can be succesfully combined.
 {
-  
+
   if(densityPointsA.size() != densityPointsB.size())
     qDebug("grids are not identical because sizes differ: %d and %d",densityPointsA.size(),densityPointsB.size());
 
@@ -1386,7 +1387,7 @@ bool DensityBase::identicalGrids()
 
   if(!(deltaA == deltaB))
     qDebug("grids are not identical because deltas differ: A(%f,%f,%f) and B(%f,%f,%f)",deltaA.x(),deltaA.y(),deltaA.z(),deltaB.x(),deltaB.y(),deltaB.z());
-  
+
   return densityPointsA.size() == densityPointsB.size() && originA == originB && numPointsA == numPointsB && deltaA == deltaB;
 }
 
@@ -1398,7 +1399,7 @@ bool DensityBase::updateIsoSurfaces()
 
   ///// first traverse the surfaces backwards to remove deleted ones
   std::vector<SurfaceProperties>::reverse_iterator rit = surfaceProperties.rbegin();
-  unsigned int surfaceIndex = surfaceProperties.size() - 1; 
+  unsigned int surfaceIndex = surfaceProperties.size() - 1;
   while(rit != surfaceProperties.rend())
   {
     if((*rit).deleted)
@@ -1465,9 +1466,9 @@ bool DensityBase::updateIsoSurfaces()
       surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
 
       if(levelChanged)
-        densityGrid->changeSurface(i, surfaceProperties[i].level); 
+        densityGrid->changeSurface(i, surfaceProperties[i].level);
       if(levelChanged || colorChanged || opacityChanged || typeChanged || mappingChanged)
-      { 
+      {
         emit updatedSurface(i);
         somethingChanged = true;
       }
@@ -1488,7 +1489,7 @@ bool DensityBase::updateVolume()
                  ColorButtonVolumeNeg->color().rgb() != volumeProperties.negativeColor ||
                  LineEditVolumePos->text() != volumeProperties.maxLevel ||
                  LineEditVolumeNeg->text() != volumeProperties.minLevel;
- 
+
   // notify that the volume needs to be updated
   if(changed)
     emit updatedVolume();
@@ -1540,5 +1541,5 @@ bool DensityBase::updateSlice()
 ///// Static Variables                                                    /////
 ///////////////////////////////////////////////////////////////////////////////
 
-const double DensityBase::deltaLevel = 0.001; 
+const double DensityBase::deltaLevel = 0.001;
 
