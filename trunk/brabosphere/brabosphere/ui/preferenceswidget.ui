@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>590</width>
-            <height>467</height>
+            <height>463</height>
         </rect>
     </property>
     <property name="maximumSize">
@@ -802,6 +802,12 @@
                                                             <widget class="QLineEdit">
                                                                 <property name="name">
                                                                     <cstring>LineEditExecutable</cstring>
+                                                                </property>
+                                                                <property name="frameShape">
+                                                                    <enum>LineEditPanel</enum>
+                                                                </property>
+                                                                <property name="frameShadow">
+                                                                    <enum>Sunken</enum>
                                                                 </property>
                                                                 <property name="text">
                                                                     <string></string>
@@ -2177,6 +2183,11 @@
                                                 </item>
                                                 <item>
                                                     <property name="text">
+                                                        <string>Smooth Lines</string>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
                                                         <string>Tubes</string>
                                                     </property>
                                                 </item>
@@ -2190,11 +2201,21 @@
                                                         <string>Van der Waals</string>
                                                     </property>
                                                 </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string>Cartoon</string>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string>Black &amp; White</string>
+                                                    </property>
+                                                </item>
                                                 <property name="name">
                                                     <cstring>ComboBoxMolecule</cstring>
                                                 </property>
                                                 <property name="currentItem">
-                                                    <number>3</number>
+                                                    <number>4</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
                                                     <string>Determines the default rendering style for molecules when a new calculation is created or when molecules are shown in CrdView.</string>
@@ -2214,6 +2235,16 @@
                                                 <item>
                                                     <property name="text">
                                                         <string>Tubes</string>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string>Cartoon</string>
+                                                    </property>
+                                                </item>
+                                                <item>
+                                                    <property name="text">
+                                                        <string>Black &amp; White</string>
                                                     </property>
                                                 </item>
                                                 <property name="name">
