@@ -188,7 +188,18 @@ GLSimpleMoleculeView::GLMoleculeParameters PreferencesBase::getGLMoleculeParamet
   result.sizeBonds = data.sizeBonds.toFloat()/2.0; // diameter -> radius
   result.sizeForces = data.sizeForces.toFloat()/2.0; // diameter -> radius
   result.defaultMoleculeStyle = data.styleMolecule;
-  result.defaultForcesStyle = data.styleForces;
+  switch(data.styleForces)
+  { // only a few styles are allowed for forces (subset of molecule styles)
+    case 1:  result.defaultForcesStyle = GLSimpleMoleculeView::Lines;
+             break;
+    case 2:  result.defaultForcesStyle = GLSimpleMoleculeView::Tubes;
+             break;
+    case 3:  result.defaultForcesStyle = GLSimpleMoleculeView::Cartoon;
+             break;
+    case 4:  result.defaultForcesStyle = GLSimpleMoleculeView::BlackAndWhite;
+             break;
+    default: result.defaultForcesStyle = GLSimpleMoleculeView::None;
+  }
   result.fastRenderLimit = data.fastRenderLimit;
   result.showElements = data.showElements;
   result.showNumbers = data.showNumbers;
@@ -263,7 +274,7 @@ void PreferencesBase::applyChanges()
             CommandHistory::setMaxRAM(-1);
             break;
     case 1: // limited levels
-            CommandHistory::setMaxLevels(data.undoLevels); 
+            CommandHistory::setMaxLevels(data.undoLevels);
             break;
     case 2: // limited RAM
             CommandHistory::setMaxRAM(data.undoRAM);
@@ -325,8 +336,8 @@ void PreferencesBase::loadSettings()
   data.basissetDir       = settings.readEntry(prefix + "basisset_dir", basisDir);
   data.basisset          = settings.readNumEntry(prefix + "basisset", Basisset::basisToNum("6-31G"));
   ///// Molecule
-  data.styleMolecule     = settings.readNumEntry(prefix + "style_molecule", 3); // Ball & Stick
-  data.styleForces       = settings.readNumEntry(prefix + "style_forces", 2); // Tubes
+  data.styleMolecule     = settings.readNumEntry(prefix + "style_molecule", GLSimpleMoleculeView::BallAndStick);
+  data.styleForces       = settings.readNumEntry(prefix + "style_forces", GLSimpleMoleculeView::Tubes);
   data.fastRenderLimit   = settings.readNumEntry(prefix + "fast_render_limit", 1000);
   data.showElements      = settings.readBoolEntry(prefix + "show_elements", false);
   data.showNumbers       = settings.readBoolEntry(prefix + "show_numbers", true);
@@ -349,7 +360,7 @@ void PreferencesBase::loadSettings()
   data.styleApplication  = settings.readNumEntry(prefix + "style", 0); // Startup style
   data.undoRedo          = settings.readNumEntry(prefix + "undo_redo_type", 1); // limited levels
   data.undoLevels        = settings.readNumEntry(prefix + "undo_redo_levels", 100);
-  data.undoRAM           = settings.readNumEntry(prefix + "undo_redo_ram", 5); 
+  data.undoRAM           = settings.readNumEntry(prefix + "undo_redo_ram", 5);
 
   ///// OpenGL
   data.lightPosition     = settings.readNumEntry(prefix + "light_position", 2);

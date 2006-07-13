@@ -204,14 +204,14 @@ void GLSimpleMoleculeView::setDisplayStyle(const DisplaySource source, const uns
 {
   if(source == Molecule)
   {
-    if(style > VanDerWaals)
+    if(style > BlackAndWhite)
       moleculeStyle = BallAndStick;
     else
       moleculeStyle = style;
   }
   else
   {
-    if(style > Tubes)
+    if(style == SmoothLines || style == BallAndStick || style == VanDerWaals || style > BlackAndWhite)
       forcesStyle = Tubes;
     else
       forcesStyle = style;
@@ -780,6 +780,11 @@ void GLSimpleMoleculeView::drawScene()
     showNumbers = oldShowNumbers;
     chargeType = oldChargeType;
   }
+
+  ///// in the case of Black And White rendering, set the background color to white
+  ///// the next frame will then be shown with the correct background
+  if(moleculeStyle == BlackAndWhite || forcesStyle == BlackAndWhite)
+    qglClearColor(QColor(255, 255, 255));
 }
 
 ///// drawAtoms ///////////////////////////////////////////////////////////////
@@ -787,13 +792,32 @@ void GLSimpleMoleculeView::drawAtoms()
 /// Draws the atoms in the OpenGL scene.
 {
   //qDebug("calling drawAtoms");
-  if(moleculeStyle == None || moleculeStyle == Lines)
+  if(moleculeStyle == None || moleculeStyle == Lines || moleculeStyle == SmoothLines || moleculeStyle > BlackAndWhite)
     return;
+
+  if(moleculeStyle == BlackAndWhite)
+  {
+    //glColor3f(1.0f, 1.0f, 1.0f); // single front color
+    glDisable(GL_FOG);
+    GLfloat materialSpecular[] = {0.0f, 0.0f, 0.0f, 0.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialSpecular);
+   }
+  else if(moleculeStyle == Cartoon)
+  {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_FOG);
+  }
 
   for(unsigned int i = 0; i < atoms->count(); i++)
   {
     glPushMatrix(); // save the current matrix
-    qglColor(atoms->color(i)); // set the color (works cos of glColorMaterial)
+    if(moleculeStyle == BlackAndWhite)
+    {
+      int gray = qGray(atoms->color(i).rgb());
+      qglColor(QColor(gray, gray, gray)); // grayscaled atom color
+    }
+    else
+      qglColor(atoms->color(i)); // set the color (works cos of glColorMaterial)
     glTranslatef(atoms->x(i), atoms->y(i), atoms->z(i)); // set the position
     if(moleculeStyle == Tubes)
     {
@@ -801,7 +825,7 @@ void GLSimpleMoleculeView::drawAtoms()
                moleculeParameters.sizeBonds,
                moleculeParameters.sizeBonds);
     }
-    else if(moleculeStyle == BallAndStick)
+    else if(moleculeStyle == BallAndStick || moleculeStyle == Cartoon || moleculeStyle == BlackAndWhite)
     {
       glScalef(AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0f,
                AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0f,
@@ -817,6 +841,48 @@ void GLSimpleMoleculeView::drawAtoms()
     glCallList(atomObject); // make the atom
     glPopMatrix(); // restore the matrix
   }
+
+  if(moleculeStyle == Cartoon || moleculeStyle == BlackAndWhite)
+  {
+    // apply gooch shading outlines
+    glDisable(GL_LIGHTING);
+    glCullFace(GL_FRONT); // show the backfacing ones
+    glDepthFunc(GL_LEQUAL);
+    if(moleculeStyle == Cartoon)
+    {
+      QColor back(baseParameters.backgroundColor);
+      qglColor(QColor(255 - back.red(), 255 - back.green(), 255 - back.blue())); // anti-color of background for maximum contrast
+    }
+    else
+      glColor3f(0.0f, 0.0f, 0.0f); // black outline for BlackAndWhite rendering
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_POLYGON_OFFSET_LINE);
+    glPolygonOffset(moleculeParameters.sizeLines, 1.0); // fix this
+    for(unsigned int i = 0; i < atoms->count(); i++)
+    {
+      glPushMatrix(); // save the current matrix
+      glTranslatef(atoms->x(i), atoms->y(i), atoms->z(i)); // set the position
+      glScalef(AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0f, // BallAndStick scaling
+               AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0f,
+               AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0f);
+      glCallList(atomObject);
+      glPopMatrix(); // restore the matrix
+    }
+    // reset defaults
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_POLYGON_OFFSET_LINE);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_LIGHTING);
+    glCullFace(GL_BACK);
+    if(baseParameters.depthCue)
+      glEnable(GL_FOG);
+    if(moleculeStyle == BlackAndWhite)
+    {
+      GLfloat materialSpecular[] = {baseParameters.materialSpecular/100.0f, baseParameters.materialSpecular/100.0f, baseParameters.materialSpecular/100.0f, 0.0f};
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialSpecular);
+    }
+  }
+
   glLoadName(START_BONDS); // just to make sure the following items do not get the same name as the last atom
 }
 
@@ -827,7 +893,7 @@ void GLSimpleMoleculeView::drawBonds()
 /// together in an OpenGL display list.
 {
   //qDebug("calling drawBonds");
-  if(moleculeStyle == None || moleculeStyle == VanDerWaals)
+  if(moleculeStyle == None || moleculeStyle == VanDerWaals || moleculeStyle > BlackAndWhite)
     return;
 
   float distance, distanceXY, x1, x2, y1, y2, z1, z2, phi, theta;
@@ -869,6 +935,19 @@ void GLSimpleMoleculeView::drawBonds()
     glEnd();
     glEnable(GL_LIGHTING);
     return;
+  }
+
+  if(moleculeStyle == BlackAndWhite)
+  {
+    //glColor3f(1.0f, 1.0f, 1.0f); // single front color
+    glDisable(GL_FOG);
+    GLfloat materialSpecular[] = {0.0f, 0.0f, 0.0f, 0.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialSpecular);
+  }
+  else if(moleculeStyle == Cartoon)
+  {
+    glDisable(GL_FOG);
+    glDisable(GL_LIGHTING);
   }
 
   ///// here moleculeStyle is either DisplayStyle::Tubes or DisplayStyle::BallAndStick
@@ -922,21 +1001,114 @@ void GLSimpleMoleculeView::drawBonds()
     if(atoms->color(atom1) == atoms->color(atom2))
     {
       ///// the bond has one color
-      qglColor(atoms->color(atom1));
+      if(moleculeStyle == BlackAndWhite)
+      {
+        int gray = qGray(atoms->color(atom1).rgb());
+        qglColor(QColor(gray, gray, gray)); // grayscaled atom color
+      }
+      else
+        qglColor(atoms->color(atom1));
       glCallList(bondObject);
     }
     else
     {
       ///// the bond has two colors
       //// make firstAtom's part of bond
-      qglColor(atoms->color(atom1));
+      if(moleculeStyle == BlackAndWhite)
+      {
+        int gray = qGray(atoms->color(atom1).rgb());
+        qglColor(QColor(gray, gray, gray)); // grayscaled atom color
+      }
+      else
+        qglColor(atoms->color(atom1));
       glCallList(bondObject);
       ///// make secondAtom's part of bond
-      qglColor(atoms->color(atom2));
+      if(moleculeStyle == BlackAndWhite)
+      {
+        int gray = qGray(atoms->color(atom2).rgb());
+        qglColor(QColor(gray, gray, gray)); // grayscaled atom color
+      }
+      else
+        qglColor(atoms->color(atom2));
       glTranslatef(0.0f, 0.0f, cylinderHeight);
       glCallList(bondObject);
     }
     glPopMatrix();
+  }
+
+  if(moleculeStyle == Cartoon || moleculeStyle == BlackAndWhite)
+  {
+    // apply gooch shading outlines
+    glDisable(GL_LIGHTING);
+    glCullFace(GL_FRONT); // show the backfacing ones
+    glDepthFunc(GL_LEQUAL);
+    if(moleculeStyle == Cartoon)
+    {
+      QColor back(baseParameters.backgroundColor);
+      qglColor(QColor(255 - back.red(), 255 - back.green(), 255 - back.blue())); // anti-color of background for maximum contrast
+    }
+    else
+      glColor3f(0.0f, 0.0f, 0.0f); // black outline for BlackAndWhite rendering
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    for(unsigned int i = 0; i < firstAtom->size(); i++)
+    {
+      ///// add the bond between atoms firstAtom[i] and secondAtom[i]
+      const unsigned int atom1 = firstAtom->operator[](i);
+      const unsigned int atom2 = secondAtom->operator[](i);
+
+      x1 = static_cast<float>(atoms->x(atom1));
+      x2 = static_cast<float>(atoms->x(atom2));
+      y1 = static_cast<float>(atoms->y(atom1));
+      y2 = static_cast<float>(atoms->y(atom2));
+      z1 = static_cast<float>(atoms->z(atom1));
+      z2 = static_cast<float>(atoms->z(atom2));
+      distanceXY = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
+      distance = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+      if(distance < 0.01f)
+        continue; //no need to draw those small bonds
+
+      glPushMatrix();
+
+      ///// TRANSLATE
+      glTranslatef(x1, y1, z1);
+
+      ///// ROTATE
+      ///// determine PHI rotation angle (around y-axis)
+      phi = acos((z2 - z1)/distance);
+      ///// determine THETA rotation angle (around z-axis)
+      if(distanceXY <= 0.0f)
+        theta = 0.0f;
+      else
+      {
+        theta = acos((x2 - x1)/distanceXY);
+        if(y2 < y1)
+          theta = 2.0f*Point3D<float>::PI - theta;
+      }
+      ///// convert them to degrees
+      phi *= Point3D<float>::RADTODEG;
+      theta *= Point3D<float>::RADTODEG;
+      glRotatef(theta, 0.0f, 0.0f, 1.0f);
+      glRotatef(phi, 0.0f, 1.0f, 0.0f);
+
+      /////SCALE
+      glScalef(moleculeParameters.sizeBonds, moleculeParameters.sizeBonds, distance/cylinderHeight);
+
+      glCallList(bondObject);
+      glPopMatrix();
+    }
+    // reset defaults
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_POLYGON_OFFSET_LINE);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_LIGHTING);
+    glCullFace(GL_BACK);
+    if(baseParameters.depthCue)
+      glEnable(GL_FOG);
+    if(moleculeStyle == BlackAndWhite)
+    {
+      GLfloat materialSpecular[] = {baseParameters.materialSpecular/100.0f, baseParameters.materialSpecular/100.0f, baseParameters.materialSpecular/100.0f, 0.0f};
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialSpecular);
+    }
   }
 }
 
@@ -955,7 +1127,10 @@ void GLSimpleMoleculeView::drawLabels()
 
   // set up the visuals
   glDisable(GL_LIGHTING);
-  qglColor(moleculeParameters.colorLabels);
+  if(moleculeStyle == BlackAndWhite)
+    glColor3f(0.0f, 0.0f, 0.0f);
+  else
+    qglColor(moleculeParameters.colorLabels);
 
   // loop over the atoms
   for(unsigned int i = 0; i < atoms->count(); i++)
@@ -981,7 +1156,7 @@ void GLSimpleMoleculeView::drawLabels()
       if(showElements || showNumbers)
         label += ")";
     }
-    renderText(0.0, 0.0, AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0 + 0.05, label, labelFont); // the +0.05 is needed for certain crappy Windows OpenGL drivers
+    renderText(0.0, 0.0, AtomSet::vanderWaals(atoms->atomicNumber(i))/2.0 + 0.1, label, labelFont); // the +0.05 is needed for certain crappy Windows OpenGL drivers
     glPopMatrix();
   }
 
@@ -996,7 +1171,8 @@ void GLSimpleMoleculeView::drawForces()
 /// together in an OpenGL display list.
 {
   //qDebug("calling drawForces");
-  if(forcesStyle == None || !atoms->hasForces())
+  if(forcesStyle == None || forcesStyle == SmoothLines || forcesStyle == BallAndStick ||
+     forcesStyle > BlackAndWhite || !atoms->hasForces())
     return;
 
   // forces are scaled. A force which is considered refined by relax (< 0.0009 mdyne/A) is equal

@@ -39,15 +39,25 @@ class AtomSet;
 class GLSimpleMoleculeView : public GLView
 {
   Q_OBJECT
-  
-  public: 
+
+  public:
     ////// constructor/destructor
     GLSimpleMoleculeView(AtomSet* atomset, QWidget* parent=0, const char* name=0);      // constructor
     ~GLSimpleMoleculeView();            // destructor
 
     ///// public enums
-    enum DisplayStyle{None, Lines, Tubes, BallAndStick, VanDerWaals};   ///< The rendering styles for the molecule and the forces.
-                                                                        ///< The forces can only be displayed in one of the first 3 styles
+    enum DisplayStyle{None = 0, Lines, SmoothLines, Tubes, BallAndStick, VanDerWaals, Cartoon, BlackAndWhite};
+    ///< The rendering styles for the molecule and the forces.
+    ///< \arg None: nothing rendered at all
+    ///< \arg Lines: only bonds and forces are rendered as lines with a 2-colored line bezteen different atoms
+    ///< \arg SmoothLines: bonds are rendered as lines with a continuously varying color
+    ///< \arg Tubes: bonds and forces are rendered as cylinders with spherical and conical cappings, respectively.
+    ///< \arg BallAndStick: atoms and bonds are rendered as spheres and cylinders, respectively, with the spheres the size of the atom's covalent radius.
+    ///< \arg VanDerWaals: atoms are rendered as spheres the size of their Van der Waals-radius.
+    ///< \arg Cartoon: atoms, bonds and forces are rendered with a sharp outline and solidly filled interiors
+    ///< \arg BlackAndWhite: atoms, bonds and forces are rendered on a white bacjgrouund with a sharp black outline
+    ///<                     and shaded grayscaled interiors without specular highlights.
+    ///< Forces can only be visualized using Lines, Tubes, Cartoon or BlackAndWhite. Other choices are equivalent to None.
     enum DisplaySource{Molecule, Forces};         ///< The types of primitives that can have different display styles
 
     ///// public member functions
@@ -68,8 +78,8 @@ class GLSimpleMoleculeView : public GLView
     {
       int quality;                      ///< The rendering quality of spheres (atoms) and cylinders (bonds) = the number of slices
       GLfloat sizeLines;                ///< Thickness for line-type bonds
-      GLfloat sizeBonds;                ///< The bond size for cylinder-type bonds 
-      GLfloat sizeForces;               ///< The size for cylinder-type forces 
+      GLfloat sizeBonds;                ///< The bond size for cylinder-type bonds
+      GLfloat sizeForces;               ///< The size for cylinder-type forces
       unsigned int defaultMoleculeStyle;///< The default molecule display style
       unsigned int defaultForcesStyle;  ///< The default forces display style
       unsigned int fastRenderLimit;     ///< The number of atoms above which to switch to fast rendering (lines and no labels)
@@ -115,7 +125,7 @@ class GLSimpleMoleculeView : public GLView
     void processSelection(const unsigned int id); // updates the selection according to the change in selection of the ID
 
     ///// protected structs
-    struct ShapeProperties             
+    struct ShapeProperties
     /// Utility struct for sorting of shapes by decreasing opacity.
     {
       unsigned int id;                  ///< A unique identifier for the shape.
@@ -126,7 +136,7 @@ class GLSimpleMoleculeView : public GLView
       {
         return opacity > prop.opacity;
       }
-    };  
+    };
 
     ///// protected member data
     AtomSet* atoms;                     ///< The list of atoms.
@@ -144,7 +154,7 @@ class GLSimpleMoleculeView : public GLView
     ///// private enums
     enum Directions{DIRECTION_X, DIRECTION_Y, DIRECTION_Z}; ///< The different directions for translations and rotations
     enum StartIndices{START_ATOMS = 100, START_BONDS = 1, START_FORCES = 2, START_SELECTEDATOMS = 3, START_SELECTEDBONDS = 4}; ///< Indices for the selection of entities
- 
+
     ///// private member functions
     void makeObjects();                 // generates the atom and bond shapes
     void changeObjects(const GLuint startList, const int numSlices);  // changes the atom and bond shapes
@@ -158,7 +168,7 @@ class GLSimpleMoleculeView : public GLView
     void drawICValue();                 // draws the value of the currently selected internal coordinate
     void drawSelections();              // draws the selected atoms and internal coordinates
 
-    ///// private member data   
+    ///// private member data
     int atomObject;                     ///< The OpenGL atom shape object pointer.
     int bondObject;                     ///< The OpenGL bond shape object pointer.
     int forceObjectLines;               ///< The OpenGL force shape object pointer for lines style.
@@ -168,12 +178,12 @@ class GLSimpleMoleculeView : public GLView
     bool showElements;                  ///< Is true if elements should be shown.
     bool showNumbers;                   ///< Is true if atom numbers should be shown
     unsigned int chargeType;            ///< Determines the type of charges to be shown
-    GLfloat selectionLineWidth;         ///< The linewidth for drawing selected bonds. 
+    GLfloat selectionLineWidth;         ///< The linewidth for drawing selected bonds.
     GLfloat selectionPointSize;         ///< The pointsize for drawing selected atoms.
     float scaleFactor;                  ///< scalefactor for scenes exceeding 50A in radius
     QFont labelFont;                    ///< The font used to render labels and other values
 
-    // private constants (made static for ease) 
+    // private constants (made static for ease)
     static const float cylinderHeight;  ///< The cylinder height. A too low value shows severe bugs in the Mesa OpenGL implementation.
 
 };
