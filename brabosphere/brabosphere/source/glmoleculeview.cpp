@@ -31,11 +31,14 @@
 
 // C++ header files
 #include <cassert>
+#include <cmath> // using abs() for floats/doubles doesn't work on e.g. GCC 3.3.3 so keep using fabs()
 
 // STL header files
 #include <algorithm>
 
+#ifdef WIN32
 #include <windows.h>
+#endif
 
 // Qt header files
 #include <qcheckbox.h>
@@ -900,8 +903,10 @@ void GLMoleculeView::updateVolume()
   QImage image, glImage;
   GLuint textureID;
 
+#ifdef WIN32
   if(!densityDialog->surfaceMapping())
   {
+  #endif
     glEnable(GL_TEXTURE_2D);
 
   ///// Allocate enough display lists to hold all textured quads
@@ -1006,6 +1011,7 @@ void GLMoleculeView::updateVolume()
   }
   reorderShapes();
 
+  #ifdef WIN32
   }
   else
   {
@@ -1089,6 +1095,7 @@ void GLMoleculeView::updateVolume()
   reorderShapes();
 
   }
+#endif
 
   ///// old code which reloaded textures upon changes in the viewing direction
   ///// -> noticable interruptions when changing directions
@@ -1750,8 +1757,10 @@ void GLMoleculeView::drawVolume()
 
   unsigned int numX = densityGrid->getNumPoints().x(), numY = densityGrid->getNumPoints().y(), numZ = densityGrid->getNumPoints().z();
 
+#ifdef WIN32
   if(!densityDialog->surfaceMapping())
   {
+#endif
 
   ///// The display lists are updated so now just call them from back to front
   glDisable(GL_LIGHTING);
@@ -1787,9 +1796,11 @@ void GLMoleculeView::drawVolume()
   glEnable(GL_CULL_FACE);
   glEnable(GL_LIGHTING);
 
+#ifdef WIN32
   }
   else
   {
+#endif
 
   ///// New technique for volume rendering: each gridelement is rendered as a quad
   ///// oriented in the XY-plane the size of the gridelement (delta.x() * delta.y())
@@ -1966,15 +1977,15 @@ void GLMoleculeView::drawVolume()
   float dotZ = axis.z();
 
   // the dot products are cosines of the angles with the viewing vector
-  float xAngle = Point3D<float>::PI/2.0f - acos(abs(dotX));
-  float yAngle = Point3D<float>::PI/2.0f - acos(abs(dotY));
-  float zAngle = Point3D<float>::PI/2.0f - acos(abs(dotZ));
+  float xAngle = Point3D<float>::PI/2.0f - acos(fabs(dotX));
+  float yAngle = Point3D<float>::PI/2.0f - acos(fabs(dotY));
+  float zAngle = Point3D<float>::PI/2.0f - acos(fabs(dotZ));
   qDebug("dots:   %f, %f, %f", dotX, dotY, dotZ);
   qDebug("angles: %f, %f, %f (sum = %f)", xAngle*180.0f/Point3D<float>::PI, yAngle*180.0f/Point3D<float>::PI, zAngle*180.0f/Point3D<float>::PI, (xAngle+yAngle+zAngle)*180.0f/Point3D<float>::PI);
 
-  float xAlpha = abs(xAngle)/(xAngle+yAngle+zAngle); // an angle of zero is fully aligned
-  float yAlpha = abs(yAngle)/(xAngle+yAngle+zAngle);
-  float zAlpha = abs(zAngle)/(xAngle+yAngle+zAngle);
+  float xAlpha = fabs(xAngle)/(xAngle+yAngle+zAngle); // an angle of zero is fully aligned
+  float yAlpha = fabs(yAngle)/(xAngle+yAngle+zAngle);
+  float zAlpha = fabs(zAngle)/(xAngle+yAngle+zAngle);
 
   ///// The display lists are updated so now just call them from back to front
   glDisable(GL_LIGHTING);
@@ -2185,6 +2196,7 @@ void GLMoleculeView::drawVolume()
   return;
   */
 
+#ifdef WIN32
   ///// 3D texturing attempt (created in updateVolume)
   // data regarding the density grid
   Point3D<float> origin = densityGrid->getOrigin();
@@ -2388,6 +2400,7 @@ void GLMoleculeView::drawVolume()
   glEnd();
 
   }
+#endif
 }
 
 ///// drawSlice ///////////////////////////////////////////////////////////////
@@ -2449,16 +2462,16 @@ unsigned int GLMoleculeView::getDirection() const
 
   // determine the general direction
   unsigned int direction = DIRECTION_NONE;
-  if(abs(dotX) > abs(dotY))
+  if(fabs(dotX) > fabs(dotY))
   {
-    if(abs(dotX) > abs(dotZ))
+    if(fabs(dotX) > fabs(dotZ))
       direction = DIRECTION_POSX;
     else
       direction = DIRECTION_POSZ;
   }
   else
   {
-    if(abs(dotY) > abs(dotZ))
+    if(fabs(dotY) > fabs(dotZ))
       direction = DIRECTION_POSY;
     else
       direction = DIRECTION_POSZ;
