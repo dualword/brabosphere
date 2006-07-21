@@ -42,7 +42,7 @@
 #endif
 
 // Xbrabo header files
-#include <vector3d.h> // includes point3d.h
+#include "vector3d.h" // includes point3d.h
 template <class T> class Vector3D; // if vector3d.h was already included, we still need a forward declaration (don't know why)
 
 ///////////////////////////////////////////////////////////////////////////////

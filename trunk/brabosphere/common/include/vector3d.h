@@ -36,8 +36,8 @@
 #include <iostream>
 
 // Xbrabo header files
-#include <point3d.h>
-#include <quaternion.h>
+#include "point3d.h"
+#include "quaternion.h"
 
 ///// class Vector3D //////////////////////////////////////////////////////////
 template<class T> class Vector3D

@@ -70,7 +70,6 @@
 #include "command.h"
 #include "glmoleculeview.h"
 #include "newatombase.h"
-#include "point3d.h" // needed for the copy constructor of AtomSet (CommandReadCoordinates, CommandAddAtoms)
 #include "xbraboview.h"
 
 ///////////////////////////////////////////////////////////////////////////////

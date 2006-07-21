@@ -37,7 +37,7 @@ class XbraboView;
 // Xbrabo header files
 #include "brabobase.h"
 #include "globalbase.h"
-#include "quaternion.h"
+#include "vector3d.h" // although a Vector3D is not used here (only a Quaternion), it fixes a compile error with GCC 3.3.3
 #include "relaxbase.h"
 
 ///// class Command ///////////////////////////////////////////////////////////
