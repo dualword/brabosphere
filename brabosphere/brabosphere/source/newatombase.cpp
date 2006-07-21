@@ -100,10 +100,10 @@ void NewAtomBase::addAtom()
     ///// Add the atom by absolute or relative cartesian coordinates
     if(RadioButtonAbsolute->isOn())
       // absolute
-      atoms->addAtom(LineEditX->text().toDouble(), LineEditY->text().toDouble(), LineEditZ->text().toDouble(), selectedAtomType);
+      atoms->addAtom(LineEditX->text().stripWhiteSpace().toDouble(), LineEditY->text().stripWhiteSpace().toDouble(), LineEditZ->text().stripWhiteSpace().toDouble(), selectedAtomType);
     else
       // relative      
-      atoms->addAtom(LineEditX->text().toDouble() + atoms->x(SpinBoxRelative->value() - 1), LineEditY->text().toDouble() + atoms->y(SpinBoxRelative->value() - 1), LineEditZ->text().toDouble() + atoms->z(SpinBoxRelative->value() - 1), selectedAtomType);
+      atoms->addAtom(LineEditX->text().stripWhiteSpace().toDouble() + atoms->x(SpinBoxRelative->value() - 1), LineEditY->text().stripWhiteSpace().toDouble() + atoms->y(SpinBoxRelative->value() - 1), LineEditZ->text().stripWhiteSpace().toDouble() + atoms->z(SpinBoxRelative->value() - 1), selectedAtomType);
   }
   else
   {
@@ -114,7 +114,7 @@ void NewAtomBase::addAtom()
     const unsigned int refIndex2 = SpinBoxReference2->value() - 1;
     const unsigned int refIndex3 = SpinBoxReference3->value() - 1;
     // add the atom with the correct bond distance from the first reference atom (along the X-axis)
-    atoms->addAtom(atoms->x(refIndex1) + LineEditBond->text().toDouble(), atoms->y(refIndex1), atoms->z(refIndex1), selectedAtomType);
+    atoms->addAtom(atoms->x(refIndex1) + LineEditBond->text().stripWhiteSpace().toDouble(), atoms->y(refIndex1), atoms->z(refIndex1), selectedAtomType);
     if(newIndex > 1)
     {
       // only set the angle when more than one atom is present 
@@ -125,25 +125,25 @@ void NewAtomBase::addAtom()
         qDebug("current angle is %f when using X-axis, so changing to Y-axis", angle); 
         // bad initial axis chosen, try the Y-axis
         atoms->setX(newIndex, atoms->x(refIndex1));
-        atoms->setY(newIndex, atoms->y(refIndex1) + LineEditBond->text().toDouble());
+        atoms->setY(newIndex, atoms->y(refIndex1) + LineEditBond->text().stripWhiteSpace().toDouble());
         angle = atoms->angle(newIndex, refIndex1, refIndex2);
         /*if(abs(angle) < Point3D<double>::TOLERANCE)
         {
           // again bad initial axis chosen, try the Z-axis, last chance
           atoms->setY(newIndex, atoms->y(refIndex1));
-          atoms->setZ(newIndex, atoms->z(refIndex1) + LineEditBond->text().toDouble());
+          atoms->setZ(newIndex, atoms->z(refIndex1) + LineEditBond->text().stripWhiteSpace().toDouble());
           angle = atoms->angle(newIndex, refIndex1, refIndex2);
         }*/
       }
       // change it to the desired value
-      atoms->changeAngle(LineEditAngle->text().toDouble() - angle, newIndex, refIndex1, refIndex2, false);
+      atoms->changeAngle(LineEditAngle->text().stripWhiteSpace().toDouble() - angle, newIndex, refIndex1, refIndex2, false);
       if(newIndex > 2)
       {
         // only set the torsion when more than 2 atoms were present
         // get the current torsion
         const double torsion = atoms->torsion(newIndex, refIndex1, refIndex2, refIndex3);
         // change it to the desired value
-        atoms->changeTorsion(torsion - LineEditTorsion->text().toDouble(), newIndex, refIndex1, refIndex2, refIndex3, false);
+        atoms->changeTorsion(torsion - LineEditTorsion->text().stripWhiteSpace().toDouble(), newIndex, refIndex1, refIndex2, refIndex3, false);
       }
     }
   }
@@ -293,7 +293,7 @@ void NewAtomBase::checkAdd()
     if(   (SpinBoxReference2->isEnabled() && (refAtom1 == refAtom2)) // ref1 cannot be equal to ref2
        || (SpinBoxReference3->isEnabled() && (refAtom1 == refAtom3)) // ref1 cannot be equal to ref3
        || (SpinBoxReference3->isEnabled() && (refAtom2 == refAtom3)) // ref2 cannot be equal to ref3
-       || (fabs(LineEditBond->text().toDouble()) < 0.1)) // bond distance should be at least 0.1
+       || (fabs(LineEditBond->text().stripWhiteSpace().toDouble()) < 0.1)) // bond distance should be at least 0.1
       PushButtonAdd->setEnabled(false);
     else
       PushButtonAdd->setEnabled(true);

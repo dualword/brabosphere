@@ -1055,9 +1055,9 @@ void AtomSet::loadCML(const QDomElement* root)
         {
           ///// new atom found, read the attributes 
           const unsigned int atomicNumber = atomToNum(atomElement.attribute("elementType", "H"));
-          const Point3D<double> xyz3(atomElement.attribute("x3","0.0").toDouble(), 
-                                      atomElement.attribute("y3","0.0").toDouble(),
-                                      atomElement.attribute("z3","0.0").toDouble());
+          const Point3D<double> xyz3(atomElement.attribute("x3","0.0").stripWhiteSpace().toDouble(), 
+                                      atomElement.attribute("y3","0.0").stripWhiteSpace().toDouble(),
+                                      atomElement.attribute("z3","0.0").stripWhiteSpace().toDouble());
           ///// iterate over the child <scalar> nodes
           QDomNode scalarNode = atomElement.firstChild();
           QString color = "#000000";
@@ -1072,12 +1072,12 @@ void AtomSet::loadCML(const QDomElement* root)
                 else if(scalarNode.toElement().attribute("dictRef") == DomUtils::nsCMLM + ":mulliken" && count() == mullikenCharges.size())
                 {
                   // only save the Muliken charges if all previous atoms also have charges
-                  double charge = scalarNode.toElement().text().toDouble();
+                  double charge = scalarNode.toElement().text().stripWhiteSpace().toDouble();
                   mullikenCharges.push_back(charge);                
                 }
                 else if(scalarNode.toElement().attribute("dictRef") == DomUtils::nsCMLM + ":stockholder" && count() == stockholderCharges.size())
                 {
-                  double charge = scalarNode.toElement().text().toDouble();
+                  double charge = scalarNode.toElement().text().stripWhiteSpace().toDouble();
                   stockholderCharges.push_back(charge);
                 }
               }
@@ -1110,9 +1110,9 @@ void AtomSet::loadCML(const QDomElement* root)
     double dx, dy, dz;
     for(QStringList::Iterator it = newForces.begin(); it != newForces.end(); ++it)
     {
-      dx = (*it).toDouble();
-      dy = (*(++it)).toDouble();
-      dz = (*(++it)).toDouble();
+      dx = (*it).stripWhiteSpace().toDouble();
+      dy = (*(++it)).stripWhiteSpace().toDouble();
+      dz = (*(++it)).stripWhiteSpace().toDouble();
       setForces(index++, dx, dy, dz);
     }
   }

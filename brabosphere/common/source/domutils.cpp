@@ -97,7 +97,7 @@ void DomUtils::readNode(QDomNode* node, double* value)
 {
   //if(node->toElement().attribute("dataType") != "xsd:double")
   //  return;
-  *value =  node->toElement().attribute("value","0.0").toDouble();
+  *value =  node->toElement().attribute("value","0.0").stripWhiteSpace().toDouble();
 }
 
 ///// readNode (overloaded) ///////////////////////////////////////////////////
@@ -137,7 +137,7 @@ void DomUtils::readNode(QDomNode* node, std::vector<double>* values)
   {
     QStringList valueList = QStringList::split(" ",childNode.toElement().text());
     for(QStringList::Iterator it = valueList.begin(); it != valueList.end(); it++)
-      values->push_back((*it).toDouble());
+      values->push_back((*it).stripWhiteSpace().toDouble());
   }
 }
 

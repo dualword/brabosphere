@@ -424,7 +424,7 @@ QStringList BraboBase::generateInput(unsigned int program)
       }
       ///// THRE
       { 
-        double threINTE = - log10(LineEditThreINTEa->text().toDouble()*pow(10.0, - LineEditThreINTEb->text().toDouble()));
+        double threINTE = - log10(LineEditThreINTEa->text().stripWhiteSpace().toDouble()*pow(10.0, - LineEditThreINTEb->text().stripWhiteSpace().toDouble()));
         if(fabs(threINTE - 8.0) > 0.00001)
           result += inputLine("thre", threINTE);
       }  
@@ -501,7 +501,7 @@ QStringList BraboBase::generateInput(unsigned int program)
       if(ComboBoxSCFType->currentItem() == 1)
         result += "drct";
       ///// IPOL
-      result += inputLine("ipol", LineEditIPOL->text().toDouble());
+      result += inputLine("ipol", LineEditIPOL->text().stripWhiteSpace().toDouble());
       ///// STAR -> always add. it will be taken out by the calculation for the first step of an optimization
       result += inputLine("star",0,0,99);
       ///// CHAR
@@ -519,10 +519,10 @@ QStringList BraboBase::generateInput(unsigned int program)
       }
       ///// SCRF
       if(CheckBoxSCRF->isChecked())
-        result += inputLine("scrf", LineEditSCRF1->text().toDouble(), LineEditSCRF2->text().toDouble());
+        result += inputLine("scrf", LineEditSCRF1->text().stripWhiteSpace().toDouble(), LineEditSCRF2->text().stripWhiteSpace().toDouble());
       ///// FIEL
       if(CheckBoxFIEL->isChecked())
-        result += inputLine("fiel", LineEditFIELx->text().toDouble(), LineEditFIELy->text().toDouble(), LineEditFIELz->text().toDouble()); 
+        result += inputLine("fiel", LineEditFIELx->text().stripWhiteSpace().toDouble(), LineEditFIELy->text().stripWhiteSpace().toDouble(), LineEditFIELz->text().stripWhiteSpace().toDouble()); 
       ///// ELMO
       if(CheckBoxELMO->isChecked())
         result += "elmo";           
@@ -543,7 +543,7 @@ QStringList BraboBase::generateInput(unsigned int program)
       }
       ///// LOCA
       if(CheckBoxLOCA->isChecked())
-        result += inputLine("loca", SpinBoxLOCA->value(), LineEditLOCA->text().toDouble());
+        result += inputLine("loca", SpinBoxLOCA->value(), LineEditLOCA->text().stripWhiteSpace().toDouble());
       ///// EXIT
       if(CheckBoxEXIT->isChecked())
         result += "exit";
@@ -557,7 +557,7 @@ QStringList BraboBase::generateInput(unsigned int program)
       {
         QString a, c;
         bool addit;
-        double threSCF = - log10(LineEditThreSCF1a->text().toDouble()*pow(10.0, - LineEditThreSCF1b->text().toDouble()));
+        double threSCF = - log10(LineEditThreSCF1a->text().stripWhiteSpace().toDouble()*pow(10.0, - LineEditThreSCF1b->text().stripWhiteSpace().toDouble()));
         if(fabs(threSCF - 8.0) > 0.00001)
         {
           a.setNum(threSCF,'f',10).truncate(10);
@@ -568,7 +568,7 @@ QStringList BraboBase::generateInput(unsigned int program)
           a = "          ";
           addit = false;
         }        
-        threSCF = - log10(LineEditThreSCF2a->text().toDouble()*pow(10.0, - LineEditThreSCF2b->text().toDouble()));
+        threSCF = - log10(LineEditThreSCF2a->text().stripWhiteSpace().toDouble()*pow(10.0, - LineEditThreSCF2b->text().stripWhiteSpace().toDouble()));
         if(fabs(threSCF + log10(3.0*pow(10.0, -6.0))) > 0.00001)
         {
           c.setNum(threSCF,'f',10).truncate(10);
@@ -581,7 +581,7 @@ QStringList BraboBase::generateInput(unsigned int program)
       }     
       ///// STHR
       { 
-        double threSTHR = - log10(LineEditSthrSCFa->text().toDouble() * pow(10.0, - LineEditSthrSCFb->text().toDouble()));
+        double threSTHR = - log10(LineEditSthrSCFa->text().stripWhiteSpace().toDouble() * pow(10.0, - LineEditSthrSCFb->text().stripWhiteSpace().toDouble()));
         if(fabs(threSTHR - 4.0) > 0.00001)
           result += inputLine("sthr",threSTHR);
       }     
@@ -594,8 +594,8 @@ QStringList BraboBase::generateInput(unsigned int program)
       else
       {
         qDebug("generateInput: MAXD = %d",SpinBoxDIIS->value());
-        if(fabs(LineEditDIIS->text().toDouble() - 0.03) > 0.00001)
-          result += inputLine("diis", LineEditDIIS->text().toDouble());
+        if(fabs(LineEditDIIS->text().stripWhiteSpace().toDouble() - 0.03) > 0.00001)
+          result += inputLine("diis", LineEditDIIS->text().stripWhiteSpace().toDouble());
         if(SpinBoxDIIS->value() != -1)
           result +=inputLine("maxd", SpinBoxDIIS->value());
       }
@@ -603,12 +603,12 @@ QStringList BraboBase::generateInput(unsigned int program)
       if(CheckBoxGoonSCF->isChecked())
         result += "goon";
       ///// LVSH and DLVS
-      if(fabs(LineEditLVSH->text().toDouble()) > 0.00001)
+      if(fabs(LineEditLVSH->text().stripWhiteSpace().toDouble()) > 0.00001)
       {
         if(CheckBoxDLVS->isChecked())
-          result += inputLine("dlvs", LineEditLVSH->text().toDouble());
+          result += inputLine("dlvs", LineEditLVSH->text().stripWhiteSpace().toDouble());
         else
-          result +=inputLine("lvsh", LineEditLVSH->text().toDouble());
+          result +=inputLine("lvsh", LineEditLVSH->text().stripWhiteSpace().toDouble());
       }
       ///// PRWF
       if(CheckBoxPRWF->isChecked())
@@ -1513,7 +1513,7 @@ void BraboBase::readInputFile()
     }
     else if(key == "thre" && section == 2)
     {
-      double thre = line.mid(10,10).toDouble();
+      double thre = line.mid(10,10).stripWhiteSpace().toDouble();
       double threA = log10(floor(thre) - thre);
       int threB = static_cast<int>(thre); // maybe change to floor() ? 
       LineEditThreINTEa->setText(QString::number(threA));
@@ -1559,7 +1559,7 @@ void BraboBase::readInputFile()
     else if(key == "drct")
       ComboBoxSCFType->setCurrentItem(1);
     else if(key == "ipol")
-      LineEditIPOL->setText(QString::number(line.mid(10,10).toDouble()));
+      LineEditIPOL->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
     else if(key == "star")
       ; // ignore
     else if(key == "char")
@@ -1581,15 +1581,15 @@ void BraboBase::readInputFile()
     }
     else if(key == "scrf")
     {
-      LineEditSCRF1->setText(QString::number(line.mid(10,10).toDouble()));
-      LineEditSCRF2->setText(QString::number(line.mid(20,10).toDouble()));
+      LineEditSCRF1->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
+      LineEditSCRF2->setText(QString::number(line.mid(20,10).stripWhiteSpace().toDouble()));
     }
     else if(key == "fiel")
     {
       CheckBoxFIEL->setChecked(true);
-      LineEditFIELx->setText(QString::number(line.mid(10,10).toDouble()));
-      LineEditFIELy->setText(QString::number(line.mid(20,10).toDouble()));
-      LineEditFIELz->setText(QString::number(line.mid(30,10).toDouble()));
+      LineEditFIELx->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
+      LineEditFIELy->setText(QString::number(line.mid(20,10).stripWhiteSpace().toDouble()));
+      LineEditFIELz->setText(QString::number(line.mid(30,10).stripWhiteSpace().toDouble()));
     }
     else if(key == "elmo")
       CheckBoxELMO->setChecked(true);
@@ -1609,7 +1609,7 @@ void BraboBase::readInputFile()
     {
       CheckBoxLOCA->setChecked(true);
       SpinBoxLOCA->setValue(line.mid(10,10).toUInt());
-      LineEditLOCA->setText(QString::number(line.mid(20,10).toDouble()));
+      LineEditLOCA->setText(QString::number(line.mid(20,10).stripWhiteSpace().toDouble()));
     }
     else if(key == "exit")
       CheckBoxEXIT->setChecked(true);
@@ -1619,8 +1619,8 @@ void BraboBase::readInputFile()
       SpinBoxITER->setValue(line.mid(10,10).toUInt());
     else if(key == "thre" && section == 3)
     {
-      double thre1 = line.mid(10,10).toDouble();
-      double thre2 = line.mid(20,10).toDouble();
+      double thre1 = line.mid(10,10).stripWhiteSpace().toDouble();
+      double thre2 = line.mid(20,10).stripWhiteSpace().toDouble();
       if(thre1 >= 1.0)
       {
         double threA = log10(floor(thre1) - thre1);
@@ -1638,7 +1638,7 @@ void BraboBase::readInputFile()
     }
     else if(key == "sthr")
     {
-      double thre = line.mid(10,10).toDouble();
+      double thre = line.mid(10,10).stripWhiteSpace().toDouble();
       if(thre >= 1.0)
       {
         double threA = log10(floor(thre) - thre);
@@ -1651,7 +1651,7 @@ void BraboBase::readInputFile()
       CheckBoxVTHR->setChecked(true);
     else if(key == "diis")
     {
-      double num = line.mid(10,10).toDouble();
+      double num = line.mid(10,10).stripWhiteSpace().toDouble();
       if(int(num) == -1)
         CheckBoxDIIS->setChecked(true);
       else
@@ -1662,11 +1662,11 @@ void BraboBase::readInputFile()
     else if(key == "goon" && section == 3)
       CheckBoxGoonSCF->setChecked(true);
     else if(key == "lvsh")
-      LineEditLVSH->setText(QString::number(line.mid(10,10).toDouble()));
+      LineEditLVSH->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
     else if(key == "dlvs")
     {
       CheckBoxDLVS->setChecked(true);
-      LineEditLVSH->setText(QString::number(line.mid(10,10).toDouble()));
+      LineEditLVSH->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
     }
     else if(key == "prwf")
       CheckBoxPRWF->setChecked(true);

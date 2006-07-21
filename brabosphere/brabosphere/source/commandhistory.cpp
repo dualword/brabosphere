@@ -83,7 +83,7 @@ void CommandHistory::addCommand(Command* command)
   {
     std::list<Command*>::iterator it = commandList.end();
     --it; // points to the active command
-    qDebug("current command to combine the new one with: %X / " + (*it)->description(), *it);
+    //qDebug("current command to combine the new one with: %X / " + (*it)->description(), *it);
     if((*it)->combine(command))
     {
       // the 2 Commands were succesfully combined

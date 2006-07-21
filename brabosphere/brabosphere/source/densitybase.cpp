@@ -213,7 +213,7 @@ void DensityBase::addSurface()
   ///// save the data
   SurfaceProperties newSurface;
   newSurface.visible = true;
-  newSurface.level = LineEditLevel->text().toDouble();
+  newSurface.level = LineEditLevel->text().stripWhiteSpace().toDouble();
   newSurface.colour = ColorButtonLevel->color().rgb();
   newSurface.opacity = SliderOpacity->value();
   newSurface.type = ComboBoxType->currentItem();
@@ -240,7 +240,7 @@ void DensityBase::addSurfacePair()
   item->setText(COLUMN_ID, QString::number(++idCounter));
   QColor blue(0, 0, 255);
   item->setText(COLUMN_RGB, QString::number(blue.rgb()));
-  if(0.05 > LabelMax->text().toDouble())
+  if(0.05 > LabelMax->text().stripWhiteSpace().toDouble())
     item->setText(COLUMN_LEVEL, LabelMax->text());
   else
     item->setText(COLUMN_LEVEL, "0.05");
@@ -253,7 +253,7 @@ void DensityBase::addSurfacePair()
   ///// save the data
   SurfaceProperties newSurface;
   newSurface.visible = true;
-  newSurface.level = LineEditLevel->text().toDouble();
+  newSurface.level = LineEditLevel->text().stripWhiteSpace().toDouble();
   newSurface.colour = blue.rgb();
   newSurface.opacity = SliderOpacity->value();
   newSurface.type = ComboBoxType->currentItem();
@@ -268,7 +268,7 @@ void DensityBase::addSurfacePair()
   item2->setText(COLUMN_ID, QString::number(++idCounter));
   QColor red(255, 0, 0);
   item2->setText(COLUMN_RGB, QString::number(red.rgb()));
-  if(-item->text(COLUMN_LEVEL).toDouble() < LabelMin->text().toDouble())
+  if(-item->text(COLUMN_LEVEL).stripWhiteSpace().toDouble() < LabelMin->text().stripWhiteSpace().toDouble())
     item2->setText(COLUMN_LEVEL, LabelMin->text());
   else
     item2->setText(COLUMN_LEVEL, "-" + item->text(COLUMN_LEVEL));
@@ -280,7 +280,7 @@ void DensityBase::addSurfacePair()
   ListViewParameters->blockSignals(false);
 
   ///// save the data
-  newSurface.level = LineEditLevel->text().toDouble();
+  newSurface.level = LineEditLevel->text().stripWhiteSpace().toDouble();
   newSurface.colour = red.rgb();
   newSurface.ID = idCounter;
   surfaceProperties.push_back(newSurface);
@@ -409,7 +409,7 @@ void DensityBase::updateSliderLevel()
 /// Updates SliderLevel with the contents of LineEditLevel.
 {
   bool convOK;
-  double level = LineEditLevel->text().toDouble(&convOK);
+  double level = LineEditLevel->text().stripWhiteSpace().toDouble(&convOK);
   if(!convOK)
     return;
   SliderLevel->blockSignals(true);
@@ -1153,8 +1153,8 @@ bool DensityBase::loadPLT(QFile* file)
         return false;
     }
   }
-  qDebug("format = %u (hex = %X)", pltFormat, pltFormat);
-  qDebug("header size in bytes: %d", file->at());
+  //qDebug("format = %u (hex = %X)", pltFormat, pltFormat);
+  //qDebug("header size in bytes: %d", file->at());
 
   // at this point pltFormat is set and both textStream and dataStream are
   // positioned after the first value.
@@ -1363,7 +1363,7 @@ void DensityBase::enableWidgets()
                                || ComboBoxVisualizationType->currentItem() != ISOSURFACES);
 
   ///// only enable the 'Add pair' widget if the density contains both positive and negative values
-  PushButtonAdd2->setEnabled(hasDensity && LabelMax->text().toDouble() > deltaLevel && LabelMin->text().toDouble() < -deltaLevel);
+  PushButtonAdd2->setEnabled(hasDensity && LabelMax->text().stripWhiteSpace().toDouble() > deltaLevel && LabelMin->text().stripWhiteSpace().toDouble() < -deltaLevel);
 
   ///// enable/disable widgets that are only available when surfaces are defined
   PushButtonDelete->setEnabled(hasDensity && ListViewParameters->childCount() != 0);
@@ -1430,7 +1430,7 @@ bool DensityBase::updateIsoSurfaces()
     {
       // this is a new surface so everything must be updated
       surfaceProperties[i].visible = dynamic_cast<QCheckListItem*>(it.current())->isOn();
-      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).toDouble();
+      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).stripWhiteSpace().toDouble();
       surfaceProperties[i].colour = it.current()->text(COLUMN_RGB).toUInt();
       surfaceProperties[i].opacity = it.current()->text(COLUMN_OPACITY).toUInt();
       surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
@@ -1450,7 +1450,7 @@ bool DensityBase::updateIsoSurfaces()
       bool typeChanged = false;
       if(dynamic_cast<QCheckListItem*>(it.current())->isOn() != surfaceProperties[i].visible)
         visibilityChanged = true;
-      if(fabs(it.current()->text(COLUMN_LEVEL).toDouble() - surfaceProperties[i].level) >= deltaLevel*deltaLevel)
+      if(fabs(it.current()->text(COLUMN_LEVEL).stripWhiteSpace().toDouble() - surfaceProperties[i].level) >= deltaLevel*deltaLevel)
         levelChanged = true;
       if(it.current()->text(COLUMN_RGB).toUInt() != surfaceProperties[i].colour)
         colorChanged = true;
@@ -1460,7 +1460,7 @@ bool DensityBase::updateIsoSurfaces()
         typeChanged = true;
       ///// update the data
       surfaceProperties[i].visible = dynamic_cast<QCheckListItem*>(it.current())->isOn();
-      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).toDouble();
+      surfaceProperties[i].level = it.current()->text(COLUMN_LEVEL).stripWhiteSpace().toDouble();
       surfaceProperties[i].colour = it.current()->text(COLUMN_RGB).toUInt();
       surfaceProperties[i].opacity = it.current()->text(COLUMN_OPACITY).toUInt();
       surfaceProperties[i].type = typeToNum(it.current()->text(COLUMN_TYPE));
@@ -1515,8 +1515,8 @@ bool DensityBase::updateSlice()
                  ColorButtonSliceNeg->color().rgb() != sliceProperties.negativeColor ||
                  ColorButtonSliceBack->color().rgb() != sliceProperties.backgroundColor ||
                  CheckBoxSliceTransparent->isChecked() != sliceProperties.transparent ||
-                 ComboBoxSliceMap->currentItem() != sliceProperties.map ||
-                 SliderSlice->value() != sliceProperties.index;
+                 ComboBoxSliceMap->currentItem() != static_cast<int>(sliceProperties.map) ||
+                 SliderSlice->value() != static_cast<int>(sliceProperties.index);
 
   // notify that the slice needs to be updated
   if(changed)

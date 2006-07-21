@@ -84,7 +84,7 @@ GLMoleculeView::GLMoleculeView(AtomSet* atomset, QWidget* parent, const char* na
   densityDialog(NULL),
   newAtomDialog(NULL),
   numVolumeObjects(0),
-  sliceObject(-1)
+  sliceObject(static_cast<GLuint>(-1)) // maybe 0 is OK is it normally can't be zero as a few objects are always assigned (atomObject etc)
 /// The default constructor.
 {
   densityGrid = new DensityGrid();
@@ -99,7 +99,7 @@ GLMoleculeView::~GLMoleculeView()
     glDeleteLists(glSurfaces[i], 1);
   if(numVolumeObjects > 0)
     glDeleteLists(volumeObjects, numVolumeObjects);
-  if(sliceObject != -1)
+  if(sliceObject != static_cast<GLuint>(-1))
     glDeleteLists(sliceObject, 1);
   delete densityGrid;
 }
@@ -165,13 +165,13 @@ bool GLMoleculeView::alterCartesian()
       // absolute changes for one atom
       unsigned int atom = *selectionList.begin();
       bool ok;
-      double newx = coords->LineEditX->text().toDouble(&ok);
+      double newx = coords->LineEditX->text().stripWhiteSpace().toDouble(&ok);
       if(ok)
         atoms->setX(atom, newx);
-      double newy = coords->LineEditY->text().toDouble(&ok);
+      double newy = coords->LineEditY->text().stripWhiteSpace().toDouble(&ok);
       if(ok)
         atoms->setY(atom, newy);
-      double newz = coords->LineEditZ->text().toDouble(&ok);
+      double newz = coords->LineEditZ->text().stripWhiteSpace().toDouble(&ok);
       if(ok)
         atoms->setZ(atom, newz);
     }
@@ -179,13 +179,13 @@ bool GLMoleculeView::alterCartesian()
     {
       // relative changes for one or more atoms
       bool ok;
-      double deltax = coords->LineEditX->text().toDouble(&ok);
+      double deltax = coords->LineEditX->text().stripWhiteSpace().toDouble(&ok);
       if(!ok)
         deltax = 0.0;
-      double deltay = coords->LineEditY->text().toDouble(&ok);
+      double deltay = coords->LineEditY->text().stripWhiteSpace().toDouble(&ok);
       if(!ok)
         deltay = 0.0;
-      double deltaz = coords->LineEditZ->text().toDouble(&ok);
+      double deltaz = coords->LineEditZ->text().stripWhiteSpace().toDouble(&ok);
       if(!ok)
         deltaz = 0.0;
       std::list<unsigned int>::iterator it = selectionList.begin();
@@ -308,6 +308,102 @@ bool GLMoleculeView::deleteSelectedAtoms()
   setModified();
   emit atomsetChanged();
   return true;
+}
+
+///// vertexCount /////////////////////////////////////////////////////////////
+unsigned int GLMoleculeView::vertexCount()
+/// Returns the number of vertices in the scene. This is a value representing
+/// the geometrical complexity of the scene.
+{
+  unsigned int result = 0;
+  
+  ///// the atoms
+  if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+    result = atoms->count() * moleculeParameters.quality*2 * moleculeParameters.quality*2;
+  if(displayStyle(Molecule) == Cartoon || displayStyle(Molecule) == BlackAndWhite)
+    result *= 2; // due to the outline 
+  result *= 4; // spheres are made from quads (assuming non-shared vertices of course)
+  
+  ///// the bonds
+  vector<unsigned int>* firstAtom;
+  vector<unsigned int>* secondAtom;
+  atoms->bonds(firstAtom, secondAtom); // assigns both pointers
+  unsigned int numBonds = firstAtom->size(); // single 1-color bonds
+  // add double color bonds
+  vector<unsigned int>::iterator it2 = secondAtom->begin();
+  for(vector<unsigned int>::iterator it1 = firstAtom->begin(); it1 != firstAtom->end(); ++it1, ++it2)
+  {
+    if(atoms->color(*it1) != atoms->color(*it2))
+      ++numBonds;
+  }
+  if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+  {
+    result += 4 * numBonds * moleculeParameters.quality*2;
+    if(displayStyle(Molecule) == Cartoon || displayStyle(Molecule) == BlackAndWhite)
+      result += 4 * numBonds * moleculeParameters.quality*2; // due to the outline 
+  }
+  else if(displayStyle(Molecule) != None) // (Smooth)Lines
+    result += 2 * numBonds;
+  
+  ///// selections
+  if(selectionList.size() > 0)
+  {
+    if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+      result += 4 * selectionList.size() * moleculeParameters.quality*2 * moleculeParameters.quality*2;
+    else
+      result += selectionList.size();
+    if(selectionList.size() <= SELECTION_TORSION)
+    {
+      if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+        result += 4 * (selectionList.size()-1) * moleculeParameters.quality*2;
+      else
+        result += 2 * (selectionList.size()-1);
+    }    
+  }
+
+  ///// text (each character is a textured quad)
+  unsigned int numChars = 0;
+  if(isShowingElements())
+    numChars += atoms->count(); // some are 2 chars but lets ignore that
+  if(isShowingNumbers())
+  {
+    numChars += atoms->count(); // some are 2 chars but lets ignore that
+    if(atoms->count() > 10)
+      numChars += (atoms->count() - 9);
+    if(atoms->count() > 100)
+      numChars += (atoms->count() - 99);
+    if(atoms->count() > 1000)
+      numChars += (atoms->count() - 999);
+    if(atoms->count() > 10000)
+      numChars += (atoms->count() - 9999);
+  }  
+  if(isShowingCharges(AtomSet::Stockholder) || isShowingCharges(AtomSet::Mulliken))
+    numChars += atoms->count() * 9;
+  result += numChars * 4;
+    
+  ///// surfaces/volumes/slices
+  if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::ISOSURFACES)
+  {
+    for(unsigned int i = 0; i < densityGrid->numSurfaces(); i++)
+    {
+      if(densityDialog->surfaceVisible(i))
+        result += densityGrid->numVertices(i);
+    }
+  }
+  ///// volumetric rendering
+  else if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::VOLUME)
+  {
+    result += 4 * densityGrid->getNumPoints().z();
+  }
+  ///// slices
+  else if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::SLICE)
+  {
+    result += 4;
+    if(densityDialog->CheckBoxSliceTransparent->isChecked())
+      result += 4;
+  } 
+
+  return result;
 }
 
 ///// toggleSelectionMode /////////////////////////////////////////////////////
@@ -896,8 +992,8 @@ void GLMoleculeView::updateVolume()
   // visualization settings from DensityBase
   QColor positiveColor = densityDialog->ColorButtonVolumePos->color();
   QColor negativeColor = densityDialog->ColorButtonVolumeNeg->color();
-  double maxPlotValue = densityDialog->LineEditVolumePos->text().toDouble();
-  double minPlotValue = densityDialog->LineEditVolumeNeg->text().toDouble();
+  double maxPlotValue = densityDialog->LineEditVolumePos->text().stripWhiteSpace().toDouble();
+  double minPlotValue = densityDialog->LineEditVolumeNeg->text().stripWhiteSpace().toDouble();
 
   // rest
   QImage image, glImage;
@@ -1108,8 +1204,8 @@ void GLMoleculeView::updateVolume()
   // visluaization settings from DensityBase
   QColor positiveColor = densityDialog->ColorButtonVolumePos->color();
   QColor negativeColor = densityDialog->ColorButtonVolumeNeg->color();
-  double maxPlotValue = densityDialog->LineEditVolumePos->text().toDouble();
-  double minPlotValue = densityDialog->LineEditVolumeNeg->text().toDouble();
+  double maxPlotValue = densityDialog->LineEditVolumePos->text().stripWhiteSpace().toDouble();
+  double minPlotValue = densityDialog->LineEditVolumeNeg->text().stripWhiteSpace().toDouble();
 
   // rest
   QColor backgroundColor(qRgba(255, 255, 255, 0)); // fully transparant
@@ -1389,8 +1485,8 @@ void GLMoleculeView::updateSlice()
   // visualization settings from DensityBase
   QColor positiveColor = densityDialog->ColorButtonSlicePos->color();
   QColor negativeColor = densityDialog->ColorButtonSliceNeg->color();
-  double maxPlotValue = densityDialog->LineEditSlicePos->text().toDouble();
-  double minPlotValue = densityDialog->LineEditSliceNeg->text().toDouble();
+  double maxPlotValue = densityDialog->LineEditSlicePos->text().stripWhiteSpace().toDouble();
+  double minPlotValue = densityDialog->LineEditSliceNeg->text().stripWhiteSpace().toDouble();
   unsigned int colorMap = densityDialog->ComboBoxSliceMap->currentItem();
   if(densityDialog->PushButtonSingleColor->isOn())
     colorMap = DensityGrid::MAP_LAST; // no mapping
@@ -1399,7 +1495,7 @@ void GLMoleculeView::updateSlice()
 
   qglColor(densityDialog->ColorButtonSliceBack->color());
 
-  if(sliceObject == -1)
+  if(sliceObject == static_cast<GLuint>(-1))
     sliceObject = glGenLists(1); // can't create it in the constructor
 
   const unsigned int index = densityDialog->SliderSlice->value();

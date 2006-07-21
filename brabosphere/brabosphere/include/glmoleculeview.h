@@ -51,6 +51,7 @@ class GLMoleculeView : public GLSimpleMoleculeView
     bool alterCartesian();              // alters the cartesian coordinates of the selected atoms
     bool alterInternal();               // alters the internal coordinates formed by the selected atoms
     bool deleteSelectedAtoms();         // deletes the selected atoms
+    unsigned int vertexCount();         // returns the number of vertices in the scene
     
     ///// public structs
     struct GLTextureParameters

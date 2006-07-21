@@ -161,14 +161,14 @@ void RelaxBase::scaleFactors(vector<unsigned int>& steps, vector<double>& factor
   if(data.useOneScaleFactor)
   {
     steps.push_back(0);
-    factors.push_back(data.sfacValue1.toDouble());
+    factors.push_back(data.sfacValue1.stripWhiteSpace().toDouble());
   }
   else
   {
     steps.reserve(data.listNumSteps.size());
     steps.assign(data.listNumSteps.begin(), data.listNumSteps.end());
     for(QStringList::iterator it = data.listValues.begin(); it != data.listValues.end(); it++)
-      factors.push_back((*it).toDouble());
+      factors.push_back((*it).stripWhiteSpace().toDouble());
   }
 
   qDebug("RelaxBase::scaleFactors:");
@@ -1063,15 +1063,15 @@ void RelaxBase::readInputFile()
     else if(key == "reft")
     {
       if(!line.mid(10,10).stripWhiteSpace().isEmpty())
-        LineEditREFT1->setText(QString::number(line.mid(10,10).toDouble()));
+        LineEditREFT1->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
       if(!line.mid(20,10).stripWhiteSpace().isEmpty())
-        LineEditREFT1->setText(QString::number(line.mid(20,10).toDouble()));
+        LineEditREFT1->setText(QString::number(line.mid(20,10).stripWhiteSpace().toDouble()));
       if(!line.mid(30,10).stripWhiteSpace().isEmpty())
-        LineEditREFT1->setText(QString::number(line.mid(30,10).toDouble()));
+        LineEditREFT1->setText(QString::number(line.mid(30,10).stripWhiteSpace().toDouble()));
       if(!line.mid(40,10).stripWhiteSpace().isEmpty())
-        LineEditREFT1->setText(QString::number(line.mid(40,10).toDouble()));
+        LineEditREFT1->setText(QString::number(line.mid(40,10).stripWhiteSpace().toDouble()));
       if(!line.mid(50,10).stripWhiteSpace().isEmpty())
-        LineEditREFT1->setText(QString::number(line.mid(50,10).toDouble()));
+        LineEditREFT1->setText(QString::number(line.mid(50,10).stripWhiteSpace().toDouble()));
     }
     else if(key == "iter")
       SpinBoxITER->setValue(line.mid(10,10).toUInt());
@@ -1079,7 +1079,7 @@ void RelaxBase::readInputFile()
     {
       if(!line.mid(10,10).stripWhiteSpace().isEmpty())
       {
-        double thre = line.mid(10,10).toDouble();
+        double thre = line.mid(10,10).stripWhiteSpace().toDouble();
         double threA = log10(floor(thre) - thre);
         int threB = static_cast<int>(thre); // maybe use floor? 
         LineEditTHRE1->setText(QString::number(threA));
@@ -1087,7 +1087,7 @@ void RelaxBase::readInputFile()
       }
       if(!line.mid(20,10).stripWhiteSpace().isEmpty())
       {
-        double thre = line.mid(20,10).toDouble();
+        double thre = line.mid(20,10).stripWhiteSpace().toDouble();
         double threA = log10(floor(thre) - thre);
         int threB = static_cast<int>(thre); 
         LineEditTHRE3->setText(QString::number(threA));
@@ -1109,7 +1109,7 @@ void RelaxBase::readInputFile()
     else if(key == "avma")
       RadioButtonMASS3->setChecked(true);
     else if(key == "fret")
-      LineEditFRET->setText(QString::number(line.mid(10,10).toDouble()));
+      LineEditFRET->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
     else if(key == "orda")
       CheckBoxORDA->setChecked(true);
     else if(key == "goon")
@@ -1120,14 +1120,14 @@ void RelaxBase::readInputFile()
     {
       CheckBoxUPDT->setChecked(true);
       ComboBoxUPDT->setCurrentItem(line.mid(10,10).toUInt() - 1);
-      LineEditUPDT->setText(QString::number(line.mid(20,10).toDouble()));
+      LineEditUPDT->setText(QString::number(line.mid(20,10).stripWhiteSpace().toDouble()));
     }
     else if(key == "shrt")
     {
       CheckBoxSHRT->setChecked(true);
-      LineEditSHRT1->setText(QString::number(line.mid(10,10).toDouble()));
-      LineEditSHRT2->setText(QString::number(line.mid(20,10).toDouble()));
-      LineEditSHRT3->setText(QString::number(line.mid(30,10).toDouble()));
+      LineEditSHRT1->setText(QString::number(line.mid(10,10).stripWhiteSpace().toDouble()));
+      LineEditSHRT2->setText(QString::number(line.mid(20,10).stripWhiteSpace().toDouble()));
+      LineEditSHRT3->setText(QString::number(line.mid(30,10).stripWhiteSpace().toDouble()));
     }
     else
     {
@@ -2713,7 +2713,7 @@ QStringList RelaxBase::generateAFFHeader()
   while(item != 0)
   {
     if(!item->text(5).isEmpty())
-      result += inputLine("toro", item->text(0).toInt(), item->text(5).toDouble());
+      result += inputLine("toro", item->text(0).toInt(), item->text(5).stripWhiteSpace().toDouble());
     item = item->nextSibling();
   }  
   
@@ -2733,21 +2733,21 @@ QStringList RelaxBase::generateAFFHeader()
   {
     result += inputLine("trot", ComboBoxTROT->currentItem() + 1);
     result += "xtfk";
-    QString temp1 =  QString::number(LineEditXTFK1->text().toDouble());
+    QString temp1 =  QString::number(LineEditXTFK1->text().stripWhiteSpace().toDouble());
     temp1.truncate(13);
-    QString temp2 = QString::number(LineEditXTFK2->text().toDouble());
+    QString temp2 = QString::number(LineEditXTFK2->text().stripWhiteSpace().toDouble());
     temp2.truncate(13);
     temp1 += " " + temp2;
-    temp2 = QString::number(LineEditXTFK3->text().toDouble());
+    temp2 = QString::number(LineEditXTFK3->text().stripWhiteSpace().toDouble());
     temp2.truncate(13);
     temp1 += " " + temp2;
-    temp2 = QString::number(LineEditXTFK4->text().toDouble());
+    temp2 = QString::number(LineEditXTFK4->text().stripWhiteSpace().toDouble());
     temp2.truncate(13);
     temp1 += " " + temp2;
-    temp2 = QString::number(LineEditXTFK5->text().toDouble());
+    temp2 = QString::number(LineEditXTFK5->text().stripWhiteSpace().toDouble());
     temp2.truncate(13);
     temp1 += " " + temp2;
-    temp2 = QString::number(LineEditXTFK6->text().toDouble());
+    temp2 = QString::number(LineEditXTFK6->text().stripWhiteSpace().toDouble());
     temp2.truncate(13);
     temp1 += " " + temp2;
     result += temp1;
@@ -2761,11 +2761,11 @@ QStringList RelaxBase::generateAFFHeader()
       
   ///// Advanced - Thresholds /////
   ///// REFT
-  double reft1 = LineEditREFT1->text().toDouble();
-  double reft2 = LineEditREFT2->text().toDouble();
-  double reft3 = LineEditREFT3->text().toDouble();
-  double reft4 = LineEditREFT4->text().toDouble();
-  double reft5 = LineEditREFT5->text().toDouble();
+  double reft1 = LineEditREFT1->text().stripWhiteSpace().toDouble();
+  double reft2 = LineEditREFT2->text().stripWhiteSpace().toDouble();
+  double reft3 = LineEditREFT3->text().stripWhiteSpace().toDouble();
+  double reft4 = LineEditREFT4->text().stripWhiteSpace().toDouble();
+  double reft5 = LineEditREFT5->text().stripWhiteSpace().toDouble();
   if((reft1 != 0.0009) || (reft2 != 0.0009) || (reft3 != 0.0009) || (reft4 != 0.0009) || (reft5 != 0.0009))
   {
     if((reft1 == reft2) && (reft2 == reft3) && (reft3 == reft4) && (reft4 == reft5))
@@ -2786,8 +2786,8 @@ QStringList RelaxBase::generateAFFHeader()
   if(SpinBoxITER->value() != 0)
     result += inputLine("iter", SpinBoxITER->value());
   ///// THRE
-  double thre1 = - log10(LineEditTHRE1->text().toDouble()*pow(10.0, - LineEditTHRE2->text().toDouble()));
-  double thre2 = - log10(LineEditTHRE3->text().toDouble()*pow(10.0, - LineEditTHRE4->text().toDouble())); 
+  double thre1 = - log10(LineEditTHRE1->text().stripWhiteSpace().toDouble()*pow(10.0, - LineEditTHRE2->text().stripWhiteSpace().toDouble()));
+  double thre2 = - log10(LineEditTHRE3->text().stripWhiteSpace().toDouble()*pow(10.0, - LineEditTHRE4->text().stripWhiteSpace().toDouble())); 
   if((fabs(thre1 - 9.3019) > 0.00001) || (fabs(thre2 - 7.0) > 0.00001))
     result += inputLine("thre", thre1, thre2);
 
@@ -2811,7 +2811,7 @@ QStringList RelaxBase::generateAFFHeader()
   }
   ///// FRET
   if(CheckBoxFRET->isChecked())
-    result += inputLine("fret", LineEditFRET->text().toDouble());
+    result += inputLine("fret", LineEditFRET->text().stripWhiteSpace().toDouble());
   ///// ORDA
   if(CheckBoxORDA->isChecked())
     result += "orda";
@@ -2825,14 +2825,14 @@ QStringList RelaxBase::generateAFFHeader()
     result += "long";
   ///// UPDT
   if(CheckBoxUPDT->isChecked())
-    result += inputLine("updt", ComboBoxUPDT->currentItem() + 1, LineEditUPDT->text().toDouble());
+    result += inputLine("updt", ComboBoxUPDT->currentItem() + 1, LineEditUPDT->text().stripWhiteSpace().toDouble());
   ///// SHRT
   if(CheckBoxSHRT->isChecked())
   {
     QString c, d;
-    c.setNum(LineEditSHRT2->text().toDouble(),'f',10).truncate(10);
-    d.setNum(LineEditSHRT3->text().toDouble(),'f',10).truncate(10);
-    result += inputLine("shrt", SpinBoxSHRT->value(), LineEditSHRT1->text().toDouble()) + c + d;
+    c.setNum(LineEditSHRT2->text().stripWhiteSpace().toDouble(),'f',10).truncate(10);
+    d.setNum(LineEditSHRT3->text().stripWhiteSpace().toDouble(),'f',10).truncate(10);
+    result += inputLine("shrt", SpinBoxSHRT->value(), LineEditSHRT1->text().stripWhiteSpace().toDouble()) + c + d;
   }  
 
   ///// Extra /////
@@ -2864,7 +2864,7 @@ QStringList RelaxBase::generateAFFHeader()
           break;
         }
       }
-      fc = it.current()->text(2).toDouble();
+      fc = it.current()->text(2).stripWhiteSpace().toDouble();
       if(it.current()->pixmap(4) != 0)
         fc = -fc; // if maximizing the internal coordinate, the force constant should be negative
       QString fcString; fcString.setNum(fc,'f',7).truncate(7);
@@ -2878,7 +2878,7 @@ QStringList RelaxBase::generateAFFHeader()
 
     ///// construct the rest
     ///// weight
-    QString weightString; weightString.setNum(it.current()->text(6).toDouble(), 'f', 9).truncate(9);
+    QString weightString; weightString.setNum(it.current()->text(6).stripWhiteSpace().toDouble(), 'f', 9).truncate(9);
     line += weightString + " ";    
     ///// type
     switch(icType)
@@ -3271,7 +3271,7 @@ void RelaxBase::fillICListFromAFF(const QStringList aff)
     else if(key == "toro")
     {
       toro.push_back((*it).mid(10,10).toUInt()); 
-      toroValues.push_back((*it).mid(20,10).toDouble()); 
+      toroValues.push_back((*it).mid(20,10).stripWhiteSpace().toDouble()); 
     }
     it++;
   }
@@ -3300,7 +3300,7 @@ void RelaxBase::fillICListFromAFF(const QStringList aff)
       QStringList values = QStringList::split(" ",*itFMAT);
       for(QStringList::Iterator itValues = values.begin(); itValues != values.end(); itValues++)
       {
-        double fc = (*itValues).toDouble(&ok);
+        double fc = (*itValues).stripWhiteSpace().toDouble(&ok);
         if(!ok)
           break;
         fmat.push_back(fc);
@@ -3333,12 +3333,12 @@ void RelaxBase::fillICListFromAFF(const QStringList aff)
     if(line.mid(10,10).stripWhiteSpace().isEmpty())
       weight = "1.0";
     else
-      weight = QString::number(line.mid(10,10).toDouble());
+      weight = QString::number(line.mid(10,10).stripWhiteSpace().toDouble());
     // atom numbers
-    unsigned int atom1 = static_cast<unsigned int>(line.mid(30,10).toDouble());
-    unsigned int atom2 = static_cast<unsigned int>(line.mid(40,10).toDouble());
-    unsigned int atom3 = static_cast<unsigned int>(line.mid(50,10).toDouble());
-    int atom4 = static_cast<int>(line.mid(60,10).toDouble());
+    unsigned int atom1 = static_cast<unsigned int>(line.mid(30,10).stripWhiteSpace().toDouble());
+    unsigned int atom2 = static_cast<unsigned int>(line.mid(40,10).stripWhiteSpace().toDouble());
+    unsigned int atom3 = static_cast<unsigned int>(line.mid(50,10).stripWhiteSpace().toDouble());
+    int atom4 = static_cast<int>(line.mid(60,10).stripWhiteSpace().toDouble());
     if(atom1 > numAtoms || atom2 > numAtoms || atom3 > numAtoms || (atom4 > 0 && static_cast<unsigned int>(atom4) > numAtoms))
     {
       it++;
@@ -3379,7 +3379,7 @@ void RelaxBase::fillICListFromAFF(const QStringList aff)
       QListViewItem* newItem = ListViewIC->selectedItem();
       newItem->setText(1, type);
       if(cnvrtaff)
-        newItem->setText(2, QString::number(line.mid(2,7).toDouble())); // force constant from AFF
+        newItem->setText(2, QString::number(line.mid(2,7).stripWhiteSpace().toDouble())); // force constant from AFF
       else
         newItem->setText(2, QString::number(fmat[numICs-1]));
       newItem->setText(6, weight);
