@@ -57,8 +57,8 @@
 
 ///// constructor /////////////////////////////////////////////////////////////
 GLSimpleMoleculeView::GLSimpleMoleculeView(AtomSet* atomset, QWidget* parent, const char* name ) : GLView(parent, name),
-  chargeType(AtomSet::None),
   atoms(atomset),
+  chargeType(AtomSet::None),
   scaleFactor(1.0f)
 /// The default constructor.
 {
@@ -892,7 +892,7 @@ void GLSimpleMoleculeView::drawBonds()
 /// if bonds don't need to be selected individually, all bonds can be stored
 /// together in an OpenGL display list.
 {
-  //qDebug("calling drawBonds");
+  qDebug("calling drawBonds with style %d", moleculeStyle);
   if(moleculeStyle == None || moleculeStyle == VanDerWaals || moleculeStyle > BlackAndWhite)
     return;
 
@@ -901,7 +901,7 @@ void GLSimpleMoleculeView::drawBonds()
   vector<unsigned int>* secondAtom;
   atoms->bonds(firstAtom, secondAtom); // assigns both pointers
 
-  if(moleculeStyle == Lines)
+  if(moleculeStyle == Lines || moleculeStyle == SmoothLines)
   {
     glLineWidth(moleculeParameters.sizeLines);
     glDisable(GL_LIGHTING);
@@ -917,7 +917,7 @@ void GLSimpleMoleculeView::drawBonds()
           glVertex3d(atoms->x(atom1), atoms->y(atom1), atoms->z(atom1));
           glVertex3d(atoms->x(atom2), atoms->y(atom2), atoms->z(atom2));
         }
-        else
+        else if(moleculeStyle == Lines)
         {
           ///// 2 half-bonds
           const double midX = (atoms->x(atom1) + atoms->x(atom2))/2.0;
@@ -929,6 +929,14 @@ void GLSimpleMoleculeView::drawBonds()
 
           qglColor(atoms->color(atom2));
           glVertex3d(midX, midY, midZ);
+          glVertex3d(atoms->x(atom2), atoms->y(atom2), atoms->z(atom2));
+        }
+        else // SmoothLines
+        {
+          qglColor(atoms->color(atom1));
+          glVertex3d(atoms->x(atom1), atoms->y(atom1), atoms->z(atom1));
+
+          qglColor(atoms->color(atom2));
           glVertex3d(atoms->x(atom2), atoms->y(atom2), atoms->z(atom2));
         }
       }

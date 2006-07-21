@@ -102,7 +102,6 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
 
   ///// Initialize the atoms
   atoms = new AtomSet();
-  qDebug("XbraboView constructor: atoms = %X, currentAomSet() = %X", atoms, currentAtomSet());
 
   ///// Construct widget layout
   BigLayout = new QVBoxLayout(this,10);
@@ -303,7 +302,6 @@ GLMoleculeView* XbraboView::moleculeView() const
 AtomSet* XbraboView::currentAtomSet() const
 /// Returns a pointer to the currently active AtomSet. 
 {
-  qDebug("XbraboView::currentAtomSet: returning %X, this = %X", atoms, this);
   return atoms;
 }
 
@@ -681,7 +679,10 @@ void XbraboView::moleculeSaveCoordinates()
 void XbraboView::moleculeFPS()
 /// Calculates the Frames-Per-Second for the current parameters.
 {
-  TextEditStatus->append(tr("Frames per second: ") + QString::number(MoleculeView->calculateFPS()));
+  TextEditStatus->append(tr("Frames per second: ") + QString::number(MoleculeView->calculateFPS()) 
+                         + " (" + tr("for a total of ") + QString::number(MoleculeView->vertexCount()) 
+                         + tr(" vertices and a window size of ") + QString::number(MoleculeView->width()) + " x " 
+                                                                 + QString::number(MoleculeView->height()) + ")");
 }
 
 ///// setupGlobalCommand //////////////////////////////////////////////////////

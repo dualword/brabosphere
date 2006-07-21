@@ -44,7 +44,7 @@ Version::Version()
 ///////////////////////////////////////////////////////////////////////////////
 const QString Version::appName = "Brabosphere";                        // The name of the application
 const QString Version::appCompany = "University of Antwerp";           // The company
-const QString Version::appVersion = "1.0.0";                           // The version of the application
+const QString Version::appVersion = "1.1.0";                           // The version of the application
 const QString Version::appBuild = QString::number(                     // The build number of the application read from an automatically 
   #include "buildnumber.h"                                             // updated file. The value depends on whether Brabosphere or
 );                                                                     // CrdView is being built as it is pulled from the local include dir.

@@ -220,7 +220,7 @@ GLMoleculeView::GLTextureParameters PreferencesBase::getGLTextureParameters() co
 /// properties using textures in GLMoleculeView.
 {
   GLMoleculeView::GLTextureParameters result;
-  result.maximumSize = pow(2,data.sliceQuality);
+  result.maximumSize = static_cast<int>(pow(2.0,static_cast<double>(data.sliceQuality)));
   return result;
 }
 

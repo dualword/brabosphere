@@ -885,7 +885,7 @@ void Calculation::readStdOutBrabo()
     {
       bool oki, oke;
       unsigned int iteration = line.left(4).toUInt(&oki);
-      double energy = line.mid(4,16).toDouble(&oke);
+      double energy = line.mid(4,16).stripWhiteSpace().toDouble(&oke);
       if(oki && oke)
         emit newIteration(iteration, energy);
       if(oki && oke && startVectorFile.isEmpty())
@@ -1733,7 +1733,7 @@ std::vector<double> Calculation::loadFromPunch(const QString code, const unsigne
   {
     line = stream.readLine(); // contains fieldsPerLine values
     for(unsigned int j = 0; j < 8; j++)
-      result.push_back(line.mid(j*fieldSize,fieldSize).toDouble());
+      result.push_back(line.mid(j*fieldSize,fieldSize).stripWhiteSpace().toDouble());
 
     if(stream.atEnd())
     {
@@ -1744,7 +1744,7 @@ std::vector<double> Calculation::loadFromPunch(const QString code, const unsigne
   ///// last incomplete line
   line = stream.readLine(); 
   for(unsigned int j = 0; j < numValues % fieldsPerLine; j++)
-    result.push_back(line.mid(j*fieldSize,fieldSize).toDouble());
+    result.push_back(line.mid(j*fieldSize,fieldSize).stripWhiteSpace().toDouble());
 
   assert(result.size() == numValues);
   return result;

@@ -697,10 +697,13 @@ unsigned int CrdFactory::readBraboFile(AtomSet* atoms, const QString filename)
   double toAngstrom = 1.0;
   if(bonds1->empty() && atoms->count() > 1)
   {
+    qDebug("This BRABO coordinate file seems to be in atomic units. Converting...");
+    qDebug("Coordinate were read as:");
     // rescale all coordinates
     toAngstrom = AUTOANG;
     for(unsigned int i = 0; i < atoms->count(); i++)
     {
+      qDebug("(%f, %f, %f) atomnum = %d", atoms->x(i), atoms->y(i), atoms->z(i), atoms->atomicNumber(i));
       atoms->setX(i,atoms->x(i) * toAngstrom);
       atoms->setY(i,atoms->y(i) * toAngstrom);
       atoms->setZ(i,atoms->z(i) * toAngstrom);
@@ -720,7 +723,7 @@ unsigned int CrdFactory::readBraboFile(AtomSet* atoms, const QString filename)
         break;
       else if(line.left(1).lower() == "n" && line.mid(1,1) == "=")
       {
-        atomNum = line.mid(10,10).toDouble();
+        atomNum = line.mid(10,10).stripWhiteSpace().toDouble();
         if(atomNum < 1.0)
           atomicNumber = 0;
         else
@@ -733,15 +736,15 @@ unsigned int CrdFactory::readBraboFile(AtomSet* atoms, const QString filename)
         }
         if(format == NormalFormat)
         {
-          x = line.mid(20,10).toDouble() * toAngstrom;
-          y = line.mid(30,10).toDouble() * toAngstrom;
-          z = line.mid(40,10).toDouble() * toAngstrom;
+          x = line.mid(20,10).stripWhiteSpace().toDouble() * toAngstrom;
+          y = line.mid(30,10).stripWhiteSpace().toDouble() * toAngstrom;
+          z = line.mid(40,10).stripWhiteSpace().toDouble() * toAngstrom;
         }
         else
         {
-          x = line.mid(20,20).toDouble() * toAngstrom;
-          y = line.mid(40,20).toDouble() * toAngstrom;
-          z = line.mid(60,20).toDouble() * toAngstrom;
+          x = line.mid(20,20).stripWhiteSpace().toDouble() * toAngstrom;
+          y = line.mid(40,20).stripWhiteSpace().toDouble() * toAngstrom;
+          z = line.mid(60,20).stripWhiteSpace().toDouble() * toAngstrom;
         }
         atoms->addAtom(x, y, z, atomicNumber);
       }
@@ -844,7 +847,7 @@ void CrdFactory::readCrdAtoms(AtomSet* atoms, QStringList &lines, const bool ext
   {
     line = *it;
     ///// read the atomic number and set it to zero if not a positive integer
-    atomNum = line.mid(10,10).toDouble();
+    atomNum = line.mid(10,10).stripWhiteSpace().toDouble();
     if(atomNum < 1.0)
      atomicNumber = 0;
     else
@@ -858,15 +861,15 @@ void CrdFactory::readCrdAtoms(AtomSet* atoms, QStringList &lines, const bool ext
     //atomicNumber = static_cast<unsigned int>(line.mid(10,10).toDouble());
     if(!extendedFormat)
     {
-      x = line.mid(20,10).toDouble();
-      y = line.mid(30,10).toDouble();
-      z = line.mid(40,10).toDouble();
+      x = line.mid(20,10).stripWhiteSpace().toDouble();
+      y = line.mid(30,10).stripWhiteSpace().toDouble();
+      z = line.mid(40,10).stripWhiteSpace().toDouble();
     }
     else
     {
-      x = line.mid(20,20).toDouble();
-      y = line.mid(40,20).toDouble();
-      z = line.mid(60,20).toDouble();
+      x = line.mid(20,20).stripWhiteSpace().toDouble();
+      y = line.mid(40,20).stripWhiteSpace().toDouble();
+      z = line.mid(60,20).stripWhiteSpace().toDouble();
     }
     atoms->addAtom(x, y, z, atomicNumber);
   }
@@ -886,15 +889,15 @@ void CrdFactory::readPunchForces(AtomSet* atoms, QStringList &lines, const bool 
     line = *it;
     if(!extendedFormat)
     {
-      dx = line.mid(0,10).toDouble();
-      dy = line.mid(10,10).toDouble();
-      dz = line.mid(20,10).toDouble();
+      dx = line.mid(0,10).stripWhiteSpace().toDouble();
+      dy = line.mid(10,10).stripWhiteSpace().toDouble();
+      dz = line.mid(20,10).stripWhiteSpace().toDouble();
     }
     else
     {
-      dx = line.mid(0,20).toDouble();
-      dy = line.mid(20,20).toDouble();
-      dz = line.mid(40,20).toDouble();
+      dx = line.mid(0,20).stripWhiteSpace().toDouble();
+      dy = line.mid(20,20).stripWhiteSpace().toDouble();
+      dz = line.mid(40,20).stripWhiteSpace().toDouble();
     }
     atoms->setForces(index++, dx, dy, dz);
   }

@@ -136,8 +136,8 @@ bool PlotMapBase::loadMapFile(const QString filename, const bool noerrors)
   stream.readLine(); // ignore the first line
   QString line = stream.readLine();
   numPoints.setValues(line.mid(0, 5).toUInt(), line.mid(75, 5).toUInt(), 0);
-  origin.setValues(line.mid(5,10).toDouble() * AUTOANG, line.mid(65,10).toDouble() * AUTOANG, 0.0);
-  delta.setValues(line.mid(15,10).toDouble() * AUTOANG, line.mid(55,10).toDouble() * AUTOANG, 0.0);
+  origin.setValues(line.mid(5,10).stripWhiteSpace().toDouble() * AUTOANG, line.mid(65,10).stripWhiteSpace().toDouble() * AUTOANG, 0.0);
+  delta.setValues(line.mid(15,10).stripWhiteSpace().toDouble() * AUTOANG, line.mid(55,10).stripWhiteSpace().toDouble() * AUTOANG, 0.0);
   QProgressDialog progress(tr("Loading the data..."), tr("Cancel"), numPoints.y() + numPoints.y()/20, this, 0, true);
   if(isVisible())
     progress.setCancelButton(0); // no cancelling when rereading
@@ -185,7 +185,7 @@ bool PlotMapBase::loadMapFile(const QString filename, const bool noerrors)
   for(unsigned int i = 0; i < numAtoms; i ++)
   {
     line = stream.readLine();
-    atom.setValues(line.left(10).toDouble() * AUTOANG, line.mid(10,10).toDouble() * AUTOANG, line.mid(20,10).toDouble() * AUTOANG);
+    atom.setValues(line.left(10).stripWhiteSpace().toDouble() * AUTOANG, line.mid(10,10).stripWhiteSpace().toDouble() * AUTOANG, line.mid(20,10).stripWhiteSpace().toDouble() * AUTOANG);
     coords.push_back(atom);
   }
   
@@ -603,11 +603,11 @@ void PlotMapBase::updatePixmap()
   QPixmap showPixmap(numPoints.x(), numPoints.y());
   QPainter painter(&showPixmap);
 
-  const double maxPlotValue = fabs(options->LineEditMaxPos->text().toDouble());
+  const double maxPlotValue = fabs(options->LineEditMaxPos->text().stripWhiteSpace().toDouble());
   const QColor positiveColor = options->ColorButtonPos->color();
   const bool useLevelsPos = options->SpinBoxPos->value() != 255;
   const int numLevelsPos = options->SpinBoxPos->value();  
-  const double minPlotValue = - fabs(options->LineEditMaxNeg->text().toDouble());
+  const double minPlotValue = - fabs(options->LineEditMaxNeg->text().stripWhiteSpace().toDouble());
   const QColor negativeColor = options->ColorButtonNeg->color();
   const bool useLevelsNeg = options->SpinBoxNeg->value() != 255;
   const int numLevelsNeg = options->SpinBoxNeg->value();    
@@ -651,7 +651,7 @@ void PlotMapBase::updatePixmap()
 void PlotMapBase::updateCrosses()
 /// Updates which atoms are displayed as crosses.
 {
-  const double showAtomsLimit = options->LineEditAtoms->text().toDouble();
+  const double showAtomsLimit = options->LineEditAtoms->text().stripWhiteSpace().toDouble();
       
   vector<Point3D<double> > showCoords;
   showCoords.reserve(numAtoms);
@@ -680,10 +680,10 @@ void PlotMapBase::updateIsoLines()
 /// and one set used for polygons (one curve for each isolevel).
 /// Points are ordered so the lines can be drawn with drawPolyLine or drawPolygon.
 {
-  const double maxPlotValue = fabs(options->LineEditMaxPos->text().toDouble());
+  const double maxPlotValue = fabs(options->LineEditMaxPos->text().stripWhiteSpace().toDouble());
   const QColor positiveColor = options->ColorButtonPos->color();
   const int numLevelsPos = options->SpinBoxPos->value();  
-  const double minPlotValue = - fabs(options->LineEditMaxNeg->text().toDouble());
+  const double minPlotValue = - fabs(options->LineEditMaxNeg->text().stripWhiteSpace().toDouble());
   const QColor negativeColor = options->ColorButtonNeg->color();
   const int numLevelsNeg = options->SpinBoxNeg->value();    
   const QColor backgroundColor = options->ColorButtonZero->color();
