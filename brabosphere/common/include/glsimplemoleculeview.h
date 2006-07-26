@@ -110,7 +110,7 @@ class GLSimpleMoleculeView : public GLView
     enum SelectionType{SELECTION_NONE, SELECTION_ATOM, SELECTION_BOND, SELECTION_ANGLE, SELECTION_TORSION, SELECTION_GROUP,
                        SELECTION_BONDS, SELECTION_FORCES}; ///< Selection indices for OpenGL selection.
 
-    enum ShapeTypes{SHAPE_ATOMS, SHAPE_BONDS, SHAPE_FORCES, SHAPE_LABELS, SHAPE_IC, SHAPE_SELECTION, SHAPE_NEXT};     ///< The different shapes that can be drawn by this class. Always keep SHAPE_NEXT as the last entry.
+    enum ShapeTypes{SHAPE_MOLECULE, SHAPE_LABELS, SHAPE_IC, SHAPE_SELECTION, SHAPE_NEXT};     ///< The different shapes that can be drawn by this class. Always keep SHAPE_NEXT as the last entry.
 
     ///// protected member functions
     virtual void keyPressEvent(QKeyEvent* e);     // handles key presses
@@ -160,15 +160,18 @@ class GLSimpleMoleculeView : public GLView
     void changeObjects(const GLuint startList, const int numSlices);  // changes the atom and bond shapes
     void selectEntity(const QPoint position);     // selects the entity at the position
     void centerMolecule();              // calculates the translations needed to have the molecule centered
+    void updateMolecule();              // updates the display list for rendering atoms, bonds and forces
     void drawScene();                   // does the actual repainting of the OpenGL scene
-    void drawAtoms();                   // draws the atoms in the OpenGL scene
-    void drawBonds();                   // draws the bonds
+    void drawMolecule();                // draws the atoms, bonds and forces in the OpenGL scene
+    void drawAtoms(const unsigned int style, const bool useColors = true);      // does the actual drawing of the atoms
+    void drawBonds(const unsigned int style, const bool useColors = true);      // does the actual drawing of the bonds
+    void drawForces(const unsigned int style, const bool useColors = true);     // does the actual drawing of the forces
     void drawLabels();                  // draws the element names&numbers and possibly charges
-    void drawForces();                  // draws the forces
     void drawICValue();                 // draws the value of the currently selected internal coordinate
     void drawSelections();              // draws the selected atoms and internal coordinates
 
     ///// private member data
+    int moleculeObject;                 ///< The OpenGL molecule shape object pointer
     int atomObject;                     ///< The OpenGL atom shape object pointer.
     int bondObject;                     ///< The OpenGL bond shape object pointer.
     int forceObjectLines;               ///< The OpenGL force shape object pointer for lines style.

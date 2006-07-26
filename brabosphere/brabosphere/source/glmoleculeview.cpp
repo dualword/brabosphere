@@ -99,8 +99,8 @@ GLMoleculeView::~GLMoleculeView()
     glDeleteLists(glSurfaces[i], 1);
   if(numVolumeObjects > 0)
     glDeleteLists(volumeObjects, numVolumeObjects);
-  if(sliceObject != static_cast<GLuint>(-1))
-    glDeleteLists(sliceObject, 1);
+  if(sliceObject != static_cast<GLuint>(-1)) // FIXME: this causes a crash on close
+    glDeleteLists(sliceObject, 1);           // well, actually this line
   delete densityGrid;
 }
 
@@ -314,15 +314,23 @@ bool GLMoleculeView::deleteSelectedAtoms()
 unsigned int GLMoleculeView::vertexCount()
 /// Returns the number of vertices in the scene. This is a value representing
 /// the geometrical complexity of the scene.
+/// TODO: forces
 {
   unsigned int result = 0;
-  
+  unsigned int localMoleculeStyle = displayStyle(Molecule);
+  if(localMoleculeStyle > SmoothLines && atoms->count() > moleculeParameters.fastRenderLimit)
+    localMoleculeStyle = Lines;
+
+  qDebug("result1 = %d", result);
   ///// the atoms
-  if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+  if(localMoleculeStyle > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
     result = atoms->count() * moleculeParameters.quality*2 * moleculeParameters.quality*2;
-  if(displayStyle(Molecule) == Cartoon || displayStyle(Molecule) == BlackAndWhite)
+  qDebug("result2 = %d", result);
+  if(localMoleculeStyle == Cartoon || displayStyle(Molecule) == BlackAndWhite)
     result *= 2; // due to the outline 
+  qDebug("result3 = %d", result);
   result *= 4; // spheres are made from quads (assuming non-shared vertices of course)
+  qDebug("result4 = %d", result);
   
   ///// the bonds
   vector<unsigned int>* firstAtom;
@@ -330,36 +338,42 @@ unsigned int GLMoleculeView::vertexCount()
   atoms->bonds(firstAtom, secondAtom); // assigns both pointers
   unsigned int numBonds = firstAtom->size(); // single 1-color bonds
   // add double color bonds
-  vector<unsigned int>::iterator it2 = secondAtom->begin();
-  for(vector<unsigned int>::iterator it1 = firstAtom->begin(); it1 != firstAtom->end(); ++it1, ++it2)
+  if(localMoleculeStyle == Lines)
   {
-    if(atoms->color(*it1) != atoms->color(*it2))
-      ++numBonds;
-  }
-  if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+    vector<unsigned int>::iterator it2 = secondAtom->begin();
+    for(vector<unsigned int>::iterator it1 = firstAtom->begin(); it1 != firstAtom->end(); ++it1, ++it2)
+    {
+      if(atoms->color(*it1) != atoms->color(*it2))
+        ++numBonds;
+    }
+  }  
+  qDebug("numBonds = %d", numBonds);  
+  if(localMoleculeStyle > SmoothLines && displayStyle(Molecule) != VanDerWaals) // Tubes, BallAndStick, Cartoon or BlackAndWhite
   {
     result += 4 * numBonds * moleculeParameters.quality*2;
-    if(displayStyle(Molecule) == Cartoon || displayStyle(Molecule) == BlackAndWhite)
+    if(localMoleculeStyle == Cartoon || localMoleculeStyle == BlackAndWhite)
       result += 4 * numBonds * moleculeParameters.quality*2; // due to the outline 
   }
-  else if(displayStyle(Molecule) != None) // (Smooth)Lines
+  else if(localMoleculeStyle == Lines || localMoleculeStyle == SmoothLines) // (Smooth)Lines
     result += 2 * numBonds;
+  qDebug("result5 = %d", result);
   
   ///// selections
   if(selectionList.size() > 0)
   {
-    if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+    if(localMoleculeStyle > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
       result += 4 * selectionList.size() * moleculeParameters.quality*2 * moleculeParameters.quality*2;
     else
       result += selectionList.size();
     if(selectionList.size() <= SELECTION_TORSION)
     {
-      if(displayStyle(Molecule) > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
+      if(localMoleculeStyle > SmoothLines) // Tubes, BallAndStick, VanderWaals, Cartoon or BlackAndWhite
         result += 4 * (selectionList.size()-1) * moleculeParameters.quality*2;
       else
         result += 2 * (selectionList.size()-1);
     }    
   }
+  qDebug("result6 = %d", result);
 
   ///// text (each character is a textured quad)
   unsigned int numChars = 0;
@@ -379,7 +393,9 @@ unsigned int GLMoleculeView::vertexCount()
   }  
   if(isShowingCharges(AtomSet::Stockholder) || isShowingCharges(AtomSet::Mulliken))
     numChars += atoms->count() * 9;
+  qDebug("numChars = %d", numChars);  
   result += numChars * 4;
+  qDebug("result7 = %d", result);
     
   ///// surfaces/volumes/slices
   if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::ISOSURFACES)
@@ -402,6 +418,7 @@ unsigned int GLMoleculeView::vertexCount()
     if(densityDialog->CheckBoxSliceTransparent->isChecked())
       result += 4;
   } 
+  qDebug("result8 = %d", result);
 
   return result;
 }
