@@ -308,8 +308,8 @@
                                                     </sizepolicy>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Determines the type of SCF to be used: a MIA assisted SCF, direct-SCF, or conventional SCF.
-&lt;/p&gt;
+                                                    <string>&lt;p&gt;Determines the type of SCF to be used: a MIA assisted SCF, direct-SCF, or conventional SCF.
+&lt;/p&gt;
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MIA&lt;/b&gt;, &lt;b&gt;DRCT&lt;/b&gt;, &lt;b&gt;TWOE&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -344,8 +344,8 @@
                                                     </sizepolicy>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Determines which method will be used: Restricted or Unrestricted Hartree Fock. In case of single point energy evaluations, the Restricted MP2 method is also available.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Determines which method will be used: Restricted or Unrestricted Hartree Fock. In case of single point energy evaluations, the Restricted MP2 method is also available.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;SCF&lt;/b&gt;, &lt;b&gt;UHF&lt;/b&gt;, &lt;b&gt;MP2E&lt;/b&gt;, &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -368,8 +368,8 @@
                                                     <number>-9</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Sets the molecular charge.
-&lt;/p&gt;
+                                                    <string>&lt;p&gt;Sets the molecular charge.
+&lt;/p&gt;
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;CHAR&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -429,8 +429,8 @@
                                                     <string>Use the startvector</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Enables the use of the starting vector file given to the right. This file will be used for single point energy evaluations, energy &amp; force evaluations and the first step of geometry optimizations.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Enables the use of the starting vector file given to the right. This file will be used for single point energy evaluations, energy &amp; force evaluations and the first step of geometry optimizations.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;STAR&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -448,8 +448,8 @@
                                                     <bool>false</bool>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Allows the specification of an existing starting vector to be used for the calculation.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Allows the specification of an existing starting vector to be used for the calculation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;F99=&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -464,8 +464,8 @@
                                                     <bool>true</bool>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Allows the specification of an existing starting vector to be used for the calculation.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Allows the specification of an existing starting vector to be used for the calculation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;F99=&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -482,8 +482,8 @@
                                             <bool>true</bool>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;If the calculation already ran at least once succesfully, a starting vector file is already present. When this box is checked, a preference will be given to the existing file over the file given above (alsowhen no starting vector is to be used.&lt;/p&gt;    
-    
+                                            <string>&lt;p&gt;If the calculation already ran at least once succesfully, a starting vector file is already present. When this box is checked, a preference will be given to the existing file over the file given above (alsowhen no starting vector is to be used.&lt;/p&gt;    
+    
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;STAR&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -525,8 +525,8 @@
                                                     <bool>true</bool>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies the use of one basis set for all atoms.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies the use of one basis set for all atoms.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;GBAS&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -588,8 +588,8 @@
                                             <string>Use multiple basis sets</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Specifies the use of different basis sets for different atom types.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Specifies the use of different basis sets for different atom types.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;ABAS&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -935,8 +935,8 @@
                                                     <number>0</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies a full-MP2 calculation. This option is only available if the MP2 method is chosen.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies a full-MP2 calculation. This option is only available if the MP2 method is chosen.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MP2E&lt;/b&gt;, &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -951,8 +951,8 @@
                                                     <number>1</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies a frozen-core MP2 calculation. This option is only available if the MP2 method is chosen.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies a frozen-core MP2 calculation. This option is only available if the MP2 method is chosen.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MP2E&lt;/b&gt;, &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -972,8 +972,8 @@
                                                             <string>Exclude</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Allows the specification of the window for MP2 calculations. &lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Allows the specification of the window for MP2 calculations. &lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MP2E&lt;/b&gt;, &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -988,8 +988,8 @@
                                                             <number>1</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the number of lowest occupied orbitals to freeze during a MP2 calculation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the number of lowest occupied orbitals to freeze during a MP2 calculation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MP2E&lt;/b&gt;, &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1012,8 +1012,8 @@
                                                             <number>999</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the number of highest virtual orbitals to freeze during an MP2 calculation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the number of highest virtual orbitals to freeze during an MP2 calculation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MP2E&lt;/b&gt;, &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1054,8 +1054,8 @@
                                             <string>Calculate the MP2 density matrix</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Determines whether the MP2 density matrix is calculated.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Determines whether the MP2 density matrix is calculated.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;MP2D&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -1080,8 +1080,8 @@
                                             <string>Impose a homogeneous electric field with field strengths of</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Imposes a homogeneous electric field upon the molecule.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Imposes a homogeneous electric field upon the molecule.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;FIEL&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -1174,8 +1174,8 @@
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the strength of the electric field in the X-direction in atomic units.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the strength of the electric field in the X-direction in atomic units.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;FIEL&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1190,8 +1190,8 @@
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the strength of the electric field in the Y-direction in atomic units.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the strength of the electric field in the Y-direction in atomic units.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;FIEL&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1206,8 +1206,8 @@
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the strength of the electric field in the Z-direction in atomic units.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the strength of the electric field in the Z-direction in atomic units.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;FIEL&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1245,8 +1245,8 @@
                                             <string>Perform a Self Consistent Reaction Field calculation</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Allows a Self Consistent Reaction Field to be carried out. This option is only available for the RHF and MP2 methods in combination with a conventional SCF.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Allows a Self Consistent Reaction Field to be carried out. This option is only available for the RHF and MP2 methods in combination with a conventional SCF.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SCRF&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -1317,8 +1317,8 @@
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the dielectric constant for a Self Consistent Reaction Field calculation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the dielectric constant for a Self Consistent Reaction Field calculation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SCRF&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1333,8 +1333,8 @@
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the cavity radius for a Self Consistent Reaction Field calculation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the cavity radius for a Self Consistent Reaction Field calculation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SCRF&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1410,8 +1410,8 @@
                                             <string>Use symmetry</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the use of symmetry.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the use of symmetry.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -1462,8 +1462,8 @@
                                                             <bool>true</bool>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Automatically determines the symmetry of the molecule.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Automatically determines the symmetry of the molecule.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1478,8 +1478,8 @@
                                                             <string>Use the following symmetry operations</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Allows the manual specification of the symmetry operations. When generating an input file, all extra operations will be added automatically.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Allows the manual specification of the symmetry operations. When generating an input file, all extra operations will be added automatically.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -1530,8 +1530,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;A mirror symmetry operation in the YZ-plane.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;A mirror symmetry operation in the YZ-plane.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1546,8 +1546,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;A mirror symmetry operation in the XZ-plane.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;A mirror symmetry operation in the XZ-plane.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1562,8 +1562,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;An inversion symmetry operation.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;An inversion symmetry operation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1578,8 +1578,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;A mirror symmetry operation in the XY-plane.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;A mirror symmetry operation in the XY-plane.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1594,8 +1594,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;A 2-fold axis symmetry operation along the X-axis&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;A 2-fold axis symmetry operation along the X-axis&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1610,8 +1610,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;A 2-fold axis symmetry operation along the Y-axis&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;A 2-fold axis symmetry operation along the Y-axis&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1626,8 +1626,8 @@
                                                                             <string></string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;A 2-fold axis symmetry operation along the Z-axis&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;A 2-fold axis symmetry operation along the Z-axis&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SYMM&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -1721,8 +1721,8 @@
                                                     <number>10</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Determines the initial value for the interpolation factor of the Fock-matrix.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Determines the initial value for the interpolation factor of the Fock-matrix.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword:  &lt;b&gt;IPOL&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1736,8 +1736,8 @@
                                             <string>Treat point charges as real atoms with basis functions</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Normally point charges (atoms with a fractional nuclear charge) are not assigned basis functions. Enable this box the override this behaviour.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Normally point charges (atoms with a fractional nuclear charge) are not assigned basis functions. Enable this box the override this behaviour.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;SKPC&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -1776,8 +1776,8 @@
                                                     <string>Print the internal geometry</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Prints the internal geometry (bonds, angles, torsions and out-of-plane angles).&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Prints the internal geometry (bonds, angles, torsions and out-of-plane angles).&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;GEOP&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1789,8 +1789,8 @@
                                                     <string>Print the converged wavefunction</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Prints the converged wave function.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Prints the converged wave function.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRWF&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1802,8 +1802,8 @@
                                                     <string>Print the converged density matrix</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Prints the coefficients of the converged density matrix.&lt;/p&gt;
-&lt;p&gt;
+                                                    <string>&lt;p&gt;Prints the coefficients of the converged density matrix.&lt;/p&gt;
+&lt;p&gt;
 Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1834,8 +1834,8 @@ Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <string>Minimize use of disk space</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Stores as little as possible on disk. One-electron integrals are computed on-the-fly like the two-electron integrals.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Stores as little as possible on disk. One-electron integrals are computed on-the-fly like the two-electron integrals.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;DS=T&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1847,8 +1847,8 @@ Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <string>Direct file access</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Files are opened in Fortran's DIRECT mode instead of the default SEQUENTIAL mode. This option does not work on all architectures.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Files are opened in Fortran's DIRECT mode instead of the default SEQUENTIAL mode. This option does not work on all architectures.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;AC=D&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1860,8 +1860,8 @@ Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <string>Save the binary data file</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies that the binary file (the .11 file) is to be saved. This option is always on when stockholder charges are being calculated. The location where this file will be written depends on the program's settings (menu-&gt;Edit-&gt;Preferences).&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies that the binary file (the .11 file) is to be saved. This option is always on when stockholder charges are being calculated. The location where this file will be written depends on the program's settings (menu-&gt;Edit-&gt;Preferences).&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;F11=&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1911,8 +1911,8 @@ Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <string>Only calculate forces on the first</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Limits the calculation of the forces to a subset of the molecule. This option is always used for cluster-type calculations.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Limits the calculation of the forces to a subset of the molecule. This option is always used for cluster-type calculations.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;FATO&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1921,8 +1921,8 @@ Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <cstring>SpinBoxFATO</cstring>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies the number of atoms that should have their forces determined. This option is fixed to the number of atoms of the central molecule for cluster-type calculations.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies the number of atoms that should have their forces determined. This option is fixed to the number of atoms of the central molecule for cluster-type calculations.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;FATO&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -1952,8 +1952,8 @@ Corresponding BRABO keyword: &lt;b&gt;PRDM&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Use MIA to calculate forces</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the MIA method for the calculation of the forces. Is only available for MIA-assisted non-single point energy calculations.&lt;/p&gt;
-&lt;p&gt;
+                                            <string>&lt;p&gt;Enables the MIA method for the calculation of the forces. Is only available for MIA-assisted non-single point energy calculations.&lt;/p&gt;
+&lt;p&gt;
 Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2014,8 +2014,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Calculate Mulliken charges</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the calculation of Mulliken charges at the end of the SCF.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the calculation of Mulliken charges at the end of the SCF.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;MULL&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2075,8 +2075,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>Don't calculate atom-atom overlap populations</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;When Mulliken charges are calculated, this option disables the determination of atom-atom overlap populations.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;When Mulliken charges are calculated, this option disables the determination of atom-atom overlap populations.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keywords: &lt;b&gt;MULL&lt;/b&gt;, &lt;b&gt;MUL1&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -2091,8 +2091,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>Calculate the charges at each SCF iteration</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;In addition to the calculation at the end of the SCF, this option specifies the calculation of the Mulliken charges at each iteration of the SCF.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;In addition to the calculation at the end of the SCF, this option specifies the calculation of the Mulliken charges at each iteration of the SCF.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;MUL1&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -2199,8 +2199,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                     <number>1</number>
                                                                 </property>
                                                                 <property name="whatsThis" stdset="0">
-                                                                    <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the density of the HOMO orbital.&lt;/p&gt;
-
+                                                                    <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the density of the HOMO orbital.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;HOMD&lt;/b&gt;. &lt;/p&gt;</string>
                                                                 </property>
                                                             </widget>
@@ -2215,8 +2215,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                     <number>2</number>
                                                                 </property>
                                                                 <property name="whatsThis" stdset="0">
-                                                                    <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the density of the LUMO orbital.&lt;/p&gt;
-
+                                                                    <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the density of the LUMO orbital.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;LUMD&lt;/b&gt;. &lt;/p&gt;</string>
                                                                 </property>
                                                             </widget>
@@ -2236,8 +2236,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                             <string>Transition density for orbitals</string>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the transition density between two orbitals.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the transition density between two orbitals.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;TRDE&lt;/b&gt;. &lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -2255,8 +2255,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                             <number>1</number>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;Specifies the first orbital for the calculation of stockholder charges from a transition density.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;Specifies the first orbital for the calculation of stockholder charges from a transition density.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;TRDE&lt;/b&gt;. &lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -2290,8 +2290,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                             <number>1</number>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;Specifies the second orbital for the calculation of stockholder charges from a transition density.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;Specifies the second orbital for the calculation of stockholder charges from a transition density.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;TRDE&lt;/b&gt;. &lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -2328,8 +2328,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                     <number>4</number>
                                                                 </property>
                                                                 <property name="whatsThis" stdset="0">
-                                                                    <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the electronic spin density. This option is only available for UHF calculations.&lt;/p&gt;
-
+                                                                    <string>&lt;p&gt;Specifies that the stockholder charges are to be calculated from the electronic spin density. This option is only available for UHF calculations.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;UHF&lt;/b&gt;. &lt;/p&gt;</string>
                                                                 </property>
                                                             </widget>
@@ -2364,8 +2364,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                             <cstring>ComboBoxStockMOLD</cstring>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;Specifies the reference density used to calculate stockholder charges.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;Specifies the reference density used to calculate stockholder charges.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;MOLD&lt;/b&gt;. &lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -2412,8 +2412,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                     <string>Calculate atomic multipoles</string>
                                                                 </property>
                                                                 <property name="whatsThis" stdset="0">
-                                                                    <string>&lt;p&gt;Enables the calculation of higher atomic multipoles using the stockholder method.&lt;/p&gt;
-
+                                                                    <string>&lt;p&gt;Enables the calculation of higher atomic multipoles using the stockholder method.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;ELMO&lt;/b&gt;. &lt;/p&gt;</string>
                                                                 </property>
                                                             </widget>
@@ -2425,8 +2425,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                     <string>Partition the energy</string>
                                                                 </property>
                                                                 <property name="whatsThis" stdset="0">
-                                                                    <string>&lt;p&gt;Enables energy partitioning using the stockholder method.&lt;/p&gt;
-
+                                                                    <string>&lt;p&gt;Enables energy partitioning using the stockholder method.&lt;/p&gt;
+
 &lt;p&gt;Corresponding STOCK keyword: &lt;b&gt;EPAR&lt;/b&gt;. &lt;/p&gt;</string>
                                                                 </property>
                                                             </widget>
@@ -2493,8 +2493,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Calculate the Boys localized canonical molecular orbitals</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the calculation of Boys localized molecular orbitals.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the calculation of Boys localized molecular orbitals.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;LOCA&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2556,8 +2556,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the neglect of coefficients during the Boys localization.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the neglect of coefficients during the Boys localization.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;LOCA&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -2597,8 +2597,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                     <number>0</number>
                                                                 </property>
                                                                 <property name="whatsThis" stdset="0">
-                                                                    <string>&lt;p&gt;Specifies the maximum number of iterations to use for the Boys localization procedure.&lt;/p&gt;
-
+                                                                    <string>&lt;p&gt;Specifies the maximum number of iterations to use for the Boys localization procedure.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;LOCA&lt;/b&gt;. &lt;/p&gt;</string>
                                                                 </property>
                                                             </widget>
@@ -2677,8 +2677,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <bool>true</bool>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Enables the calculation of extra integrals for a given set of atoms. Atoms are specified by their index, separated by comma's. Ranges can be specified too using hyphens. Example: 1-5, 7, 10.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Enables the calculation of extra integrals for a given set of atoms. Atoms are specified by their index, separated by comma's. Ranges can be specified too using hyphens. Example: 1-5, 7, 10.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;NUCL&lt;/b&gt;. &lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -2692,8 +2692,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Calculate the electric quadrupole and octopole moments</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the calculation of the electric quadrupole and octopole moments.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the calculation of the electric quadrupole and octopole moments.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;ELMO&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2705,8 +2705,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Calculate singlet and triplet exitation energies</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the calculation of singlet and triplet excitation energies.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the calculation of singlet and triplet excitation energies.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;EXIT&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2718,8 +2718,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Calculate NMR coupling constants</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the calculation of NMR coupling constants.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the calculation of NMR coupling constants.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;JAB&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2813,8 +2813,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <number>-1</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies the maximum number of SCF iterations.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies the maximum number of SCF iterations.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;ITER&lt;/b&gt;. &lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -2845,8 +2845,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Diagonalize the Fock matrix using the Jacobi procedure</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the use of the Jacobi procedure for the diagonalization of the Fock-matrix.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the use of the Jacobi procedure for the diagonalization of the Fock-matrix.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;JACO&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2877,8 +2877,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Disable DIIS</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Disables the use of the DIIS method for accelerating the convergence of the SCF method.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Disables the use of the DIIS method for accelerating the convergence of the SCF method.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;DIIS&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -2928,8 +2928,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <number>-1</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the maximum number of previous iterations to use for the DIIS extrapolation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the maximum number of previous iterations to use for the DIIS extrapolation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;DIIS&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -2971,8 +2971,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <number>10</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies the threshold at which the SCF procedure switches from linear interpolation to the DIIS method.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies the threshold at which the SCF procedure switches from linear interpolation to the DIIS method.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;DIIS&lt;/b&gt;. &lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3046,8 +3046,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <number>10</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Allows the energy shifting of the virtual orbitals by a fixed amount.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Allows the energy shifting of the virtual orbitals by a fixed amount.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;LVHS&lt;/b&gt;. &lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3086,8 +3086,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <string>Dynamically adjust the energy level shift</string>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Enables the dynamical adjustment of energy level shifting.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Enables the dynamical adjustment of energy level shifting.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;DLVS&lt;/b&gt;. &lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3183,8 +3183,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <number>10</number>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the neglect of small integrals.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the neglect of small integrals.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;THRE&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3193,7 +3193,7 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <cstring>TextLabel2_2_3</cstring>
                                                         </property>
                                                         <property name="text">
-                                                            <string>x 10&lt;font size="+1"&gt;&lt;sup&gt; -&lt;/sup&gt;&lt;/font&gt;</string>
+                                                            <string>&lt;p&gt;x&amp;nbsp;10&lt;font size="+1"&gt;&lt;sup&gt;&amp;nbsp;-&lt;/sup&gt;&lt;/font&gt;&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
                                                     <widget class="QLineEdit">
@@ -3204,8 +3204,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>8.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the neglect of small integrals.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the neglect of small integrals.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;THRE&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3249,8 +3249,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>1.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the smallest value of the overlap matrix.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the smallest value of the overlap matrix.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;STHR&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3259,7 +3259,7 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <cstring>TextLabel2_2_2_2_2_2</cstring>
                                                         </property>
                                                         <property name="text">
-                                                            <string>x 10&lt;font size="+1"&gt;&lt;sup&gt; -&lt;/sup&gt;&lt;/font&gt;</string>
+                                                            <string>&lt;p&gt;x&amp;nbsp;10&lt;font size="+1"&gt;&lt;sup&gt;&amp;nbsp;-&lt;/sup&gt;&lt;/font&gt;&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
                                                     <widget class="QLineEdit">
@@ -3270,8 +3270,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>4.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the smallest value of the overlap matrix.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the smallest value of the overlap matrix.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;STHR&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3299,8 +3299,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>3.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the convergence of the SCF density matrix.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the convergence of the SCF density matrix.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;THRE&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3309,7 +3309,7 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <cstring>TextLabel2_2_2_2_3</cstring>
                                                         </property>
                                                         <property name="text">
-                                                            <string>x 10&lt;font size="+1"&gt;&lt;sup&gt; -&lt;/sup&gt;&lt;/font&gt;</string>
+                                                            <string>&lt;p&gt;x&amp;nbsp;10&lt;font size="+1"&gt;&lt;sup&gt;&amp;nbsp;-&lt;/sup&gt;&lt;/font&gt;&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
                                                     <widget class="QLineEdit">
@@ -3320,8 +3320,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>6.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the convergence of the SCF density matrix.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the convergence of the SCF density matrix.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;THRE&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3349,8 +3349,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>1.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the MIA approximation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the MIA approximation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;THRE&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3359,7 +3359,7 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <cstring>LabelThreMIA2</cstring>
                                                         </property>
                                                         <property name="text">
-                                                            <string>x 10&lt;font size="+1"&gt;&lt;sup&gt; -&lt;/sup&gt;&lt;/font&gt;</string>
+                                                            <string>&lt;p&gt;x&amp;nbsp;10&lt;font size="+1"&gt;&lt;sup&gt;&amp;nbsp;-&lt;/sup&gt;&lt;/font&gt;&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
                                                     <widget class="QLineEdit">
@@ -3370,8 +3370,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>8.0</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies the threshold for the MIA approximation.&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies the threshold for the MIA approximation.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;THRE&lt;/b&gt;. &lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -3409,8 +3409,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <bool>false</bool>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the use of variable thresholds for the MIA procedure.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the use of variable thresholds for the MIA procedure.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;VTHR&lt;/b&gt;. &lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -3478,8 +3478,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                     <string>use PVM</string>
                                 </property>
                                 <property name="whatsThis" stdset="0">
-                                    <string>&lt;p&gt;Enables the use of PVM allowing to perform the calculation in parallel.&lt;/p&gt;
-
+                                    <string>&lt;p&gt;Enables the use of PVM allowing to perform the calculation in parallel.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PVM&lt;/b&gt;. &lt;/p&gt;</string>
                                 </property>
                             </widget>
@@ -3533,8 +3533,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <cstring>ListBoxNOTH1</cstring>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Shows a list of execution hosts that should not be assigned jobs.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Shows a list of execution hosts that should not be assigned jobs.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword:&lt;b&gt; NOTH&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3720,8 +3720,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <number>0</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies the number of tasks to be submitted to each host.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies the number of tasks to be submitted to each host.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;NTAS&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3742,8 +3742,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <number>0</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>Specifies the number of shells to be calculated in one batch by a host.
-
+                                                    <string>Specifies the number of shells to be calculated in one batch by a host.
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;NCST&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3840,8 +3840,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                     <number>-1</number>
                                                 </property>
                                                 <property name="whatsThis" stdset="0">
-                                                    <string>&lt;p&gt;Specifies the nice value for each execution host. The default value is 19.&lt;/p&gt;
-
+                                                    <string>&lt;p&gt;Specifies the nice value for each execution host. The default value is 19.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;NICE&lt;/b&gt;.&lt;/p&gt;</string>
                                                 </property>
                                             </widget>
@@ -3875,8 +3875,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Do not submit slaves on the master</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Disables submitting execution jobs on the host acting as the master.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Disables submitting execution jobs on the host acting as the master.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;NOSE&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -3891,8 +3891,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Send data in packed form</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Specifies the PVM messages should be sent in packed form as to minimize network traffic.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Specifies the PVM messages should be sent in packed form as to minimize network traffic.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PACK&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -3936,8 +3936,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Print debug messages from the PVM section</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the printing of debug messages for the PVM section.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the printing of debug messages for the PVM section.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -3952,8 +3952,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Print debug messages from the FORC section</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the printing of debug messages for the FORC section.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the printing of debug messages for the FORC section.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -3984,8 +3984,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Do not stop on errors in the INTE section</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Disables the error checks in the INTE section.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Disables the error checks in the INTE section.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;GOON&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -3997,8 +3997,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Overrride SCF convergence checks</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Disables the error checks in the SCF section.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Disables the error checks in the SCF section.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;GOON&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -4029,8 +4029,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Print all integrals</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the printing of all precalculated integrals.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the printing of all precalculated integrals.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -4042,8 +4042,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <string>Print detailed information about the basisfunctions</string>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>&lt;p&gt;Enables the printing of detailed information of the assignment of the basis functions.&lt;/p&gt;
-
+                                            <string>&lt;p&gt;Enables the printing of detailed information of the assignment of the basis functions.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;LONG&lt;/b&gt;.&lt;/p&gt;</string>
                                         </property>
                                     </widget>
@@ -4096,10 +4096,10 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>the molecular orbitals and the SDF-FDS matrices</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the following quantities should be printed:&lt;br&gt;
-- the molecular orbitals&lt;br&gt;
-- the SDF-FDS matrices&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the following quantities should be printed:&lt;br&gt;
+- the molecular orbitals&lt;br&gt;
+- the SDF-FDS matrices&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -4111,12 +4111,12 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>+ the density and energy weighted density matrices</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the following quantities should be printed:&lt;br&gt;
-- the molecular orbitals&lt;br&gt;
-- the SDF-FDS matrices&lt;br&gt;
-- the density matrix&lt;br&gt;
-- the C*eps*C matrices&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the following quantities should be printed:&lt;br&gt;
+- the molecular orbitals&lt;br&gt;
+- the SDF-FDS matrices&lt;br&gt;
+- the density matrix&lt;br&gt;
+- the C*eps*C matrices&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -4128,14 +4128,14 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                             <string>+ the Fock, final Fock and level shift matrices</string>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the following quantities should be printed:&lt;br&gt;
-- the molecular orbitals&lt;br&gt;
-- the SDF-FDS matrices&lt;br&gt;
-- the density matrix&lt;br&gt;
-- the C*eps*C matrices&lt;br&gt;
-- the Fock matrix (including the final one)&lt;br&gt;
-- the level shifting matrices&lt;/p&gt;
-
+                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the following quantities should be printed:&lt;br&gt;
+- the molecular orbitals&lt;br&gt;
+- the SDF-FDS matrices&lt;br&gt;
+- the density matrix&lt;br&gt;
+- the C*eps*C matrices&lt;br&gt;
+- the Fock matrix (including the final one)&lt;br&gt;
+- the level shifting matrices&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                                         </property>
                                                     </widget>
@@ -4175,8 +4175,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                                                             <bool>false</bool>
                                                                         </property>
                                                                         <property name="whatsThis" stdset="0">
-                                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the coefficients of a number of virtual orbitals should be printed.&lt;/p&gt;
-
+                                                                            <string>&lt;p&gt;Specifies that at each SCF iteration the coefficients of a number of virtual orbitals should be printed.&lt;/p&gt;
+
 &lt;p&gt;Corresponding BRABO keyword: &lt;b&gt;PRIN&lt;/b&gt;.&lt;/p&gt;</string>
                                                                         </property>
                                                                     </widget>
@@ -4316,8 +4316,8 @@ Corresponding BRABO keyword: &lt;b&gt;MIA&lt;/b&gt;.&lt;/p&gt;</string>
                                             <number>8</number>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>In this table extra keywords can be specified for the main section of the BRABO input file.
-Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
+                                            <string>In this table extra keywords can be specified for the main section of the BRABO input file.
+Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
 This input is not checked in any way for errors.</string>
                                         </property>
                                     </widget>
@@ -4485,8 +4485,8 @@ This input is not checked in any way for errors.</string>
                                             <number>8</number>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>In this table extra keywords can be specified for the PVM section of the BRABO input file.
-Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
+                                            <string>In this table extra keywords can be specified for the PVM section of the BRABO input file.
+Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
 This input is not checked in any way for errors.</string>
                                         </property>
                                     </widget>
@@ -4651,8 +4651,8 @@ This input is not checked in any way for errors.</string>
                                             <number>8</number>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>In this table extra keywords can be specified for the INTE section of the BRABO input file.
-Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
+                                            <string>In this table extra keywords can be specified for the INTE section of the BRABO input file.
+Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
 This input is not checked in any way for errors.</string>
                                         </property>
                                     </widget>
@@ -4817,8 +4817,8 @@ This input is not checked in any way for errors.</string>
                                             <number>8</number>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>In this table extra keywords can be specified for the SCF section of the BRABO input file.
-Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
+                                            <string>In this table extra keywords can be specified for the SCF section of the BRABO input file.
+Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
 This input is not checked in any way for errors.</string>
                                         </property>
                                     </widget>
@@ -4989,8 +4989,8 @@ This input is not checked in any way for errors.</string>
                                             <bool>true</bool>
                                         </property>
                                         <property name="whatsThis" stdset="0">
-                                            <string>In this table extra keywords can be specified for the FORC section of the BRABO input file.
-Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
+                                            <string>In this table extra keywords can be specified for the FORC section of the BRABO input file.
+Each field can hold up to 10 characters. If a field is made longer, it occupies multiple cells. Rows can be added, removed and cleared, respectively, using the buttons on the right.
 This input is not checked in any way for errors.</string>
                                         </property>
                                     </widget>
