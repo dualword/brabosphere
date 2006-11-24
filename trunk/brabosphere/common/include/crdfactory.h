@@ -31,7 +31,7 @@ class QStringList;
 class AtomSet;
 
 ///// class CrdFactory ////////////////////////////////////////////////////////
-class CrdFactory  
+class CrdFactory
 {
   public:
     ~CrdFactory();                      // destructor
@@ -41,7 +41,7 @@ class CrdFactory
     static unsigned int writeToFile(AtomSet* atoms, QString filename = QString::null, bool extendedFormat = false);     // writes coordinates from the AtomSet to a (predefined) file and a certain format for .crd files
     static unsigned int convert(const QString inputFileName, const QString outputFileName, const bool extendedFormat = false);    // converts between coordinate file formats
     static unsigned int readForces(AtomSet* atoms, QString filename); // reads the forces from a predefined file and fills the AtomSet
-        
+
     enum returnCodes{OK, Cancelled, UnknownExtension, ErrorOpen, ErrorRead, ErrorWrite, UnknownFormat, NormalFormat, ExtendedFormat};  // return codes
 
   private:
@@ -56,6 +56,7 @@ class CrdFactory
     static bool xmolExtension(const QString filename);      // returns true if the extension is an Xmol format
     static bool gaussianExtension(const QString filename);  // returns true if the extension is a Gaussian format
     static bool moldenExtension(const QString filename);    // returns true if the extension is a Molden format
+    static bool molcasExtension(const QString filename);    // returns true if the extension is a MOLCAS format
 
     static unsigned int readBraboFile(AtomSet* atoms, const QString filename);  // reads a Brabo .crd/.c00
     static unsigned int writeBraboFile(AtomSet* atoms, const QString filename, const bool extendedFormat);    // reads a Brabo .crd/.c00
@@ -70,8 +71,10 @@ class CrdFactory
     static unsigned int readXmolFile(AtomSet* atoms, const QString filename);      // reads an Xmol .xyz file
     static unsigned int readGaussianFile(AtomSet* atoms, const QString filename);  // reads a Gaussian .fchk file
     static unsigned int readMoldenFile(AtomSet* atoms, const QString filename);    // reads a Molden .molden file
+    static unsigned int readMolcasFile(AtomSet* atoms, const QString filename);    // reads a MOLCAS .input file
+    static unsigned int writeMolcasFile(AtomSet* atoms, const QString filename);   // writes a MOLCAS .input file
 
-	  static const double AUTOANG;
+    static const double AUTOANG;
 };
 
 #endif

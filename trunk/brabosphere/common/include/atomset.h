@@ -57,6 +57,8 @@ class AtomSet
     void addAtom(const double x, const double y, const double z, const unsigned int atomicNumber, const QColor color, const int index = -1);    // adds an atom at position index with a special color
     void addAtom(const double x, const double y, const double z, const unsigned int atomicNumber, const int index = -1);    // adds an atom at position index
     void removeAtom(const unsigned int index);    // removes an atom
+    void addPointCharge(const double x, const double y, const double z, const double charge, const unsigned int atomicNumber = 0);          // adds a point charge
+    void removePointCharges();          // removes all point charges
 
     ///// public member functions for changing data
     void setX(const unsigned int index, const double x);    // changes the x-coordinate of atom index
@@ -64,13 +66,13 @@ class AtomSet
     void setZ(const unsigned int index, const double z);    // changes the z-coordinate of atom index
     void setColor(const unsigned int index, const QColor color);      // changes the color of atom index
     void setCharges(const vector<double>& charges, const ChargeType type, const QString scf = QString::null, const QString density = QString::null);  // sets all charges of a certain type
-    void clearCharges(const ChargeType type);  // removes the charges of a specified type  
+    void clearCharges(const ChargeType type);  // removes the charges of a specified type
     void setForces(const unsigned int index, const double dx, const double dy, const double dz);    // changes the forces of atom index
     void changeBond(const double amount, const unsigned int movingAtom, const unsigned int secondAtom, const bool includeNeighbours = false);         // changes a bond length
     void changeAngle(const double amount, const unsigned int movingAtom, const unsigned int centralAtom, const unsigned int lastAtom, const bool includeNeighbours = false);        // changes a valence angle
     void changeTorsion(const double amount, const unsigned int movingAtom, const unsigned int secondAtom, const unsigned int thirdAtom, const unsigned int fourthAtom, const bool includeNeighbours = false);     // changes a torsion angle
     void transferCoordinates(const AtomSet* source);        // copies the coordinates from another AtomSet
-    
+
     ///// public member functions for retrieving data
     unsigned int count() const;         // returns the number of atoms
     Point3D<double> coordinates(const unsigned int index) const;         // returns the coordinates for atom index
@@ -98,6 +100,12 @@ class AtomSet
     Point3D<float> rotationCenter() const;        // returns the center around which the molecule can best be rotated
     bool needsExtendedFormat();         // returns true if the coordinates need to be written in BRABO's extended format in order to prevent clipping
     unsigned int ramSize() const;       // returns the size of the class in bytes
+    unsigned int countPointCharges() const;       // returns the number of point charges
+    Point3D<double> pointChargeCoordinates(const unsigned int index) const;     // returns the coordinates for point charge index
+    double xPC(const unsigned int index) const;   // returns the X-coordinate of the specified point charge
+    double yPC(const unsigned int index) const;   // returns the Y-coordinate of the specified point charge
+    double zPC(const unsigned int index) const;   // returns the Z-coordinate of the specified point charge
+    double pointCharge(const unsigned int index) const;     // returns the charge of point charge index
 
     // public member functions for doing IO
     void loadCML(const QDomElement* root);        // loads coordinates from a CML file
@@ -109,7 +117,7 @@ class AtomSet
     static QString numToAtom(const unsigned int atom);      // maps atomic numbers to elements
     static float vanderWaals(const unsigned int atom);      // returns the Van der Waals radius of atomic number atom
     static QColor stdColor(const unsigned int atom);        // returns the standard color for atomic number atom
-    
+
   private:
     // private member functions
     void setChanged(const bool state = true);     // sets the 'changed' property
@@ -123,11 +131,11 @@ class AtomSet
     unsigned int numAtoms;              ///< the number of atoms
     bool changed;                       ///< = true if anything changed
 
-    vector<Point3D<double> > coords;    ///< cartesian coordinates of the atoms with the atomic numbers as the ID's
-    vector<QColor> colors;              ///< colors of the atoms
-    vector<Point3D<double> >* forces;   ///< forces on the atoms
-    vector<unsigned int> bonds1;        ///< the first part of the bonds array
-    vector<unsigned int> bonds2;        ///< the second part of the bonds array
+    vector<Point3D<double> > coords;    ///< Cartesian coordinates of the atoms with the atomic numbers as the ID's
+    vector<QColor> colors;              ///< Colors of the atoms
+    vector<Point3D<double> >* forces;   ///< Forces on the atoms
+    vector<unsigned int> bonds1;        ///< The first part of the bonds array
+    vector<unsigned int> bonds2;        ///< The second part of the bonds array
     vector<double>* chargesMulliken;    ///< Contains the Mulliken charges if present
     vector<double>* chargesStockholder; ///< Contains the stockholder charges if present
     QString chargesMullikenSCF;         ///< The type of SCF method used for calculating the Mulliken charges (e.g. RHF/6-31G)
@@ -137,6 +145,8 @@ class AtomSet
     Point3D<double>* boxMax;            ///< The first point of the smallest box surrounding the atoms (have to use pointers because point3d.h cannot be included)
     Point3D<double>* boxMin;            ///< The second point of the smallest box surrounding the atoms
     bool dirtyBox;                      ///< If true the box needs to be recalculated
+    vector<Point3D<double> > coordsPC;  ///< Cartesian coordinates of the point charges
+    vector<double> chargesPC;           ///< Contains the charges of the point charges
 };
 
 #endif

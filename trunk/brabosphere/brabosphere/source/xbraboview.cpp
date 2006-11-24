@@ -28,7 +28,7 @@
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
-#include <cmath> 
+#include <cmath>
 
 // Qt header files
 #include <qapplication.h>
@@ -139,9 +139,9 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
   connect(MoleculeView, SIGNAL(modified()), this, SLOT(setModified()));
   connect(MoleculeView, SIGNAL(changed()), this, SIGNAL(changed()));
   connect(&commandHistory, SIGNAL(changed()), this, SIGNAL(changed()));
-  
+
   ///// What's This
-  QWhatsThis::add(MoleculeView, 
+  QWhatsThis::add(MoleculeView,
     tr("<p>Shows the molecular system in 3D. Pressing the right mouse button "
        "opens a context menu containing the most frequently used actions from the "
        "Molecule menu.</p>"
@@ -155,7 +155,7 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
        "<li>Rotate around the Z-axis: <em>Shift+Left</em> and <em>Shift+Right</em>"
        "<li>Zoom: <em>Shift+Up</em> and <em>Shift+Down</em> or using the scrollwheel of the mouse"
        "<li>Translate horizontally: <em>Ctrl+Left</em> and <em>Ctrl+Right</em>"
-       "<li>Translate vertically: <em>Ctrl+Up</em> and <em>Ctrl+Down</em>"       
+       "<li>Translate vertically: <em>Ctrl+Up</em> and <em>Ctrl+Down</em>"
        "</ul>"
        "<p>Atoms can be selected/deselected by clicking on them with the left mouse button. When a "
        "selection is present, all actions shown above can be applied to the selection only. This can "
@@ -172,7 +172,7 @@ XbraboView::XbraboView(QWidget* mainWin, QWidget* parent, QString title, const c
   QWhatsThis::add(ProgressBar,
     tr("Indicates the progress of a running calculation. It will be reset shortly after a calculation has finished."));
 
-  ///// Other 
+  ///// Other
   setModified(false);
 }
 
@@ -190,7 +190,7 @@ unsigned int XbraboView::calculationType() const
 /// \arg GlobalBase::ENERGY_AND_FORCES
 /// \arg GlobalBase::GEOMETRY_OPTIMIZATION
 /// \arg GlobalBase::FREQUENCIES
-{  
+{
   if(globalSetup == 0)
     return GlobalBase::SinglePointEnergy;
 
@@ -203,17 +203,17 @@ unsigned int XbraboView::buurType() const
 /// \arg GlobalBase::NO_BUUR
 /// \arg GlobalBase::PC
 /// \arg GlobalBase::SM
-{  
+{
   if(globalSetup == 0)
     return GlobalBase::NoBuur;
-  
+
   return globalSetup->buurType();
 }
 
 ///// isModified //////////////////////////////////////////////////////////////
 bool XbraboView::isModified() const
 /// Returns true if the calculation has been modified and should be saved.
-{  
+{
   return calcModified;
 }
 
@@ -250,7 +250,7 @@ bool XbraboView::isRunning() const
 {
   if(calculation == 0)
     return false;
-  
+
   return calculation->isRunning();
 }
 
@@ -260,7 +260,7 @@ bool XbraboView::isPaused() const
 {
   if(calculation == 0)
     return false;
-  
+
   return calculation->isPaused();
 }
 
@@ -268,9 +268,9 @@ bool XbraboView::isPaused() const
 ///// cut /////////////////////////////////////////////////////////////////////
 void XbraboView::cut()
 /// Deletes the marked text and puts it on the clipboard. It is currently only
-/// connected to the cut facility of StatusText. As that is 
+/// connected to the cut facility of StatusText. As that is
 /// read-only, nothing is actually cut, only put on the clipboard.
-{ 
+{
   TextEditStatus->cut();
 }
 
@@ -285,7 +285,7 @@ void XbraboView::copy()
 ///// paste ///////////////////////////////////////////////////////////////////
 void XbraboView::paste()
 /// Pastes the contents from the clipboard. It is currently only
-/// connected to the paste facility of StatusText. As that is 
+/// connected to the paste facility of StatusText. As that is
 /// read-only, nothing actually happens.
 {
   TextEditStatus->paste();
@@ -293,14 +293,14 @@ void XbraboView::paste()
 
 ///// moleculeView ////////////////////////////////////////////////////////////
 GLMoleculeView* XbraboView::moleculeView() const
-/// Returns a pointer to the GLMoleculeView class. 
+/// Returns a pointer to the GLMoleculeView class.
 {
   return MoleculeView;
 }
 
 ///// currentAtomSet //////////////////////////////////////////////////////////
 AtomSet* XbraboView::currentAtomSet() const
-/// Returns a pointer to the currently active AtomSet. 
+/// Returns a pointer to the currently active AtomSet.
 {
   return atoms;
 }
@@ -333,7 +333,7 @@ void XbraboView::setAtomSet(AtomSet* atomSet)
 ///// loadCML /////////////////////////////////////////////////////////////////
 bool XbraboView::loadCML(const QDomDocument* doc)
 /// Loads all calculation data from a QDomDocument. It returns the success status.
-{  
+{
   ///// Check for the CML root element
   QDomElement root = doc->documentElement();
   if(root.tagName() != "cml")
@@ -381,7 +381,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
   root = root.namedItem("parameterList").toElement();
   if(root.attribute("dictRef") != DomUtils::ns + ":settings")
   {
-    TextEditStatus->append("<font color=red>" + tr("  ...no calculation related information found while loading") + "</font>");  
+    TextEditStatus->append("<font color=red>" + tr("  ...no calculation related information found while loading") + "</font>");
   }
   else
   {
@@ -392,7 +392,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       {
         ///// geometry
         {
-          TextEditStatus->append(tr("  ...setting geometry"));  
+          TextEditStatus->append(tr("  ...setting geometry"));
           loadCMLLocal(&section);
         }
       }
@@ -400,7 +400,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       {
         ///// view
         {
-          TextEditStatus->append(tr("  ...loading view data"));  
+          TextEditStatus->append(tr("  ...loading view data"));
           MoleculeView->loadCML(&section);
         }
       }
@@ -408,7 +408,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       {
         ///// global
         {
-          TextEditStatus->append(tr("  ...loading Global data"));  
+          TextEditStatus->append(tr("  ...loading Global data"));
           initGlobalSetup();
           globalSetup->loadCML(&section);
         }
@@ -417,7 +417,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       {
         ///// brabo
         {
-          TextEditStatus->append(tr("  ...loading Energy & Forces data"));  
+          TextEditStatus->append(tr("  ...loading Energy & Forces data"));
           initBraboSetup();
           braboSetup->loadCML(&section);
         }
@@ -426,7 +426,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       {
         ///// relax
         {
-          TextEditStatus->append(tr("  ...loading Geometry Optimization data"));  
+          TextEditStatus->append(tr("  ...loading Geometry Optimization data"));
           initRelaxSetup();
           relaxSetup->loadCML(&section);
         }
@@ -435,7 +435,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       {
         ///// calculation
         {
-          TextEditStatus->append(tr("  ...loading Calculation data"));  
+          TextEditStatus->append(tr("  ...loading Calculation data"));
           bool ok = initCalculation();
           calculation->loadCML(&section);
           if(!ok)
@@ -444,9 +444,9 @@ bool XbraboView::loadCML(const QDomDocument* doc)
       }
       section = section.nextSibling().toElement();
     }
-    TextEditStatus->append(tr("Loading done"));  
+    TextEditStatus->append(tr("Loading done"));
   }
-  
+
   updateBraboSetup();
   updateRelaxSetup();
   setModified(false);
@@ -456,7 +456,7 @@ bool XbraboView::loadCML(const QDomDocument* doc)
 ///// saveCML /////////////////////////////////////////////////////////////////
 QDomDocument* XbraboView::saveCML()
 /// Saves the calculation to a QDomDocument.
-{  
+{
   QDomDocument* doc = new QDomDocument();
   ///// add the <?xml> line
   QDomProcessingInstruction instr = doc->createProcessingInstruction("xml","version=\"1.0\" encoding=\"UTF-8\"");
@@ -464,8 +464,8 @@ QDomDocument* XbraboView::saveCML()
   ///// add the <!DOCTYPE> line -> this was only used for CML1
   //QDomImplementation impl;
   //QDomDocumentType type = impl.createDocumentType("cml",0, "cml.dtd");
-  //doc->appendChild(type);  
-  ///// add the <cml> element          
+  //doc->appendChild(type);
+  ///// add the <cml> element
   QDomElement root = doc->createElement("cml");
   root.setAttribute("xmlns", DomUtils::uriNSCML);
   root.setAttribute("xmlns:" + DomUtils::nsCMLM, DomUtils::uriDictCMLM);
@@ -494,7 +494,7 @@ QDomDocument* XbraboView::saveCML()
   childNode.appendChild(grandChildNode);
   ///// add the molecular data
   childNode = doc->createElement("molecule");
-  root.appendChild(childNode);  
+  root.appendChild(childNode);
   atoms->saveCML(&childNode);
   ///// add the rest of the data in a parameter list
   childNode = doc->createElement("parameterList");
@@ -561,7 +561,7 @@ CommandHistory* XbraboView::getCommandHistory()
 
 ///// moleculeReadCoordinates /////////////////////////////////////////////////
 bool XbraboView::moleculeReadCoordinates()
-/// Does the actual reading of coordinates into the AtomSet as called from 
+/// Does the actual reading of coordinates into the AtomSet as called from
 /// CommandReadCoordinates. It returns whether the operation was succesful or not.
 {
   QString filename;
@@ -569,9 +569,14 @@ bool XbraboView::moleculeReadCoordinates()
   switch(result)
   {
     case CrdFactory::OK:
+    {
       updateAtomSet();
-      TextEditStatus->append(tr("New coordinates read: ") + QString::number(atoms->count()) + tr(" atoms"));
+      QString text = tr("New coordinates read: ") + QString::number(atoms->count()) + tr(" atoms");
+      if(atoms->countPointCharges() != 0)
+        text += QString(" + ") + QString::number(atoms->countPointCharges()) + tr(" point charges");
+      TextEditStatus->append(text);
       return true;
+    }
     case CrdFactory::UnknownExtension:
       QMessageBox::warning(this, tr("Unknown format"), "The file " + filename + " has an unknown extension", QMessageBox::Ok, QMessageBox::NoButton);
       break;
@@ -584,7 +589,7 @@ bool XbraboView::moleculeReadCoordinates()
     case CrdFactory::UnknownFormat:
       QMessageBox::warning(this, tr("Unknown format"), "The format (normal/extended) of the file " + filename + " could not be detected correctly", QMessageBox::Ok, QMessageBox::NoButton);
       break;
-  }    
+  }
   return false;
 }
 
@@ -599,7 +604,7 @@ bool XbraboView::showProperties()
   properties->CheckBoxElement->setChecked(MoleculeView->isShowingElements());
   properties->CheckBoxNumber->setChecked(MoleculeView->isShowingNumbers());
   if(MoleculeView->isShowingCharges(AtomSet::Mulliken))
-    properties->ComboBoxCharge->setCurrentItem(AtomSet::Mulliken); 
+    properties->ComboBoxCharge->setCurrentItem(AtomSet::Mulliken);
   else if(MoleculeView->isShowingCharges(AtomSet::Stockholder))
     properties->ComboBoxCharge->setCurrentItem(AtomSet::Stockholder);
   else
@@ -631,7 +636,7 @@ void XbraboView::setModified(bool state)
   calcModified = state;
   if(!state)
   {
-    // setting the calculation is not being modified is only done after a 
+    // setting the calculation is not being modified is only done after a
     // save has occured
     MoleculeView->setModified(false);
     if(calculation != 0)
@@ -650,7 +655,7 @@ void XbraboView::moleculeReadCoordinatesCommand()
 
 ///// showPropertiesCommand ///////////////////////////////////////////////////
 void XbraboView::showPropertiesCommand()
-/// Creates a Command to change the display mode of the molecule and its 
+/// Creates a Command to change the display mode of the molecule and its
 /// properties.
 {
   commandHistory.addCommand(new CommandDisplayMode(this, "Display Mode")); // calls showProperties
@@ -679,30 +684,30 @@ void XbraboView::moleculeSaveCoordinates()
 void XbraboView::moleculeFPS()
 /// Calculates the Frames-Per-Second for the current parameters.
 {
-  TextEditStatus->append(tr("Frames per second: ") + QString::number(MoleculeView->calculateFPS()) 
-                         + " (" + tr("for a total of ") + QString::number(MoleculeView->vertexCount()) 
-                         + tr(" vertices and a window size of ") + QString::number(MoleculeView->width()) + " x " 
+  TextEditStatus->append(tr("Frames per second: ") + QString::number(MoleculeView->calculateFPS())
+                         + " (" + tr("for a total of ") + QString::number(MoleculeView->vertexCount())
+                         + tr(" vertices and a window size of ") + QString::number(MoleculeView->width()) + " x "
                                                                  + QString::number(MoleculeView->height()) + ")");
 }
 
 ///// setupGlobalCommand //////////////////////////////////////////////////////
 void XbraboView::setupGlobalCommand()
 /// Creates a Command to set up the global options.
-{  
+{
   commandHistory.addCommand(new CommandSetupGlobal(this, tr("Global setup")));
 }
 
 ///// setupBraboCommand //////////////////////////////////////////////////////
 void XbraboView::setupBraboCommand()
 /// Creates a Command to set up the Brabo options.
-{  
+{
   commandHistory.addCommand(new CommandSetupBrabo(this, tr("Energy & Forces setup")));
 }
 
 ///// setupRelaxCommand //////////////////////////////////////////////////////
 void XbraboView::setupRelaxCommand()
 /// Creates a Command to set up the Relax options.
-{  
+{
   commandHistory.addCommand(new CommandSetupRelax(this, tr("Geometry optimization setup")));
 }
 
@@ -761,9 +766,9 @@ void XbraboView::start()
   TextEditStatus->append(" * " + tr("Method") + ": " + braboSetup->method());
   if(calcType == GlobalBase::GeometryOptimization)
     TextEditStatus->append(" * " + tr("Optimization step") + " 1");
-  TextEditStatus->append("   - " + tr("Calculating energy"));  
+  TextEditStatus->append("   - " + tr("Calculating energy"));
 
-  // progressbar  
+  // progressbar
   ProgressBar->reset();
   unsigned int numSteps = braboSetup->maxIterations(); // never zero
   if(calcType != GlobalBase::SinglePointEnergy)
@@ -785,7 +790,7 @@ void XbraboView::start()
 ///// pause ///////////////////////////////////////////////////////////////////
 void XbraboView::pause()
 /// Pauses the calculation.
-{  
+{
   if(calculation != 0)
   {
     if(calculation->pause())
@@ -803,7 +808,7 @@ void XbraboView::pause()
 ///// stop ////////////////////////////////////////////////////////////////////
 void XbraboView::stop()
 /// Stops a running calculation.
-{  
+{
   if(calculation != 0)
   {
     calculation->stop();
@@ -849,7 +854,7 @@ void XbraboView::cleanCalculation()
 ///// viewOutput //////////////////////////////////////////////////////////////
 void XbraboView::viewOutput()
 /// Shows the output from the calculation.
-{  
+{
   ///// create an output widget
   OutputChooserWidget* outputChooser = new OutputChooserWidget(this, 0, true, 0);
   outputChooser->ListView->setSorting(-1);
@@ -868,7 +873,7 @@ void XbraboView::viewOutput()
       item->setPixmap(3, pixmapPresent);
     if(!calculation->affOutput().isEmpty())
       item->setPixmap(4, pixmapPresent);
-  
+
     ///// get the outputs for the saved cycles
     vector<unsigned int> cycles;
     vector<bool> savedBrabo, savedStock, savedRelax, savedAFF;
@@ -898,7 +903,7 @@ void XbraboView::viewOutput()
 ///// updatePVMHosts //////////////////////////////////////////////////////////
 void XbraboView::updatePVMHosts(const QStringList& hosts)
 /// Updates the PVM host list for BraboBase.
-{  
+{
   if(!braboSetup)
     hostListPVM = hosts;
   else
@@ -951,7 +956,7 @@ void XbraboView::popup()
   const int ID_MOLECULE_DELETE = popup->insertItem(tr("Delete selected atoms"), MoleculeView, SLOT(deleteSelectedAtomsCommand()));
   popup->insertSeparator();
   const int ID_ALTER_CARTESIAN = popup->insertItem(tr("Alter cartesian coordinates"), MoleculeView, SLOT(alterCartesianCommand()));
-  const int ID_ALTER_INTERNAL = popup->insertItem(tr("Alter internal coordinate"), MoleculeView, SLOT(alterInternalCommand()));    
+  const int ID_ALTER_INTERNAL = popup->insertItem(tr("Alter internal coordinate"), MoleculeView, SLOT(alterInternalCommand()));
   popup->insertSeparator();
   popup->insertItem(tr("Select all"), MoleculeView, SLOT(selectAllCommand()));
   popup->insertItem(tr("Select none"), MoleculeView, SLOT(unselectAllCommand()));
@@ -979,7 +984,7 @@ void XbraboView::popup()
   ///// submenu alter
   QPopupMenu* popupAlter = new QPopupMenu(popup, 0);
   const int ID_ALTER_CARTESIAN = popupAlter->insertItem(tr("Cartesian coordinates"), MoleculeView, SLOT(alterCartesian()));
-  const int ID_ALTER_INTERNAL = popupAlter->insertItem(tr("Internal coordinate"), MoleculeView, SLOT(alterInternal()));    
+  const int ID_ALTER_INTERNAL = popupAlter->insertItem(tr("Internal coordinate"), MoleculeView, SLOT(alterInternal()));
   ///// submenu setup
   QPopupMenu* popupSetup = new QPopupMenu(popup, 0);
   popupSetup->insertItem(IconSets::getIconSet(IconSets::SetupGlobal), tr("Global"),this, SLOT(setupGlobal()));
@@ -993,7 +998,7 @@ void XbraboView::popup()
   const int ID_RUN_PAUSE = popupRun->insertItem(IconSets::getIconSet(IconSets::Pause), tr("Pause"), this, SLOT(pause()));
   const int ID_RUN_STOP = popupRun->insertItem(IconSets::getIconSet(IconSets::Stop), tr("Stop"), this, SLOT(stop()));
   popupRun->insertItem(IconSets::getIconSet(IconSets::Outputs), tr("View output"), this, SLOT(viewOutput()));
-  ///// menu                                     
+  ///// menu
   popup->insertItem(IconSets::getIconSet(IconSets::MoleculeRead), tr("Read coordinates..."), this, SLOT(moleculeReadCoordinates()));
   popup->insertItem(tr("Change isosurfaces..."), MoleculeView, SLOT(showDensity()));
   popup->insertItem(tr("Change display mode..."), this, SLOT(showProperties()), 0);
@@ -1019,7 +1024,7 @@ void XbraboView::popup()
   }
   if(MoleculeView->selectedAtoms() < 2 || MoleculeView->selectedAtoms() > 4)
     popup->setItemEnabled(ID_ALTER_INTERNAL, false);
-    
+
   ///// disable items for Setup menu
   if(globalSetup == 0 || globalSetup->calculationType() != GlobalBase::GeometryOptimization)
     popup->setItemEnabled(ID_SETUP_RELAX, false);
@@ -1036,8 +1041,8 @@ void XbraboView::popup()
     popup->setItemEnabled(ID_RUN_PAUSE, false);
     popup->setItemEnabled(ID_RUN_STOP, false);
   }
- 
-  ///// execute the menu  
+
+  ///// execute the menu
   popup->exec(QCursor::pos());
   delete popup;
 }
@@ -1083,7 +1088,7 @@ void XbraboView::updateCycle(unsigned int cycle)
   lastProgress += braboSetup->maxIterations(); // assume calculation of forces takes as long as energy
   if(lastProgress >= static_cast<unsigned int>(ProgressBar->totalSteps()))
     ProgressBar->setTotalSteps(lastProgress + 2* braboSetup->maxIterations());
-  ProgressBar->setProgress(lastProgress); 
+  ProgressBar->setProgress(lastProgress);
 }
 
 /*//// updateCharges ///////////////////////////////////////////////////////////
@@ -1153,7 +1158,7 @@ void XbraboView::cleanupCalculation(unsigned int error)
 ///// showOutput //////////////////////////////////////////////////////////////
 void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
 /// Shows the output corresponding to the item clicked on.
-{ 
+{
   ///// out of bounds checks
   if(item == 0 || column < 1 || column > 4 || calculation == 0)
     return;
@@ -1168,7 +1173,7 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
     cycle = 0;
   else
     cycle = item->text(0).toUInt();
-  
+
   ///// load the file into a QStringList
   QStringList contents;
   int fileWidth = 81;
@@ -1198,7 +1203,7 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
   outputViewer->TextEdit->setTextFormat(Qt::LogText); // default is PlainText
   QFontMetrics metrics(outputViewer->TextEdit->currentFont());
   int newWidth = fileWidth*metrics.width(" ") + 2*outputViewer->layout()->margin() + outputViewer->TextEdit->verticalScrollBar()->sliderRect().width();
-  outputViewer->resize(newWidth, outputViewer->height()); 
+  outputViewer->resize(newWidth, outputViewer->height());
 
   ///// fill the QTextEdit
   switch(column)
@@ -1208,7 +1213,7 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
               outputViewer->setCaption(tr("Showing Brabo output from last cycle"));
             else
               outputViewer->setCaption(tr("Showing Brabo output from cycle") + " " + QString::number(cycle));
-            outputViewer->TextEdit->setText(contents.join("\n"));      
+            outputViewer->TextEdit->setText(contents.join("\n"));
             break;
 
       /*
@@ -1302,8 +1307,8 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
                + "<font color=blue>"     + line.mid(29, 15) + "</font>"
                + "<font color=darkblue>" + line.mid(44, 6)  + "</font>"
                + "<font color=blue>"     + line.mid(50, 16) + "</font>"
-               + "<font color=darkblue>" + line.mid(66, 5)  + "</font>";   
-          outputViewer->TextEdit->append(line);                            
+               + "<font color=darkblue>" + line.mid(66, 5)  + "</font>";
+          outputViewer->TextEdit->append(line);
         }
         else if(line.left(10) == "**********")
         {
@@ -1315,7 +1320,7 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
           line = "<font color=darkgray>" + line + "</font>";
           outputViewer->TextEdit->append(line);
         }
-        else                      
+        else
           outputViewer->TextEdit->append(line);
       }
       break;
@@ -1325,22 +1330,22 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
               outputViewer->setCaption(tr("Showing Stock output from last cycle"));
             else
               outputViewer->setCaption(tr("Showing Stock output from cycle") + " " + QString::number(cycle));
-            outputViewer->TextEdit->setText(contents.join("\n"));      
+            outputViewer->TextEdit->setText(contents.join("\n"));
             break;
-    case 3: // it's a Relax output file      
+    case 3: // it's a Relax output file
             if(cycle == 0)
               outputViewer->setCaption(tr("Showing Relax output from last cycle"));
             else
               outputViewer->setCaption(tr("Showing Relax output from cycle") + " " + QString::number(cycle));
-            outputViewer->TextEdit->setText(contents.join("\n"));      
+            outputViewer->TextEdit->setText(contents.join("\n"));
             break;
     case 4: //it's an AFF file
             if(cycle == 0)
               outputViewer->setCaption(tr("Showing AFF file from last cycle"));
             else
               outputViewer->setCaption(tr("Showing AFF file from cycle") + " " + QString::number(cycle));
-            outputViewer->TextEdit->setText(contents.join("\n"));      
-            break;      
+            outputViewer->TextEdit->setText(contents.join("\n"));
+            break;
   }
 
   ///// show it from the top
@@ -1357,7 +1362,7 @@ void XbraboView::showOutput(QListViewItem* item, const QPoint&, int column)
 ///// loadCMLLocal ////////////////////////////////////////////////////////////
 void XbraboView::loadCMLLocal(const QDomElement* root)
 /// Loads the positions and sizes of the XbraboView widgets from a QDomElement.
-{  
+{
   int positionX = 0, positionY = 0, sizeWidth = 400, sizeHeight = 400;
   QValueList<int> splitterSizes;
   const QString prefix = "geometry_";
@@ -1373,7 +1378,7 @@ void XbraboView::loadCMLLocal(const QDomElement* root)
       else if(DomUtils::dictEntry(childNode, prefix + "width"))
         DomUtils::readNode(&childNode, &sizeWidth);
       else if(DomUtils::dictEntry(childNode, prefix + "height"))
-        DomUtils::readNode(&childNode, &sizeHeight);  
+        DomUtils::readNode(&childNode, &sizeHeight);
       else if(DomUtils::dictEntry(childNode, prefix + "splitter_sizes"))
         DomUtils::readNode(&childNode, &splitterSizes);
     }
@@ -1390,15 +1395,15 @@ void XbraboView::loadCMLLocal(const QDomElement* root)
 ///// saveCMLLocal ////////////////////////////////////////////////////////////
 void XbraboView::saveCMLLocal(QDomElement* root)
 /// Saves the positions and sizes of the XbraboView widgets to a QDomElement.
-{  
+{
   ///// XbraboView geometry (use QextMDI functions)
-  QRect geometry = internalGeometry();  
+  QRect geometry = internalGeometry();
   const QString prefix = "geometry_";
   DomUtils::makeNode(root, geometry.x(), prefix + "position-x");
   DomUtils::makeNode(root, geometry.y(), prefix + "position-y");
   DomUtils::makeNode(root, geometry.width(), prefix + "width");
   DomUtils::makeNode(root, geometry.height(), prefix + "height");
-  
+
   QValueList<int> list = Splitter->sizes();
   DomUtils::makeNode(root, list, prefix + "splitter_sizes");
 }
@@ -1407,7 +1412,7 @@ void XbraboView::saveCMLLocal(QDomElement* root)
 void XbraboView::updateCaptions()
 /// Updates the captions for the widget and taskbar.
 {
-  QFileInfo fi = QFileInfo(calcFileName);  
+  QFileInfo fi = QFileInfo(calcFileName);
   QString tempString = fi.baseName(true);
   if(globalSetup != 0 && !globalSetup->description().isEmpty())
     tempString += QString(" - ") + globalSetup->description();
@@ -1471,7 +1476,7 @@ void XbraboView::initGlobalSetup()
 {
   if(globalSetup != 0)
     return;
-  
+
   globalSetup = new GlobalBase(this, 0, true, 0);
   globalSetup->setDefaultName(calcDefaultName);
   globalSetup->setIcon(QPixmap::fromMimeSource("SetupGlobalNormal"));
@@ -1484,10 +1489,10 @@ void XbraboView::initBraboSetup()
 {
   if(braboSetup != 0)
     return;
-  
+
   initGlobalSetup();
   braboSetup = new BraboBase(atoms, this, 0, true, 0);
-  //braboSetup->setIcon(QPixmap::fromMimeSource("SetupBraboNormal")); // doesn't work apparently 
+  //braboSetup->setIcon(QPixmap::fromMimeSource("SetupBraboNormal")); // doesn't work apparently
   updateBraboSetup();
   if(!hostListPVM.isEmpty())
     updatePVMHosts(hostListPVM);
@@ -1521,16 +1526,16 @@ bool XbraboView::initCalculation()
     connect(calculation, SIGNAL(finished(unsigned int)), this, SLOT(cleanupCalculation(unsigned int)));
     connect(calculation, SIGNAL(modified()), this, SIGNAL(changed()));
   }
-  
+
   ///// check for the presence of any coordinates
   if(atoms->count() == 0)
   {
     QMessageBox::warning(this, tr("Initialize calculation"), tr("There are no atoms present"));
     return false;
-  }  
+  }
 
   ///// GlobalBase related parameters (should be given before those of BraboBase)
-  initBraboSetup(); // also inits globalSetup  
+  initBraboSetup(); // also inits globalSetup
   calculation->setCalculationType(globalSetup->calculationType(), globalSetup->buurType());
   calculation->setParameters(globalSetup->name(), globalSetup->directory(), globalSetup->extendedFormat());
   calculation->setBackup(1, true, true, true, true, true); // default until interface is made (in class GlobalBase)
@@ -1550,7 +1555,7 @@ bool XbraboView::initCalculation()
     return false;
   calculation->setBraboInput(braboSetup->generateInput(BraboBase::BRABO), basissetList, startVector, prefer, size1, size2);
   calculation->setStockInput(braboSetup->generateInput(BraboBase::STOCK), atdens);
-  
+
   ///// RelaxBase related parameters
   if(globalSetup->calculationType() == GlobalBase::GeometryOptimization)
   {
@@ -1562,7 +1567,7 @@ bool XbraboView::initCalculation()
     for(unsigned int i = 0; i < steps.size(); i++)
       qDebug(" %d, step %d, factor %f", i, steps[i], factors[i]);
 
-    calculation->setRelaxInput(relaxSetup->generateInput(RelaxBase::AFF), relaxSetup->generateInput(RelaxBase::MAFF), 
+    calculation->setRelaxInput(relaxSetup->generateInput(RelaxBase::AFF), relaxSetup->generateInput(RelaxBase::MAFF),
                                relaxSetup->inputGenerationFrequency(), relaxSetup->maxSteps(), steps, factors);
   }
   return true;
@@ -1571,7 +1576,7 @@ bool XbraboView::initCalculation()
 ///// setupGlobal /////////////////////////////////////////////////////////////
 bool XbraboView::setupGlobal()
 /// Sets up the global options.
-{  
+{
   initGlobalSetup();
   if(globalSetup->exec() == QDialog::Accepted)
   {
@@ -1589,7 +1594,7 @@ bool XbraboView::setupGlobal()
 ///// setupBrabo //////////////////////////////////////////////////////////////
 bool XbraboView::setupBrabo()
 /// Sets up the Brabo options.
-{  
+{
   initBraboSetup();
   if(braboSetup->exec() == QDialog::Accepted)
   {
@@ -1613,7 +1618,7 @@ bool XbraboView::setupBrabo()
       if(size1 == 0)
         return true;
       calculation->setBraboInput(braboSetup->generateInput(BraboBase::BRABO), basissetList, startVector, prefer, size1, size2);
-      calculation->setStockInput(braboSetup->generateInput(BraboBase::STOCK), atdens);      
+      calculation->setStockInput(braboSetup->generateInput(BraboBase::STOCK), atdens);
     }
     return true;
   }
@@ -1635,7 +1640,7 @@ bool XbraboView::setupRelax()
       std::vector<unsigned int> steps;
       std::vector<double> factors;
       relaxSetup->scaleFactors(steps, factors);
-      calculation->setRelaxInput(relaxSetup->generateInput(RelaxBase::AFF), relaxSetup->generateInput(RelaxBase::MAFF), 
+      calculation->setRelaxInput(relaxSetup->generateInput(RelaxBase::AFF), relaxSetup->generateInput(RelaxBase::MAFF),
                                  relaxSetup->inputGenerationFrequency(), relaxSetup->maxSteps(), steps, factors);
     }
     return true;
@@ -1646,7 +1651,7 @@ bool XbraboView::setupRelax()
 
 ///// updateAtomSet ///////////////////////////////////////////////////////////
 void XbraboView::updateAtomSet()
-/// Does the necessary updating when the AtomSet has been changed. This means 
+/// Does the necessary updating when the AtomSet has been changed. This means
 /// new coordinates have been read from file or atoms have been added/deleted.
 {
   setModified();
@@ -1654,8 +1659,8 @@ void XbraboView::updateAtomSet()
   if(calculation != 0)
     calculation->setContinuable(false);
 
-  // possibly update the SpinBox limits in RelaxBase when needed. ATM it is done 
-  // each time the dialog is opened. 
+  // possibly update the SpinBox limits in RelaxBase when needed. ATM it is done
+  // each time the dialog is opened.
 }
 
 ///////////////////////////////////////////////////////////////////////////////

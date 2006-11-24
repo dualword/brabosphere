@@ -205,7 +205,7 @@ void GLSimpleMoleculeView::setDisplayStyle(const DisplaySource source, const uns
   // reset the background color if the current style was BlackAndWhite
   if(moleculeStyle == BlackAndWhite || forcesStyle == BlackAndWhite)
     qglClearColor(QColor(baseParameters.backgroundColor));
-  
+
   if(source == Molecule)
   {
     if(style > BlackAndWhite)
@@ -421,11 +421,11 @@ void GLSimpleMoleculeView::updateGLSettings()
   glLineWidth(moleculeParameters.sizeLines);
   //glPolygonOffset(moleculeParameters.sizeLines, 1.0); // fix this
 
-  // reset the background to white in case of BlackAndWhite 
+  // reset the background to white in case of BlackAndWhite
   // (set the regular background color in GLView::updateGLSettings())
   if(moleculeStyle == BlackAndWhite)
     qglClearColor(QColor(255, 255, 255));
-    
+
   ///// transparency settings might have changed
   reorderShapes();
 }
@@ -523,7 +523,7 @@ void GLSimpleMoleculeView::processSelection(const unsigned int id)
 
 ///// makeObjects /////////////////////////////////////////////////////////////
 void GLSimpleMoleculeView::makeObjects()
-/// Generates the display lists for the molecule, the atoms, the bonds and the 
+/// Generates the display lists for the molecule, the atoms, the bonds and the
 /// forces.
 {
   moleculeObject = glGenLists(5);
@@ -692,14 +692,14 @@ void GLSimpleMoleculeView::centerMolecule()
 
 ///// updateMolecule //////////////////////////////////////////////////////////
 void GLSimpleMoleculeView::updateMolecule()
-/// Updates the display list \c moleculeObject that holds the atoms, the 
+/// Updates the display list \c moleculeObject that holds the atoms, the
 /// bonds and the forces as they all need to be updated when at least one atom
 /// changes its coordinates or when the number of atoms changes.
 {
   ///// check for fast rendering
   unsigned int localMoleculeStyle = moleculeStyle;
   unsigned int localForcesStyle = forcesStyle;
-  if(atoms->count() > moleculeParameters.fastRenderLimit && moleculeStyle > SmoothLines)
+  if(atoms->count() + atoms->countPointCharges() > moleculeParameters.fastRenderLimit && moleculeStyle > SmoothLines)
   {
     localMoleculeStyle = Lines;
     localForcesStyle = Lines;
@@ -719,10 +719,10 @@ void GLSimpleMoleculeView::updateMolecule()
     glDisable(GL_FOG);
   }
 
-  ///// the atoms 
+  ///// the atoms
   drawAtoms(localMoleculeStyle);
 
-  ///// the bonds 
+  ///// the bonds
   drawBonds(localMoleculeStyle);
 
   ///// the forces
@@ -731,7 +731,7 @@ void GLSimpleMoleculeView::updateMolecule()
   drawForces(localForcesStyle);
   if(moleculeParameters.opacityForces < 100 && localForcesStyle != Lines)
     glDisable(GL_BLEND);
-  
+
   if(localMoleculeStyle == Cartoon || localMoleculeStyle == BlackAndWhite || localForcesStyle == Cartoon || localForcesStyle == BlackAndWhite)
   {
     ///// Setup a Gooch-shading like treatment (draw outlines)
@@ -780,7 +780,7 @@ void GLSimpleMoleculeView::updateMolecule()
     }
     glDisable(GL_BLEND);
   }
-  
+
   glEndList();
 }
 
@@ -866,13 +866,13 @@ void GLSimpleMoleculeView::drawMolecule()
 
 ///// drawAtoms ///////////////////////////////////////////////////////////////
 void GLSimpleMoleculeView::drawAtoms(const unsigned int style, const bool useColors)
-/// Draws the atoms in the OpenGL scene in the given style. 
+/// Draws the atoms in the OpenGL scene in the given style.
 {
   //qDebug("calling drawAtoms");
   if(style == None || style == Lines || style == SmoothLines || style > BlackAndWhite)
     return;
 
-  
+
   for(unsigned int i = 0; i < atoms->count(); i++)
   {
     glPushMatrix(); // save the current matrix
@@ -885,7 +885,7 @@ void GLSimpleMoleculeView::drawAtoms(const unsigned int style, const bool useCol
       }
       else
         qglColor(atoms->color(i)); // set the color (works cos of glColorMaterial)
-    }    
+    }
     glTranslatef(atoms->x(i), atoms->y(i), atoms->z(i)); // set the position
     if(style == Tubes)
     {
@@ -910,6 +910,29 @@ void GLSimpleMoleculeView::drawAtoms(const unsigned int style, const bool useCol
     glPopMatrix(); // restore the matrix
   }
   glLoadName(0); // just to make sure the following items do not get the same name as the last atom
+
+  ///// add the point charges
+  for(unsigned int i = 0; i < atoms->countPointCharges(); i++)
+  {
+    glPushMatrix();
+    Point3D<double> point(atoms->pointChargeCoordinates(i));
+    if(useColors)
+    {
+      if(style == BlackAndWhite)
+      {
+        int gray = qGray(AtomSet::stdColor(point.id()).rgb());
+        qglColor(QColor(gray, gray, gray)); // grayscaled atom color
+      }
+      else
+       qglColor(AtomSet::stdColor(point.id()));
+    }
+    glTranslatef(point.x(), point.y(), point.z());
+    glScalef(moleculeParameters.sizeBonds/2.0,
+             moleculeParameters.sizeBonds/2.0,
+             moleculeParameters.sizeBonds/2.0);
+    glCallList(atomObject);
+    glPopMatrix();
+  }
 }
 
 ///// drawBonds ///////////////////////////////////////////////////////////////
@@ -930,7 +953,7 @@ void GLSimpleMoleculeView::drawBonds(const unsigned int style, const bool useCol
   {
     glLineWidth(moleculeParameters.sizeLines);
     glDisable(GL_LIGHTING);
-    if(baseParameters.antialias) 
+    if(baseParameters.antialias)
       glEnable(GL_BLEND); // does this work for all graphics drivers?
     glBegin(GL_LINES);
       for(unsigned int i = 0; i < firstAtom->size(); i++)
@@ -969,7 +992,7 @@ void GLSimpleMoleculeView::drawBonds(const unsigned int style, const bool useCol
       }
     glEnd();
     glEnable(GL_LIGHTING);
-    if(baseParameters.antialias) 
+    if(baseParameters.antialias)
       glDisable(GL_BLEND);
     return;
   }
@@ -1034,7 +1057,7 @@ void GLSimpleMoleculeView::drawBonds(const unsigned int style, const bool useCol
         }
         else
           qglColor(atoms->color(atom1));
-      }    
+      }
       glCallList(bondObject);
     }
     else
