@@ -17,7 +17,7 @@
 
 ///// Comments ////////////////////////////////////////////////////////////////
 
-/*! 
+/*!
   \class AtomSet
   \brief Stores the atoms of a molecular system.
 
@@ -38,14 +38,14 @@
   atomic numbers are assigned a zero for the unknown atom type "?"
 
 */
-/// \file 
+/// \file
 /// Contains the implementation of the class AtomSet.
 
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
 #include <cassert>
-#include <cmath>         
+#include <cmath>
 
 // STL header files
 #include <algorithm>
@@ -108,7 +108,7 @@ AtomSet::AtomSet(const AtomSet* atoms)
   colors.reserve(numAtoms);
   colors.assign(atoms->colors.begin(), atoms->colors.end());
   if(atoms->forces != NULL)
-  { 
+  {
     forces = new vector<Point3D<double> >();
     forces->reserve(numAtoms);
     forces->assign(atoms->forces->begin(), atoms->forces->end());
@@ -116,7 +116,7 @@ AtomSet::AtomSet(const AtomSet* atoms)
   bonds1.reserve(atoms->bonds1.size());
   bonds1.assign(atoms->bonds1.begin(), atoms->bonds1.end());
   bonds2.reserve(atoms->bonds2.size());
-  bonds2.assign(atoms->bonds2.begin(), atoms->bonds2.end());  
+  bonds2.assign(atoms->bonds2.begin(), atoms->bonds2.end());
   if(atoms->chargesMulliken != NULL)
   {
     chargesMulliken = new vector<double >();
@@ -124,7 +124,7 @@ AtomSet::AtomSet(const AtomSet* atoms)
     chargesMulliken->assign(atoms->chargesMulliken->begin(), atoms->chargesMulliken->end());
   }
   if(atoms->chargesStockholder != NULL)
-  { 
+  {
     chargesStockholder = new vector<double >();
     chargesStockholder->reserve(numAtoms);
     chargesStockholder->assign(atoms->chargesStockholder->begin(), atoms->chargesStockholder->end());
@@ -141,20 +141,22 @@ AtomSet::AtomSet(const AtomSet* atoms)
 ///// clear ///////////////////////////////////////////////////////////////////
 void AtomSet::clear()
 /// Removes all atoms.
-{ 
+{
   coords.clear();
   colors.clear();
   clearProperties();
   bonds1.clear();
   bonds2.clear();
   numAtoms = 0;
+  coordsPC.clear();
+  chargesPC.clear();
   setChanged(false);
 }
 
 ///// reserve /////////////////////////////////////////////////////////////////
 void AtomSet::reserve(const unsigned int size)
 /// Resizes all the vectors to accomodate the requested number of atoms.
-{ 
+{
   if(size <= coords.size())
     return;
 
@@ -171,7 +173,7 @@ void AtomSet::reserve(const unsigned int size)
 ///// addAtom /////////////////////////////////////////////////////////////////
 void AtomSet::addAtom(const Point3D<double>& location, const unsigned int atomicNumber, const QColor color, const int index)
 /// Adds an atom of type \a atomicNumber with
-/// coordinates \a location and color \a color at position \a index. 
+/// coordinates \a location and color \a color at position \a index.
 /// If \a index is negative (the default) the atom is added at the end.
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
@@ -190,7 +192,7 @@ void AtomSet::addAtom(const Point3D<double>& location, const unsigned int atomic
   Point3D<double> newAtom(location);
   newAtom.setID(atomNum);
 
-  ///// add the atom 
+  ///// add the atom
   if(index < 0 || static_cast<unsigned int>(index) > numAtoms)
   {
     ///// add the atom at the end
@@ -261,15 +263,54 @@ void AtomSet::removeAtom(const unsigned int index)
     setGeometryChanged();
   }
 }
+///// addPointCharge //////////////////////////////////////////////////////////
+void AtomSet::addPointCharge(const double x, const double y, const double z, const double charge, const unsigned int atomicNumber)
+/// Adds a point charge with the given coordinates and the given charge.
+/// If an atomic number is specified, the point charge will be shown
+/// with the appropriate color.
+{
+  ///// return if the limit is reached (unlikely)
+  if(coordsPC.size() == coords.max_size())
+  {
+    qDebug("AtomSet::addPointCharge: the maximum number of atoms has been reached.");
+    return;
+  }
+
+  ///// fix the atomic number if needed
+  unsigned int atomNum = atomicNumber;
+  if(atomNum > maxElements)
+    atomNum = 0; // the unknown element
+  ///// make a local copy with the atomic number added
+  Point3D<double> newPC(x, y, z);
+  newPC.setID(atomNum);
+
+  ///// add the point charge
+  coordsPC.push_back(newPC);
+  chargesPC.push_back(charge);
+
+  setGeometryChanged();
+}
+
+///// removePointCharges //////////////////////////////////////////////////////
+void AtomSet::removePointCharges()
+/// Clears the list of point charges
+{
+  if(coordsPC.empty())
+    return;
+
+  coordsPC.clear();
+  chargesPC.clear();
+  setGeometryChanged();
+}
 
 ///// setX ////////////////////////////////////////////////////////////////////
 void AtomSet::setX(const unsigned int index, const double x)
 /// Sets the x-coordinate of the atom at position \c index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
-{  
+{
   if(index >= numAtoms)
     return;
-  
+
   coords[index].setValues(x, coords[index].y(), coords[index].z());
   setGeometryChanged();
 }
@@ -278,22 +319,22 @@ void AtomSet::setX(const unsigned int index, const double x)
 void AtomSet::setY(const unsigned int index, const double y)
 /// Sets the y-coordinate of the atom at position \c index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
-{ 
+{
   if(index >= numAtoms)
     return;
-  
+
   coords[index].setValues(coords[index].x(), y, coords[index].z());
-  setGeometryChanged();  
+  setGeometryChanged();
 }
 
 ///// setZ ////////////////////////////////////////////////////////////////////
 void AtomSet::setZ(const unsigned int index, const double z)
 /// Sets the z-coordinate of the atom at position index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
-{  
+{
   if(index >= numAtoms)
     return;
-  
+
   coords[index].setValues(coords[index].x(), coords[index].y(), z);
   setGeometryChanged();
 }
@@ -304,14 +345,14 @@ void AtomSet::setColor(const unsigned int index, const QColor color)
 {
   if(index >= numAtoms)
     return;
-  
+
   colors[index] = color;
   setChanged();
 }
 
 ///// setCharges ///////////////////////////////////////////////////////////////
 void AtomSet::setCharges(const vector<double>& charges, const ChargeType type, const QString scf, const QString density)
-/// Sets the charges on all atoms. 
+/// Sets the charges on all atoms.
 /// \param[in] charges: the vector containing all charges. It's size has to
 ///                     be equal to count() or no charges will be assigned.
 /// \param[in] type: The type of charges to be added/updated.
@@ -320,7 +361,7 @@ void AtomSet::setCharges(const vector<double>& charges, const ChargeType type, c
 {
   if(charges.size() != numAtoms || type == None)
     return;
-  
+
   if(type == Mulliken)
   {
     ///// Mulliken charges
@@ -380,7 +421,7 @@ void AtomSet::setForces(const unsigned int index, const double dx, const double 
 
   if(forces == NULL)
     forces = new vector<Point3D<double> >(numAtoms);
-  
+
   forces->operator[](index) = Point3D<double>(dx, dy, dz);
 }
 
@@ -411,7 +452,7 @@ void AtomSet::changeBond(const double amount, const unsigned int movingAtom, con
       moveableAtoms.clear();
   }
   moveableAtoms.push_back(movingAtom);
-  
+
   ///// determine the amount of displacement
   const Vector3D<double> oldPosition(coords[secondAtom], coords[movingAtom]);
   Vector3D<double> newPosition = oldPosition;
@@ -658,7 +699,7 @@ void AtomSet::bonds(vector<unsigned int>*& first, vector<unsigned int>*& second)
     bonds2.reserve(numAtoms);
     // update the dimensions of the box
     updateBoxDimensions();
-    // divide it into cells of 4x4x4 Angstrom 
+    // divide it into cells of 4x4x4 Angstrom
     // (4.0A because largest VdW radius = 3.0A => largest distance = 1.25*(3.0 + 3.0) = 7.5A < 2 * 4.0A)
     const double cellSize = 4.0;
     Point3D<unsigned int> numCells(static_cast<unsigned int>((boxMax->x() - boxMin->x())/cellSize) + 1,
@@ -704,7 +745,7 @@ void AtomSet::bonds(vector<unsigned int>*& first, vector<unsigned int>*& second)
             continue; // an empty cell can be skipped
           ///// find all surrounding cells (X/Y/Z, X+1/Y/Z, X/Y+1/Z, X/Y/Z+1, X+1/Y+1/Z, X+1/Y/Z+1, X/Y+1/Z+1, X+1/Y+1/Z+1,
           /////                             X-1/Y/Z+1, X+1/Y+1/Z-1, X/Y+1/Z-1, X-1/Y+1/Z-1, X-1/Y+1/Z, X-1/Y+1/Z+1)
-          ///// other neighbouring cells (remaining of 13 total of 26) will already have been combined with this cell before 
+          ///// other neighbouring cells (remaining of 13 total of 26) will already have been combined with this cell before
           ///// (no double counting)
           // X/Y/Z -> intra-cell bonds
           addBonds(atomList, atomList);
@@ -760,7 +801,7 @@ void AtomSet::bonds(vector<unsigned int>*& first, vector<unsigned int>*& second)
     unsigned int atomNumI, atomNumJ;
 
     ///// do a double loop over all atoms and check whether the sum of their
-    ///// Van der Waals radii is less than the distance between them 
+    ///// Van der Waals radii is less than the distance between them
     ///// use the squared distances for speed
     for(unsigned int i = 0; i < numAtoms; i++)
     {
@@ -822,7 +863,7 @@ unsigned int AtomSet::numberOfBonds(unsigned int index) const
 
     distance2 = dx*dx + dy*dy + dz*dz;
     refdistance = 1.25f*(vanderWaals(atomicNumber(i)) + vanderWaals(atomicNumber(index)));
-    
+
     if(distance2 <= refdistance*refdistance)
       result++;
   }
@@ -874,7 +915,7 @@ double AtomSet::dx(const unsigned int index) const
 {
   if(forces == NULL || index >= numAtoms)
     return 0.0;
-  
+
   return forces->operator[](index).x();
 }
 
@@ -885,7 +926,7 @@ double AtomSet::dy(const unsigned int index) const
 {
   if(forces == NULL || index >= numAtoms)
     return 0.0;
-  
+
   return forces->operator[](index).y();
 }
 
@@ -896,7 +937,7 @@ double AtomSet::dz(const unsigned int index) const
 {
   if(forces == NULL || index >= numAtoms)
     return 0.0;
-  
+
   return forces->operator[](index).z();
 }
 
@@ -954,7 +995,7 @@ double AtomSet::charge(const ChargeType type, const unsigned int index) const
 bool AtomSet::hasCharges(const ChargeType type) const
 /// Returns whether charges of the specified type are present.
 {
-  if((type == Mulliken && chargesMulliken != NULL) || 
+  if((type == Mulliken && chargesMulliken != NULL) ||
      (type == Stockholder && chargesStockholder != NULL))
     return true;
 
@@ -970,7 +1011,7 @@ QString AtomSet::chargesSCF(const ChargeType type) const
       return chargesMullikenSCF;
   else if(type == Stockholder && chargesStockholder != NULL)
       return chargesStockholderSCF;
-  
+
   return QString::null;
 }
 
@@ -983,7 +1024,7 @@ QString AtomSet::chargesDensity(const ChargeType type) const
       return chargesMullikenDensity;
   else if(type == Stockholder && chargesStockholder != NULL)
       return chargesStockholderDensity;
-  
+
   return QString::null;
 }
 
@@ -998,14 +1039,14 @@ bool AtomSet::hasForces() const
 Point3D<float> AtomSet::rotationCenter() const
 /// Returns the optimal center of rotation for the molecule.
 {
-  return Point3D<float>(static_cast<float>((boxMax->x() + boxMin->x())/2.0), 
-                        static_cast<float>((boxMax->y() + boxMin->y())/2.0), 
+  return Point3D<float>(static_cast<float>((boxMax->x() + boxMin->x())/2.0),
+                        static_cast<float>((boxMax->y() + boxMin->y())/2.0),
                         static_cast<float>((boxMax->z() + boxMin->z())/2.0));
 }
 
 //// needsExtendedFormat //////////////////////////////////////////////////////
 bool AtomSet::needsExtendedFormat()
-/// Returns true if the coordinates need to be written in BRABO's extended 
+/// Returns true if the coordinates need to be written in BRABO's extended
 /// format in order to prevent clipping. This is needed as soon as one coordinate
 /// value is at least 100.0 or a negative value at least -10.0.
 {
@@ -1027,11 +1068,70 @@ unsigned int AtomSet::ramSize() const
     result += numAtoms * sizeof(double);
   if(chargesStockholder != NULL)
     result += numAtoms * sizeof(double);
-  qDebug("AtomSet::ramSize: returning %d bytes (%d KB, %d MB)", result, result/1024, result/(1024*1024));
+  result += coordsPC.size() * sizeof(Point3D<double>);
+  result += chargesPC.size() * sizeof(double);
+  //qDebug("AtomSet::ramSize: returning %d bytes (%d KB, %d MB)", result, result/1024, result/(1024*1024));
   return result;
 }
 
-//// loadCML //////////////////////////////////////////////////////////////////
+///// countPointCharges ///////////////////////////////////////////////////////
+unsigned int AtomSet::countPointCharges() const
+/// Returns the number of point charges
+{
+  return coordsPC.size();
+}
+
+///// pointChargeCoordinates //////////////////////////////////////////////////
+Point3D<double> AtomSet::pointChargeCoordinates(const unsigned int index) const
+/// Returns the coordinates for the given point charge
+{
+  if(index < coordsPC.size())
+    return coordsPC[index];
+  else
+    return Point3D<double>();
+}
+
+///// xPC /////////////////////////////////////////////////////////////////////
+double AtomSet::xPC(const unsigned int index) const
+/// Returns the X-coordinate of the given point charge
+{
+  if(index < coordsPC.size())
+    return coordsPC[index].x();
+  else
+    return 0.0;
+}
+
+///// yPC /////////////////////////////////////////////////////////////////////
+double AtomSet::yPC(const unsigned int index) const
+/// Returns the Y-coordinate of the given point charge
+{
+  if(index < coordsPC.size())
+    return coordsPC[index].y();
+  else
+    return 0.0;
+}
+
+///// zPC /////////////////////////////////////////////////////////////////////
+double AtomSet::zPC(const unsigned int index) const
+/// Returns the Z-coordinate of the given point charge
+{
+  if(index < coordsPC.size())
+    return coordsPC[index].z();
+  else
+    return 0.0;
+}
+
+///// pointCharge /////////////////////////////////////////////////////////////
+double AtomSet::pointCharge(const unsigned int index) const
+/// Returns the charge for the given point charge
+{
+  if(index < chargesPC.size())
+    return chargesPC[index];
+  else
+    return 0.0;
+}
+
+///// loadCML /////////////////////////////////////////////////////////////////
 void AtomSet::loadCML(const QDomElement* root)
 /// Reads all atom data from a QDomElement.
 {
@@ -1040,12 +1140,12 @@ void AtomSet::loadCML(const QDomElement* root)
   QStringList newForces;
 
   ///// iterate over all nodes
-  QDomNode childNode = root->firstChild();  
+  QDomNode childNode = root->firstChild();
   while(!childNode.isNull())
   {
     if(childNode.isElement() && childNode.toElement().tagName() == "atomArray")
     {
-      ///// <atomArray> found, iterate over the nodes  
+      ///// <atomArray> found, iterate over the nodes
       QDomNode grandChildNode = childNode.firstChild();
       QDomElement atomElement;
       while(!grandChildNode.isNull())
@@ -1053,9 +1153,9 @@ void AtomSet::loadCML(const QDomElement* root)
         atomElement = grandChildNode.toElement();
         if(!atomElement.isNull() && atomElement.tagName() == "atom")
         {
-          ///// new atom found, read the attributes 
+          ///// new atom found, read the attributes
           const unsigned int atomicNumber = atomToNum(atomElement.attribute("elementType", "H"));
-          const Point3D<double> xyz3(atomElement.attribute("x3","0.0").stripWhiteSpace().toDouble(), 
+          const Point3D<double> xyz3(atomElement.attribute("x3","0.0").stripWhiteSpace().toDouble(),
                                       atomElement.attribute("y3","0.0").stripWhiteSpace().toDouble(),
                                       atomElement.attribute("z3","0.0").stripWhiteSpace().toDouble());
           ///// iterate over the child <scalar> nodes
@@ -1066,14 +1166,14 @@ void AtomSet::loadCML(const QDomElement* root)
             if(scalarNode.isElement())
             {
               if(scalarNode.toElement().tagName() == "scalar")
-              { 
+              {
                 if(DomUtils::dictEntry(scalarNode, "atom_color"))
                   color = scalarNode.toElement().text();
                 else if(scalarNode.toElement().attribute("dictRef") == DomUtils::nsCMLM + ":mulliken" && count() == mullikenCharges.size())
                 {
                   // only save the Muliken charges if all previous atoms also have charges
                   double charge = scalarNode.toElement().text().stripWhiteSpace().toDouble();
-                  mullikenCharges.push_back(charge);                
+                  mullikenCharges.push_back(charge);
                 }
                 else if(scalarNode.toElement().attribute("dictRef") == DomUtils::nsCMLM + ":stockholder" && count() == stockholderCharges.size())
                 {
@@ -1096,7 +1196,7 @@ void AtomSet::loadCML(const QDomElement* root)
     }
     childNode = childNode.nextSibling();
   }
-  
+
   ///// set the charges
   if(mullikenCharges.size() == count())
     setCharges(mullikenCharges, Mulliken);
@@ -1125,7 +1225,7 @@ void AtomSet::saveCML(QDomElement* root)
 {
   QDomElement childNode, grandChildNode;
   QDomText textNode;
-  
+
   ///// The list of atoms added as individual entries in an atomArray
   QDomElement atomArray = root->ownerDocument().createElement("atomArray");
   root->appendChild(atomArray);
@@ -1178,10 +1278,10 @@ void AtomSet::saveCML(QDomElement* root)
       grandChildNode.setAttribute("multiplierToSI", "1E-8");
       grandChildNode.setAttribute("dataType", DomUtils::nsXSD + ":double");
       childNode.appendChild(grandChildNode);
-      textNode = root->ownerDocument().createTextNode(  QString::number(forces->operator [](i).x(), 'f', 12) + " " 
-                                                      + QString::number(forces->operator [](i).y(), 'f', 12) + " " 
+      textNode = root->ownerDocument().createTextNode(  QString::number(forces->operator [](i).x(), 'f', 12) + " "
+                                                      + QString::number(forces->operator [](i).y(), 'f', 12) + " "
                                                       + QString::number(forces->operator [](i).z(), 'f', 12) + " ");
-      grandChildNode.appendChild(textNode);      
+      grandChildNode.appendChild(textNode);
     }
   }
 }
@@ -1191,7 +1291,7 @@ unsigned int AtomSet::atomToNum(const QString& atom)
 /// Returns the atomic number corresponding
 /// to the element atom.
 {
-  QString atom2 = atom.upper().simplifyWhiteSpace();  
+  QString atom2 = atom.upper().simplifyWhiteSpace();
   if(atom2 == "H")  return  1;
   if(atom2 == "HE") return  2;
   if(atom2 == "LI") return  3;
@@ -1383,9 +1483,9 @@ float AtomSet::vanderWaals(const unsigned int atom)
   //qDebug("AtomSet::vanderWaals: atomic number %d out of range. Returning 0.0", atom);
   // the radius of an unknown atom is set to that of helium (the smallest one disregarding
   // the zeroes) This sort of atom does not bond at all.
-  return 0.30f; 
+  return 0.30f;
 }
-  
+
 ///// stdColor ////////////////////////////////////////////////////////////////
 QColor AtomSet::stdColor(const unsigned int atom)
 /// Returns the standard color for the atomic
@@ -1472,7 +1572,7 @@ void AtomSet::setGeometryChanged()
 {
   setChanged(); // something has changed
 
-  clearProperties(); // properties like forces and charges do not coincide with the 
+  clearProperties(); // properties like forces and charges do not coincide with the
                      // structure anymore
   ///// set 'dirty' flags for a number of other things
   bonds1.clear();
@@ -1642,7 +1742,7 @@ void AtomSet::addBonds(const vector<unsigned int>* atomList1, const vector<unsig
   unsigned int atomIndex1, atomIndex2, atomNum1;
 
   ///// do a double loop over the atoms in each list and check whether the sum of their
-  ///// Van der Waals radii is less than the distance between them 
+  ///// Van der Waals radii is less than the distance between them
   ///// use the squared distances for speed
   unsigned int limit = atomList2->size(); // normal iteration limit for different atom lists
   for(unsigned int i = 0; i < atomList1->size(); i++)

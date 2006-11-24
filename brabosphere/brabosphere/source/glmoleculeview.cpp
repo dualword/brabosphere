@@ -327,11 +327,11 @@ unsigned int GLMoleculeView::vertexCount()
     result = atoms->count() * moleculeParameters.quality*2 * moleculeParameters.quality*2;
   qDebug("result2 = %d", result);
   if(localMoleculeStyle == Cartoon || displayStyle(Molecule) == BlackAndWhite)
-    result *= 2; // due to the outline 
+    result *= 2; // due to the outline
   qDebug("result3 = %d", result);
   result *= 4; // spheres are made from quads (assuming non-shared vertices of course)
   qDebug("result4 = %d", result);
-  
+
   ///// the bonds
   vector<unsigned int>* firstAtom;
   vector<unsigned int>* secondAtom;
@@ -346,18 +346,18 @@ unsigned int GLMoleculeView::vertexCount()
       if(atoms->color(*it1) != atoms->color(*it2))
         ++numBonds;
     }
-  }  
-  qDebug("numBonds = %d", numBonds);  
+  }
+  qDebug("numBonds = %d", numBonds);
   if(localMoleculeStyle > SmoothLines && displayStyle(Molecule) != VanDerWaals) // Tubes, BallAndStick, Cartoon or BlackAndWhite
   {
     result += 4 * numBonds * moleculeParameters.quality*2;
     if(localMoleculeStyle == Cartoon || localMoleculeStyle == BlackAndWhite)
-      result += 4 * numBonds * moleculeParameters.quality*2; // due to the outline 
+      result += 4 * numBonds * moleculeParameters.quality*2; // due to the outline
   }
   else if(localMoleculeStyle == Lines || localMoleculeStyle == SmoothLines) // (Smooth)Lines
     result += 2 * numBonds;
   qDebug("result5 = %d", result);
-  
+
   ///// selections
   if(selectionList.size() > 0)
   {
@@ -371,7 +371,7 @@ unsigned int GLMoleculeView::vertexCount()
         result += 4 * (selectionList.size()-1) * moleculeParameters.quality*2;
       else
         result += 2 * (selectionList.size()-1);
-    }    
+    }
   }
   qDebug("result6 = %d", result);
 
@@ -390,13 +390,13 @@ unsigned int GLMoleculeView::vertexCount()
       numChars += (atoms->count() - 999);
     if(atoms->count() > 10000)
       numChars += (atoms->count() - 9999);
-  }  
+  }
   if(isShowingCharges(AtomSet::Stockholder) || isShowingCharges(AtomSet::Mulliken))
     numChars += atoms->count() * 9;
-  qDebug("numChars = %d", numChars);  
+  qDebug("numChars = %d", numChars);
   result += numChars * 4;
   qDebug("result7 = %d", result);
-    
+
   ///// surfaces/volumes/slices
   if(densityDialog != NULL && densityDialog->visualizationType() == DensityBase::ISOSURFACES)
   {
@@ -417,7 +417,7 @@ unsigned int GLMoleculeView::vertexCount()
     result += 4;
     if(densityDialog->CheckBoxSliceTransparent->isChecked())
       result += 4;
-  } 
+  }
   qDebug("result8 = %d", result);
 
   return result;
@@ -1776,14 +1776,37 @@ bool GLMoleculeView::rotateSelection(const double angleX, const double angleY, c
   while(it != selectionList.end())
   {
     Vector3D<double> v(centerOfMass, atoms->coordinates(*it));
-    //v.rotate(axis, angle);
     v.rotate(backAxis, backAngle);
     v.rotate(axis, angle);
-    v.rotate(backAxis, -backAngle);
+     v.rotate(backAxis, -backAngle);
     atoms->setX(*it, centerOfMass.x() + v.x());
     atoms->setY(*it, centerOfMass.y() + v.y());
     atoms->setZ(*it, centerOfMass.z() + v.z());
     it++;
+  }
+  ///// TEMP HACK: if all atoms are selected, also rotate the point charges
+  if(selectionList.size() == atoms->count())
+  {
+    vector<Point3D<double> > newPCcoords;
+    vector<double> newPCcharges;
+    newPCcoords.reserve(atoms->countPointCharges());
+    newPCcharges.reserve(atoms->countPointCharges());
+    for(unsigned int i = 0; i < atoms->countPointCharges(); i++)
+    {
+      Vector3D<double> v(centerOfMass, atoms->pointChargeCoordinates(i));
+      v.rotate(backAxis, backAngle);
+      v.rotate(axis, angle);
+      v.rotate(backAxis, -backAngle);
+      Point3D<double> point(centerOfMass.x() + v.x(), centerOfMass.y() + v.y(), centerOfMass.z() + v.z());
+      point.setID(atoms->pointChargeCoordinates(i).id());
+      newPCcoords.push_back(point);
+      newPCcharges.push_back(atoms->pointCharge(i));
+    }
+    atoms->removePointCharges();
+    vector<Point3D<double> >::iterator it1 = newPCcoords.begin();
+    vector<double>::iterator it2 = newPCcharges.begin();
+    for(; it1 != newPCcoords.end(); it1++, it2++)
+      atoms->addPointCharge((*it1).x(), (*it1).y(), (*it1).z(), *it2, (*it1).id());
   }
   updateAtomSet();
   setModified();

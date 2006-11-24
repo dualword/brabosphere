@@ -143,6 +143,11 @@ unsigned int CrdFactory::readFromFile(AtomSet* atoms, QString filename)
     ///// Molden format
     return readMoldenFile(atoms, filename);
   }
+  else if(molcasExtension(filename))
+  {
+    ///// Molden format
+    return readMolcasFile(atoms, filename);
+  }
 #ifdef USE_OPENBABEL1
   else
   {
@@ -261,6 +266,11 @@ unsigned int CrdFactory::writeToFile(AtomSet* atoms, QString filename, bool exte
   {
     ///// Brabo format
     return writeBraboFile(atoms, filename, extendedFormat);
+  }
+  else if(molcasExtension(filename))
+  {
+    ///// MOLCAS format
+    return writeMolcasFile(atoms, filename);
   }
 #ifdef USE_OPENBABEL1
   else
@@ -454,10 +464,11 @@ QStringList CrdFactory::supportedInputFormats()
 /// supported coordinate input formats, ready for use in a QFileDialog filter.
 {
   // Xbrabo filetypes
-  QStringList allTypes = "*.crd *.c00 *.ncr *.crdcrd *.fchk *.molden"; // all locally supported filetypes
+  QStringList allTypes = "*.crd *.c00 *.ncr *.crdcrd *.fchk *.molden *.input"; // all locally supported filetypes
   QStringList result = "Brabo (*.crd *.c00 *.ncr *.crdcrd)";
   result += "Gaussian Checkpoint (*.fchk)";
   result += "Molden (*.molden)";
+  result += "MOLCAS (*.input)";
 
 #ifdef USE_OPENBABEL1
   for(unsigned int i = 0; i < extab.Count(); i++)
@@ -513,6 +524,7 @@ QStringList CrdFactory::supportedOutputFormats()
 /// supported coordinate output formats, ready for use in a QFileDialog filter.
 {
   QStringList result = "Brabo (*.crd)";
+  result += "MOLCAS (*.input)";
 #ifdef USE_OPENBABEL1
   for(unsigned int i = 0; i < extab.Count(); i++)
   {
@@ -559,7 +571,9 @@ bool CrdFactory::validInputFormat(const QString filename)
 /// Returns true if the contents of the filename can be read.
 {
   // check for local formats
-  if(braboExtension(filename) || xmolExtension(filename) || gaussianExtension(filename) || moldenExtension(filename))
+  if(braboExtension(filename) || xmolExtension(filename) ||
+     gaussianExtension(filename) || moldenExtension(filename) ||
+     molcasExtension(filename))
     return true;
 
 #ifdef USE_OPENBABEL1
@@ -597,8 +611,8 @@ bool CrdFactory::validForceInputFormat(const QString filename)
 bool CrdFactory::validOutputFormat(const QString filename)
 /// Returns true if the filename can be written.
 {
-  // check for Brabo formats
-  if(braboExtension(filename))
+  // check for local formats
+  if(braboExtension(filename) || molcasExtension(filename))
     return true;
 
 #ifdef USE_OPENBABEL1
@@ -653,6 +667,14 @@ bool CrdFactory::moldenExtension(const QString filename)
 /// given filename corresponds to a Molden format.
 {
   return filename.section(".", -1).lower() == "molden";
+}
+
+///// molcasExtension //////////////////////////////////////////////////////////
+bool CrdFactory::molcasExtension(const QString filename)
+/// Returns true if the extension of the
+/// given filename corresponds to a MOLCAS format.
+{
+  return filename.section(".", -1).lower() == "input";
 }
 
 //// readBraboFile ////////////////////////////////////////////////////////////
@@ -1180,6 +1202,132 @@ unsigned int CrdFactory::readMoldenFile(AtomSet* atoms, const QString filename)
     atoms->addAtom(x, y, z, line.section(" ", 2, 2, QString::SectionSkipEmpty).toUInt());
     line = stream.readLine();
   }
+  return OK;
+}
+
+//// readMolcasFile ///////////////////////////////////////////////////////////
+unsigned int CrdFactory::readMolcasFile(AtomSet* atoms, const QString filename)
+/// Reads coordinates from a given MOLCAS file.
+/// This function does not check the validity of the given filename.
+{
+  ///// open the file
+  QFile file(filename);
+  if(!file.open(IO_ReadOnly))
+    return ErrorOpen;
+
+   ///// find the start of the SEWARD input section
+  QTextStream stream(&file);
+  QString line = stream.readLine();
+  while(!stream.atEnd() && !line.contains("&SEWARD") && !line.contains("&END"))
+    line = stream.readLine();
+  if(stream.atEnd())
+    return ErrorRead;
+
+  atoms->clear();
+
+  ///// read every basis set section and point charge section until the end of the SEWARD section
+  while(!stream.atEnd() && !line.contains("End of input", false))
+  {
+    ///// find the start of a basis set section or a point charge section
+    while(!stream.atEnd() && !line.stripWhiteSpace().left(4).contains("basi", false)
+                          && !line.stripWhiteSpace().left(4).contains("xfie", false))
+      line = stream.readLine();
+
+    if(stream.atEnd())
+      return ErrorRead;
+
+    ///// for basis set sections
+    if(line.stripWhiteSpace().left(4).contains("basi", false))
+    {
+      // read the next (non-comment) line which should contain the basis set definition
+      line = stream.readLine();
+      while(line.stripWhiteSpace().left(1) == "*")
+        line = stream.readLine();
+      unsigned int atomNumber = AtomSet::atomToNum(line.section('.',0,0).stripWhiteSpace());
+
+      // read all coordinate lines
+      double x, y, z;
+      bool okX, okY, okZ;
+      while(!stream.atEnd() && !line.contains("End of basis", false))
+      {
+        x = line.section(" ", 1, 1, QString::SectionSkipEmpty).toDouble(&okX);
+        y = line.section(" ", 2, 2, QString::SectionSkipEmpty).toDouble(&okY);
+        z = line.section(" ", 3, 3, QString::SectionSkipEmpty).toDouble(&okZ);
+        if(!line.section(" ", 4, 4, QString::SectionSkipEmpty).contains("angs", false))
+        {
+           x *= AUTOANG;
+           y *= AUTOANG;
+           z *= AUTOANG;
+        }
+        if(okX && okY && okZ && line.stripWhiteSpace().left(1) != "*")
+          atoms->addAtom(x, y, z, atomNumber);
+        line = stream.readLine();
+      }
+    }
+    ///// for point charge subsections
+    else
+    {
+      ///// get the number of point charges
+      line = stream.readLine();
+      if(line.contains("@"))
+        return OK; // can't handle reading from an external file...
+      unsigned int numCharges = line.section(" ",0, 0, QString::SectionSkipEmpty).toUInt();
+      double conv = AUTOANG;
+      if(line.section(" ",1, 1, QString::SectionSkipEmpty).contains("angs", false))
+        conv = 1.0;
+      double x, y, z, q;
+      bool okX, okY, okZ, okQ;
+      for(unsigned int i = 0; i < numCharges; i++)
+      {
+        line = stream.readLine();
+        while(line.stripWhiteSpace().left(1) == "*")
+          line = stream.readLine();
+        x = line.section(" ", 0, 0, QString::SectionSkipEmpty).toDouble(&okX);
+        y = line.section(" ", 1, 1, QString::SectionSkipEmpty).toDouble(&okY);
+        z = line.section(" ", 2, 2, QString::SectionSkipEmpty).toDouble(&okZ);
+        q = line.section(" ", 3, 3, QString::SectionSkipEmpty).toDouble(&okQ); // the charge
+        if(okX && okY && okZ && okQ)
+          atoms->addPointCharge(x*conv, y*conv, z*conv, q);
+      }
+    }
+    line = stream.readLine();
+  }
+  return OK;
+}
+
+//// writeMolcasFile //////////////////////////////////////////////////////////
+unsigned int CrdFactory::writeMolcasFile(AtomSet* atoms, const QString filename)
+/// Writes coordinates to a MOLCAS .input file with the specified filename.
+{
+  QFile file(filename);
+  if(!file.open(IO_WriteOnly))
+    return ErrorOpen;
+
+  QTextStream stream(&file);
+  QString line;
+
+  ///// write the coordinates
+  stream << " &SEWARD &END\n\nBasis set\nX.dummy\n";
+  for(unsigned int i = 0; i < atoms->count(); i++)
+    stream << QString("%1%2  %3  %4  %5\n").arg(AtomSet::numToAtom(atoms->atomicNumber(i)).stripWhiteSpace())
+                                      .arg(i+1)
+                                      .arg(atoms->x(i)/AUTOANG, 20, 'f', 12)
+                                      .arg(atoms->y(i)/AUTOANG, 20, 'f', 12)
+                                      .arg(atoms->z(i)/AUTOANG, 20, 'f', 12);
+  stream << "End of basis\n";
+
+  ///// write the point charges
+  if(atoms->countPointCharges() != 0)
+  {
+    stream << "\nXField\n" << atoms->countPointCharges() << "\n";
+    for(unsigned int i = 0; i < atoms->countPointCharges(); i++)
+      stream << QString("%1  %2 %3  %4 .0 .0 .0\n").arg(atoms->xPC(i)/AUTOANG, 20, 'f', 12)
+                                                   .arg(atoms->yPC(i)/AUTOANG, 20, 'f', 12)
+                                                   .arg(atoms->zPC(i)/AUTOANG, 20, 'f', 12)
+                                                   .arg(atoms->pointCharge(i), 10, 'f', 7);
+  }
+  stream << "End of input\n";
+  file.close();
   return OK;
 }
 
