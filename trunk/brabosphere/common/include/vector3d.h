@@ -265,7 +265,6 @@ template <class T> void Vector3D<T>::rotate(const Vector3D axis, const T angle)
   Quaternion<T> thisVector(0.0, xVect, yVect, zVect);
   ///// determine the resulting vector
   Quaternion<T> result = rotation*thisVector*inverse;
-  result.normalize();
   setValues(result.x(), result.y(), result.z());
 }
 

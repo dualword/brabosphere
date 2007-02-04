@@ -36,8 +36,9 @@
 ///// Header files ////////////////////////////////////////////////////////////
 
 // C++ header files
+#include <cassert>
 #include <cmath>
-#ifndef QT_NO_DEBUG
+#ifndef NDEBUG
   #include <iostream>
 #endif
 
@@ -168,10 +169,10 @@ template <class T> void Quaternion<T>::identity()
 template <class T> void Quaternion<T>::normalize()
 /// Normalizes the quaternion.
 {
-  T norm = wQuat*wQuat + xQuat*xQuat + yQuat*yQuat + zQuat*zQuat;
+  T norm = sqrt(wQuat*wQuat + xQuat*xQuat + yQuat*yQuat + zQuat*zQuat);
   if(norm < Point3D<T>::TOLERANCE)
   {
-#ifndef QT_NO_DEBUG
+#ifndef NDEBUG
     std::cerr << "Quaternion::normalize(): Norm of the quaternion too close to zero" << std::endl;
 #endif
     return;
@@ -182,14 +183,14 @@ template <class T> void Quaternion<T>::normalize()
   yQuat /= norm;
   zQuat /= norm;
 
-  norm = wQuat*wQuat + xQuat*xQuat + yQuat*yQuat + zQuat*zQuat;
+#ifndef NDEBUG
+  norm = sqrt(wQuat*wQuat + xQuat*xQuat + yQuat*yQuat + zQuat*zQuat);
   if(fabs(norm - 1.0f) > Point3D<T>::TOLERANCE)
   {
-#ifndef QT_NO_DEBUG
     std::cerr << "Quaternion::normalize(): Norm of the quaternion not equal to 1 but " << norm << std::endl;
-#endif
     return;
   }
+#endif
 
   limitRange(-1.0, wQuat, 1.0);
   limitRange(-1.0, xQuat, 1.0);
@@ -215,8 +216,6 @@ template <class T> void Quaternion<T>::setValues(const T w, const T x, const T y
   xQuat = x;
   yQuat = y;
   zQuat = z;
-
-  normalize();
 }
 
 ///// conjugate ///////////////////////////////////////////////////////////////
@@ -233,11 +232,14 @@ template <class T> void Quaternion<T>::inverse()
 /// Changes the quaternion into its inverse.
 {
   conjugate();
-  T norm = wQuat*wQuat + xQuat*xQuat + yQuat*yQuat + zQuat*zQuat;
-  wQuat /= norm;
-  xQuat /= norm;
-  yQuat /= norm;
-  zQuat /= norm;
+  T squaredNorm = wQuat*wQuat + xQuat*xQuat + yQuat*yQuat + zQuat*zQuat;
+  if(squaredNorm < Point3D<T>::TOLERANCE)
+    return;
+
+  wQuat /= squaredNorm;
+  xQuat /= squaredNorm;
+  yQuat /= squaredNorm;
+  zQuat /= squaredNorm;
 }
 
 ///// w ///////////////////////////////////////////////////////////////////////
