@@ -603,31 +603,43 @@ void GLSimpleMoleculeView::selectEntity(const QPoint position)
   GLuint* pBuffer = selectionBuffer;
   GLint viewport[4]; // viewport
 
+  // save the modelview matrix
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+
   ///// get the selections
   glSelectBuffer(BUFFER_SIZE, pBuffer); // set up the selection buffer
   glGetIntegerv(GL_VIEWPORT, viewport); // get the viewport
   glMatrixMode(GL_PROJECTION); // set projection mode
   glPushMatrix(); // save the matrix
-  glRenderMode(GL_SELECT); // set selection mode
   glLoadIdentity();
+  glRenderMode(GL_SELECT); // set selection mode
   GLint xPosition = position.x();
   GLint yPosition = viewport[3] - position.y();
   gluPickMatrix(xPosition, yPosition, 2, 2, viewport); // set up a viewport of 2 pixels wide around the mouse position
   setPerspective(); // calls gluPerspective or glOrtho depending on the prespective setting
   glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 
+  // setup the scene as would be done in paintGL/drawScene
+  Vector3D<float> axis;
+  float angle;
+  orientationQuaternion->getAxisAngle(axis, angle);
+  glTranslatef(xPos, yPos, 0.0f);
+  glRotatef(angle, axis.x(), axis.y(), axis.z());
+  if(scaleFactor < 1.0f)
+    glScalef(scaleFactor, scaleFactor, scaleFactor);
+  glTranslatef(-centerX, -centerY, -centerZ);
+
+  // draw the atoms needed for selection
+  glInitNames();
+  glPushName(0);
   if(moleculeStyle == None || moleculeStyle == Lines)
-  {
-    ///// temporarily change to a tubes representation to be able to get the selections
-    unsigned int oldStyle = moleculeStyle;
-    moleculeStyle = Tubes;
-    updateGL();
-    moleculeStyle = oldStyle;
-  }
+    drawAtoms(Tubes, false); // colors are not needed
   else
-    updateGL(); // just draw the scene
+    drawAtoms(moleculeStyle, false); // just draw the atoms
 
-  ///// generate the selection
+  ///// generate the selection and reset the selection mode
   GLint hits = glRenderMode(GL_RENDER);
 
   ///// restore the original view
@@ -638,16 +650,16 @@ void GLSimpleMoleculeView::selectEntity(const QPoint position)
   ///// process the selection
   if(hits != 0)
   {
-    pBuffer++; // GLuint count = *pBuffer++; // the number of names in the buffer
-    pBuffer++; // GLuint minz = *pBuffer++; // minimum z-value of selection
-    pBuffer++; // GLuint maxz = *pBuffer++; // maximum z-value of selection
+    GLuint count = *pBuffer++; // GLuint count = *pBuffer++; // the number of names in the buffer
+    pBuffer +=2; // GLuint minz = *pBuffer++; // minimum z-value of selection
+                 // GLuint maxz = *pBuffer++; // maximum z-value of selection
     GLuint id = *pBuffer; // the id of the first selection
-    //qDebug("Number of selections: %d", count);
+    qDebug("Number of selections: %d", count);
     qDebug("ID of first selection: %d", id);
     processSelectionCommand(id);
     updateGL();
+    emit changed();
   }
-  emit changed();
 }
 
 ///// centerMolecule //////////////////////////////////////////////////////////
@@ -699,7 +711,7 @@ void GLSimpleMoleculeView::updateMolecule()
   ///// check for fast rendering
   unsigned int localMoleculeStyle = moleculeStyle;
   unsigned int localForcesStyle = forcesStyle;
-  if(atoms->count() + atoms->countPointCharges() > moleculeParameters.fastRenderLimit && moleculeStyle > SmoothLines)
+  if(atoms->count() > moleculeParameters.fastRenderLimit && moleculeStyle > SmoothLines)
   {
     localMoleculeStyle = Lines;
     localForcesStyle = Lines;
@@ -819,9 +831,6 @@ void GLSimpleMoleculeView::drawScene()
   glEnable(GL_LIGHTING);
   // END DEBUG
 
-  glInitNames();
-  glPushName(0);
-
   bool usedBlending = false;
   ///// draw all shapes in order of decreasing opacity
   for(unsigned int i = 0; i < shapes.size(); i++)
@@ -871,7 +880,6 @@ void GLSimpleMoleculeView::drawAtoms(const unsigned int style, const bool useCol
   //qDebug("calling drawAtoms");
   if(style == None || style == Lines || style == SmoothLines || style > BlackAndWhite)
     return;
-
 
   for(unsigned int i = 0; i < atoms->count(); i++)
   {

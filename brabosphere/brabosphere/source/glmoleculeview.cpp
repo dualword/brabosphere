@@ -750,6 +750,8 @@ void GLMoleculeView::updateShapes()
       prop.id = i;
       if(densityDialog->surfaceType(i) == 0)
         prop.opacity = densityDialog->surfaceOpacity(i);
+      else if(baseParameters.antialias)
+        prop.opacity = 99; // antialiased lines/dots need blending enabled
       else
         prop.opacity = 100;
       prop.type = SHAPE_SURFACE;
@@ -1778,7 +1780,7 @@ bool GLMoleculeView::rotateSelection(const double angleX, const double angleY, c
     Vector3D<double> v(centerOfMass, atoms->coordinates(*it));
     v.rotate(backAxis, backAngle);
     v.rotate(axis, angle);
-     v.rotate(backAxis, -backAngle);
+    v.rotate(backAxis, -backAngle);
     atoms->setX(*it, centerOfMass.x() + v.x());
     atoms->setY(*it, centerOfMass.y() + v.y());
     atoms->setZ(*it, centerOfMass.z() + v.z());

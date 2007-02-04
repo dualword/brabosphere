@@ -1919,7 +1919,7 @@
                                                     <cstring>CheckBoxAA</cstring>
                                                 </property>
                                                 <property name="text">
-                                                    <string>Antialiasing</string>
+                                                    <string>Line antialiasing</string>
                                                 </property>
                                                 <property name="checked">
                                                     <bool>true</bool>
