@@ -99,6 +99,8 @@ class PreferencesBase : public PreferencesWidget
     void updateOpacitySelection();      // updates TextLabelSelection according to SliderSelectionOpacity
     void updateOpacityForces();         // updates TextLabelForces according to SliderForcesOpacity
     void updateColorButtonForce();      // enables/disables ColorButtonForce according to the selected color type
+    ///// OpenGL
+    void updateSliderSlices();          // updates the maximum value for SliderSlices
     ///// PVM
     void changePVMHost();               // updates LineEditPVMHost with the selected item in ListViewPVMHosts
     void updatePVMHost(const QString& text);      // keeps ListViewPVMHosts in sync with LineEditPVMHost
@@ -172,6 +174,7 @@ class PreferencesBase : public PreferencesWidget
       unsigned int quality;             ///< SliderQuality
       unsigned int sliceQuality;        ///< SliderSlices
       bool perspectiveProjection;       ///< ButtonGroupProjection
+      bool use3DTextures;               ///< CheckBoxVolumeHQ
 
       ///// PVM
       QStringList pvmHosts;             ///< ListViewPVMHosts      
@@ -190,6 +193,8 @@ class PreferencesBase : public PreferencesWidget
     float minLineWidthGL;               ///< Contains the minimum possible linewidth for a glLineWidth call.
     float maxLineWidthGL;               ///< Contains the maximum possible linewidth for a glLineWidth call.
     float lineWidthGranularity;         ///< Contains the granularity for OpenGL linewidths.
+    int max2DTextureSize;               ///< Maximum allowed size for 2D textures
+    int max3DTextureSize;               ///< Maximum allowed size for 3D textures
     QString toolbarsInfo;               ///< Contains the info needed to restore the toolbars.
     bool toolbarsStatus;                ///< Contains the visibility of the statusbar (not present in toolbarsInfo).   
 };

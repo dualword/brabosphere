@@ -1867,7 +1867,7 @@
                                                             <enum>NoMarks</enum>
                                                         </property>
                                                         <property name="whatsThis" stdset="0">
-                                                            <string>Allows changing the quality with which atoms and bonds/forces are drawn in the Ball &amp; Stick and Tubes visualization modes. Increasing the slider will give a higher quality but a decreased drawing speed and vice versa.</string>
+                                                            <string>Allows changing the maximum quality with which densities are shown using volume rendering and slices. If the source data is of limited quality, increasing the value of this slider will not increase the quality further.</string>
                                                         </property>
                                                     </widget>
                                                     <widget class="QSlider" row="0" column="1">
@@ -1953,13 +1953,28 @@
                                                     <string>Increases the perception of depth in the scene by fading distant objects.</string>
                                                 </property>
                                             </widget>
+                                            <widget class="QCheckBox">
+                                                <property name="name">
+                                                    <cstring>CheckBoxVolumeHQ</cstring>
+                                                </property>
+                                                <property name="text">
+                                                    <string>High quality volume rendering</string>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="whatsThis" stdset="0">
+                                                    <string>Normally, volume rendering of electron densities is done using 2D textures which are available in all standards OpenGL implementations (low quality). This approach, however, suffers from unwanted edge fading effects. Using 3D textures solves this, but this is not always available (high quality). 
+2D textures are much faster, but take up 3 times as much video memory. Only uncheck this box if handling volume renders becomes too slow.</string>
+                                                </property>
+                                            </widget>
                                         </vbox>
                                     </widget>
                                 </grid>
                             </widget>
                             <spacer>
                                 <property name="name">
-                                    <cstring>spacer11</cstring>
+                                    <cstring>spacer18</cstring>
                                 </property>
                                 <property name="orientation">
                                     <enum>Vertical</enum>
@@ -1970,7 +1985,7 @@
                                 <property name="sizeHint">
                                     <size>
                                         <width>20</width>
-                                        <height>40</height>
+                                        <height>16</height>
                                     </size>
                                 </property>
                             </spacer>

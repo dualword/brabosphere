@@ -439,7 +439,7 @@ void GLSimpleMoleculeView::updateShapes()
 
   // molecule
   prop.id = 0; // not used
-  prop.opacity = 100; // always
+  prop.opacity = 100; // always, if blending is needed for bonds (antialiasing), blending is turned on locally
   prop.type = SHAPE_MOLECULE;
   shapes.push_back(prop);
   // labels

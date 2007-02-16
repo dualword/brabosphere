@@ -32,9 +32,10 @@ class AtomSet;
 class DensityGrid;
 class DensityBase;
 class NewAtomBase;
+#include "point3d.h"
 
 // Base class header file
-#include <glsimplemoleculeview.h>
+#include "glsimplemoleculeview.h"
 
 ///// class GLMoleculeView ////////////////////////////////////////////////////
 class GLMoleculeView : public GLSimpleMoleculeView
@@ -57,7 +58,8 @@ class GLMoleculeView : public GLSimpleMoleculeView
     struct GLTextureParameters
     /// A struct containing all the OpenGL parameters pertaining to texturing.
     {
-      int maximumSize;                  ///< The maximum size of a 2D texture (should be a power of 2)
+      int maximumSize;                  ///< The maximum size of a 2D/3D texture (should be a power of 2)
+      bool use3DTextures;               ///< Determines whether 3D texturing is used instead of stacks of 2D textures
     };
 
     ///// static public member functions
@@ -84,10 +86,11 @@ class GLMoleculeView : public GLSimpleMoleculeView
     void addAtoms();                    // adds atoms using a dialog
 
   protected:
-    virtual void initializeGL();        // initial OpenGL setup
+    //virtual void initializeGL();        // initial OpenGL setup
     void mouseMoveEvent(QMouseEvent* e);// event which takes place when the mouse is moved while a mousebutton is pressed
     void keyPressEvent(QKeyEvent* e);   // event which takes places when a key is pressed
     virtual void updateShapes();        // updates the shapes vector
+    virtual void updateGLSettings();    // updates the GL View according to parameters
     void processSelectionCommand(const unsigned int id);      // creates a Command to call processSelection
     void translateCommand(const int amountX, const int amountY, const int amountZ);       // creates a Command to translate the scene
     void rotateCommand(const float amountX, const float amountY, const float amountZ);    // creates a Command to rotate the scene
@@ -134,18 +137,27 @@ private slots:
     bool changeSelectedIC(const int range);       // changes the selected internal coordinate
     void drawItem(const unsigned int index);      // draws the item shapes[index]
     void drawSurface(const unsigned int index);   // draws an isosurface
-    void drawVolume();                  // draws a grid with volumetric rendering
+    void drawVolume();                  // draws a grid with volumetric rendering 
+    void drawVolume2D();                // draws a grid with volumetric rendering using a stack of 2D textures
+    void drawVolume3D();                // draws a grid with volumetric rendering using a 3D texture
+    void updateVolume2D();              // updates the 2D textures used for volume rendering
+    void updateVolume3D();              // updates the 3D texture used for volume rendering
     void drawSlice();                   // draws a slice
     unsigned int getDirection() const;  // gets the current viewing direction
-    QImage glSlice(const QImage& image) const;    // resizes an image according to the maximum slice size settings and OpenGL limitations
+    unsigned int textureSize(const unsigned int size) const;// returns the power-of-two size according to the maximum texture size settings and OpenGL limitations
+    QImage glSlice(const QImage& image) const;    // resizes an image according to the textureSize() values and converts it to OpenGL format
+    void clearVolumeTextures();         // clear any allocation made for OpenGL texturing
     
     ///// private member data   
     DensityGrid* densityGrid;           ///< An isodensity surface.
     DensityBase* densityDialog;         ///< A dialog for changing the isodensity surfaces.
     NewAtomBase* newAtomDialog;         ///< A dialog for adding atoms to the atomset
     std::vector<GLuint> glSurfaces;     ///< A vector that holds the GL display list indices for surfaces.
-    GLuint volumeObjects;               ///< Holds the start index of the first GL display list for volume rendering textures.
-    unsigned int numVolumeObjects;      ///< Holds the number of allocated display lists for texturing.
+    GLuint volumeObjects;               ///< Holds the start index of the first GL display list for 2D volume rendering textures.
+    unsigned int numVolumeObjects;      ///< Holds the number of allocated display lists for 2D texturing.
+    GLuint* textureID2D;                ///< Holds the list of texture names for the 2D textures
+    GLuint textureID3D;                 ///< Holds the texture name of the 3D texture
+    Point3D<unsigned int> volumeTextureSize; ///< Holds the size of the 3D volume texture
     GLuint sliceObject;                 ///< Holds the OpenGL display list number for slices
 
     ///// static private member data

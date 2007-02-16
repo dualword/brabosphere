@@ -243,25 +243,24 @@ void AtomSet::removeAtom(const unsigned int index)
 /// Removes the atom at position index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
-  if((numAtoms > 0) && (index < numAtoms))
+  assert(numAtoms > 0 && index < numAtoms);
+
+  if(index == numAtoms - 1)
   {
-    if(index == numAtoms - 1)
-    {
-      coords.pop_back();
-      colors.pop_back();
-    }
-    else
-    {
-      vector<Point3D<double> >::iterator it = coords.begin();
-      it += index;
-      coords.erase(it);
-      vector<QColor>::iterator it2 = colors.begin();
-      it2 += index;
-      colors.erase(it2);
-    }
-    numAtoms--;
-    setGeometryChanged();
+    coords.pop_back();
+    colors.pop_back();
   }
+  else
+  {
+    vector<Point3D<double> >::iterator it = coords.begin();
+    it += index;
+    coords.erase(it);
+    vector<QColor>::iterator it2 = colors.begin();
+    it2 += index;
+    colors.erase(it2);
+  }
+  numAtoms--;
+  setGeometryChanged();
 }
 ///// addPointCharge //////////////////////////////////////////////////////////
 void AtomSet::addPointCharge(const double x, const double y, const double z, const double charge, const unsigned int atomicNumber)
@@ -308,8 +307,7 @@ void AtomSet::setX(const unsigned int index, const double x)
 /// Sets the x-coordinate of the atom at position \c index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
-  if(index >= numAtoms)
-    return;
+  assert(index < numAtoms);
 
   coords[index].setValues(x, coords[index].y(), coords[index].z());
   setGeometryChanged();
@@ -320,8 +318,7 @@ void AtomSet::setY(const unsigned int index, const double y)
 /// Sets the y-coordinate of the atom at position \c index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
-  if(index >= numAtoms)
-    return;
+  assert(index < numAtoms);
 
   coords[index].setValues(coords[index].x(), y, coords[index].z());
   setGeometryChanged();
@@ -332,8 +329,7 @@ void AtomSet::setZ(const unsigned int index, const double z)
 /// Sets the z-coordinate of the atom at position index.
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
-  if(index >= numAtoms)
-    return;
+  assert(index < numAtoms);
 
   coords[index].setValues(coords[index].x(), coords[index].y(), z);
   setGeometryChanged();
@@ -343,8 +339,7 @@ void AtomSet::setZ(const unsigned int index, const double z)
 void AtomSet::setColor(const unsigned int index, const QColor color)
 /// Sets the color of the atom at position index.
 {
-  if(index >= numAtoms)
-    return;
+  assert(index < numAtoms);
 
   colors[index] = color;
   setChanged();
@@ -416,8 +411,7 @@ void AtomSet::clearCharges(const ChargeType type)
 void AtomSet::setForces(const unsigned int index, const double dx, const double dy, const double dz)
 /// Sets the forces on the atom at position index.
 {
-  if(index >= numAtoms)
-    return;
+  assert(index < numAtoms);
 
   if(forces == NULL)
     forces = new vector<Point3D<double> >(numAtoms);
@@ -433,8 +427,7 @@ void AtomSet::changeBond(const double amount, const unsigned int movingAtom, con
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
   ///// check the validity of the input
-  if(movingAtom >= numAtoms || secondAtom >= numAtoms)
-    return;
+  assert(movingAtom < numAtoms && secondAtom < numAtoms);
   if(fabs(amount) < Point3D<double>::TOLERANCE)
     return;
 
@@ -479,8 +472,7 @@ void AtomSet::changeAngle(const double amount, const unsigned int movingAtom, co
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
   ///// check the validity of the input
-  if(movingAtom >= numAtoms || centralAtom >= numAtoms || lastAtom >= numAtoms)
-    return;
+  assert(movingAtom < numAtoms && centralAtom < numAtoms && lastAtom < numAtoms);
   if(fabs(amount) < Point3D<double>::TOLERANCE)
     return;
 
@@ -529,8 +521,7 @@ void AtomSet::changeTorsion(const double amount, const unsigned int movingAtom, 
 /// \warning Implies resetting all properties (forces, charges, etc.)
 {
   ///// check the validity of the input
-  if(movingAtom >= numAtoms || secondAtom >= numAtoms || thirdAtom >= numAtoms || fourthAtom >= numAtoms)
-    return;
+  assert(movingAtom < numAtoms && secondAtom < numAtoms && thirdAtom < numAtoms && fourthAtom < numAtoms);
   if(fabs(amount) < Point3D<double>::TOLERANCE)
     return;
 
@@ -585,8 +576,7 @@ void AtomSet::transferCoordinates(const AtomSet* source)
 /// \warning Implies resetting all properties (forces, charges, etc.)
 
 {
-  if(count() != source->count())
-    return;
+  assert(count() == source->count());
 
   ///// copy the coordsX, Y and Z vectors
   coords.assign(source->coords.begin(), source->coords.end());
@@ -605,60 +595,54 @@ unsigned int AtomSet::count() const
 Point3D<double> AtomSet::coordinates(const unsigned int index) const
 /// Returns the coordinates of the atom at position \c index.
 {
-  if(index < numAtoms)
-    return coords[index];
-  else
-    return Point3D<double>();
+  assert(index < numAtoms);
+
+  return coords[index];
 }
 
 ///// x ///////////////////////////////////////////////////////////////////////
 double AtomSet::x(const unsigned int index) const
 /// Returns the x-coordinate of the atom at position \c index.
 {
-  if(index < numAtoms)
-    return coords[index].x();
-  else
-    return 0.0;
+  assert(index < numAtoms);
+
+  return coords[index].x();
 }
 
 ///// y ///////////////////////////////////////////////////////////////////////
 double AtomSet::y(const unsigned int index) const
 /// Returns the y-coordinate of the atom at position \c index.
 {
-  if(index < numAtoms)
-    return coords[index].y();
-  else
-    return 0.0;
+  assert(index < numAtoms);
+
+  return coords[index].y();
 }
 
 ///// z ///////////////////////////////////////////////////////////////////////
 double AtomSet::z(const unsigned int index) const
 /// Returns the z-coordinate of the atom at position \c index
 {
-  if(index < numAtoms)
-    return coords[index].z();
-  else
-    return 0.0;
+  assert(index < numAtoms);
+  
+  return coords[index].z();
 }
 
 ///// atomicNumber ////////////////////////////////////////////////////////////
 unsigned int AtomSet::atomicNumber(const unsigned int index) const
 /// Returns the atomic number of the atom at position \c index.
 {
-  if(index < numAtoms)
-    return coords[index].id();
-  else
-    return 0;
+  assert(index < numAtoms);
+
+  return coords[index].id();
 }
 
 ///// color ///////////////////////////////////////////////////////////////////
 QColor AtomSet::color(const unsigned int index) const
 /// Returns the color of the atom at position \c index.
 {
-  if(index < numAtoms)
-    return colors[index];
-  else
-    return QColor(0,0,0);
+  assert(index < numAtoms);
+
+  return colors[index];
 }
 
 ///// usedAtomicNumbers ///////////////////////////////////////////////////////
@@ -845,7 +829,9 @@ void AtomSet::bonds(vector<unsigned int>*& first, vector<unsigned int>*& second)
 unsigned int AtomSet::numberOfBonds(unsigned int index) const
 /// Returns the number of bonds an atom has.
 {
-  if(index >= numAtoms || atomicNumber(index) == 0)
+  assert(index < numAtoms);
+
+  if(atomicNumber(index) == 0)
     return 0;
 
   unsigned int result = 0;
@@ -913,7 +899,8 @@ double AtomSet::dx(const unsigned int index) const
 /// Returns the x-component of the force on the atom
 /// at position index.
 {
-  if(forces == NULL || index >= numAtoms)
+  assert(index < numAtoms);
+  if(forces == NULL)
     return 0.0;
 
   return forces->operator[](index).x();
@@ -924,7 +911,8 @@ double AtomSet::dy(const unsigned int index) const
 /// Returns the y-component of the force on the atom
 /// at position index.
 {
-  if(forces == NULL || index >= numAtoms)
+  assert(index < numAtoms);
+  if(forces == NULL)
     return 0.0;
 
   return forces->operator[](index).y();
@@ -935,7 +923,8 @@ double AtomSet::dz(const unsigned int index) const
 /// Returns the z-component of the force on the atom
 /// at position index.
 {
-  if(forces == NULL || index >= numAtoms)
+  assert(index < numAtoms);
+  if(forces == NULL)
     return 0.0;
 
   return forces->operator[](index).z();
@@ -972,10 +961,11 @@ double AtomSet::torsion(const unsigned int atom1, const unsigned int atom2, cons
 double AtomSet::charge(const ChargeType type, const unsigned int index) const
 /// Returns the charge on the atom at position index for a specific charge type.
 {
-  if(index >= numAtoms || type == None)
-    return 0.0;
+  assert(index < numAtoms);
 
-  if(type == Mulliken)
+  if(type == None)
+    return 0.0;
+  else if(type == Mulliken)
   {
     if(chargesMulliken == NULL)
       return 0.0;
@@ -1085,50 +1075,45 @@ unsigned int AtomSet::countPointCharges() const
 Point3D<double> AtomSet::pointChargeCoordinates(const unsigned int index) const
 /// Returns the coordinates for the given point charge
 {
-  if(index < coordsPC.size())
-    return coordsPC[index];
-  else
-    return Point3D<double>();
+  assert(index < coordsPC.size());
+
+  return coordsPC[index];
 }
 
 ///// xPC /////////////////////////////////////////////////////////////////////
 double AtomSet::xPC(const unsigned int index) const
 /// Returns the X-coordinate of the given point charge
 {
-  if(index < coordsPC.size())
-    return coordsPC[index].x();
-  else
-    return 0.0;
+  assert(index < coordsPC.size());
+
+  return coordsPC[index].x();
 }
 
 ///// yPC /////////////////////////////////////////////////////////////////////
 double AtomSet::yPC(const unsigned int index) const
 /// Returns the Y-coordinate of the given point charge
 {
-  if(index < coordsPC.size())
-    return coordsPC[index].y();
-  else
-    return 0.0;
+  assert(index < coordsPC.size());
+
+  return coordsPC[index].y();
 }
 
 ///// zPC /////////////////////////////////////////////////////////////////////
 double AtomSet::zPC(const unsigned int index) const
 /// Returns the Z-coordinate of the given point charge
 {
-  if(index < coordsPC.size())
-    return coordsPC[index].z();
-  else
-    return 0.0;
+  assert(index < coordsPC.size());
+
+  return coordsPC[index].z();
 }
 
 ///// pointCharge /////////////////////////////////////////////////////////////
 double AtomSet::pointCharge(const unsigned int index) const
 /// Returns the charge for the given point charge
 {
-  if(index < chargesPC.size())
-    return chargesPC[index];
-  else
-    return 0.0;
+  assert(index < chargesPC.size());
+  
+  return chargesPC[index];
 }
 
 ///// loadCML /////////////////////////////////////////////////////////////////

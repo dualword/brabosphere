@@ -32,6 +32,9 @@
 // C++ header files
 #include <cmath>
 
+// GLee header files
+#include "GLee.h" // must be included before gl.h (included by qgl.h)
+
 // Qt header files
 #include <qapplication.h>
 #include <qbuttongroup.h>
@@ -220,7 +223,8 @@ GLMoleculeView::GLTextureParameters PreferencesBase::getGLTextureParameters() co
 /// properties using textures in GLMoleculeView.
 {
   GLMoleculeView::GLTextureParameters result;
-  result.maximumSize = static_cast<int>(pow(2.0,static_cast<double>(data.sliceQuality)));
+  result.maximumSize = 1 << data.sliceQuality; // = 2^data.sliceQuality
+  result.use3DTextures = data.use3DTextures;
   return result;
 }
 
@@ -381,6 +385,8 @@ void PreferencesBase::loadSettings()
     data.quality         = settings.readNumEntry(prefix + "atom_quality", 15); // 32*32 slices
   data.sliceQuality      = settings.readNumEntry(prefix + "slice_quality", 7); // 128x128 textures
   data.perspectiveProjection = settings.readBoolEntry(prefix + "perspective_projection", true);
+  data.use3DTextures     = CheckBoxVolumeHQ->isEnabled() ? settings.readBoolEntry(prefix + "high_quality_volumes", true) : false;
+
   ///// PVM
   data.pvmHosts          = settings.readListEntry(prefix + "pvm_hosts");
 
@@ -465,6 +471,7 @@ void PreferencesBase::saveSettings()
   settings.writeEntry(prefix + "atom_quality", static_cast<int>(data.quality));
   settings.writeEntry(prefix + "slice_quality", static_cast<int>(data.sliceQuality));
   settings.writeEntry(prefix + "perspective_projection", data.perspectiveProjection);
+  settings.writeEntry(prefix + "high_quality_volumes", data.use3DTextures);
   ///// PVM
   settings.writeEntry(prefix + "pvm_hosts", data.pvmHosts);
 
@@ -757,6 +764,14 @@ void PreferencesBase::updateColorButtonForce()
   ColorButtonForce->setEnabled(ComboBoxForceColor->currentItem() == 1);
 }
 
+///// updateSliderSlices //////////////////////////////////////////////////////
+void PreferencesBase::updateSliderSlices()
+/// Updates the maximum possible value for SliderSlices
+{
+  SliderSlices->setMaxValue(CheckBoxVolumeHQ->isChecked() ? max3DTextureSize : max2DTextureSize);
+  qDebug("new max value for SliderSlices = %d", SliderSlices->maxValue());
+}
+
 ///// changePVMHost ///////////////////////////////////////////////////////////
 void PreferencesBase::changePVMHost()
 /// Updates LineEditPVMHost with the selected item in ListViewPVMHosts.
@@ -851,10 +866,11 @@ void PreferencesBase::makeConnections()
   connect(SliderSelectionOpacity, SIGNAL(valueChanged(int)), this, SLOT(updateOpacitySelection()));
   connect(SliderForceOpacity, SIGNAL(valueChanged(int)), this, SLOT(updateOpacityForces()));
   connect(ComboBoxForceColor, SIGNAL(activated(int)), this, SLOT(updateColorButtonForce()));
+  ///// OpenGL
+  connect(CheckBoxVolumeHQ, SIGNAL(clicked()), this, SLOT(updateSliderSlices()));
   ///// Application
   connect(ToolButtonBackground, SIGNAL(clicked()), this, SLOT(selectBackground()));
   connect(ButtonGroupUndoRedo, SIGNAL(clicked(int)), this, SLOT(updateUndoRedo()));
-
   ///// PVM
   connect(ListViewPVMHosts, SIGNAL(selectionChanged()), this, SLOT(changePVMHost()));
   connect(LineEditPVMHosts, SIGNAL(textChanged(const QString&)), this, SLOT(updatePVMHost(const QString&)));
@@ -900,9 +916,11 @@ void PreferencesBase::makeConnections()
   connect(SpinBoxUndoRAM, SIGNAL(valueChanged(int)), this, SLOT(changed()));
   ///// OpenGL
   connect(SliderQuality, SIGNAL(valueChanged(int)), this, SLOT(changed()));
+  connect(SliderSlices, SIGNAL(valueChanged(int)), this, SLOT(changed()));
   connect(CheckBoxAA, SIGNAL(clicked()), this, SLOT(changed()));
   connect(CheckBoxSmooth, SIGNAL(clicked()), this, SLOT(changed()));
   connect(CheckBoxDepthCue, SIGNAL(clicked()), this, SLOT(changed()));
+  connect(CheckBoxVolumeHQ, SIGNAL(clicked()), this, SLOT(changed()));
   connect(ButtonGroupLightPosition, SIGNAL(clicked(int)), this, SLOT(changed()));
   connect(ColorButtonLight, SIGNAL(newColor(QColor*)), this, SLOT(changed()));
   connect(SliderSpecular, SIGNAL(valueChanged(int)), this, SLOT(changed()));
@@ -961,6 +979,7 @@ void PreferencesBase::init()
   ///// load the settings
   loadSettings();
   updateColorButtonForce();
+  updateSliderSlices();
 
   ///// assign the icons
   for(QIconViewItem* item = IconViewCategory->firstItem(); item; item = item->nextItem())
@@ -992,8 +1011,8 @@ void PreferencesBase::init()
 ///// initOpenGL //////////////////////////////////////////////////////////////
 void PreferencesBase::initOpenGL()
 /// Determines the capabilities of the current OpenGL implementation.
-/// ATM: minimum/maximum linewidth, linewidth granularity
-/// in the future: stereo mode, etc.
+/// ATM: minimum/maximum linewidth, linewidth granularity, 
+/// 2D/3D texture sizes and capabilities
 /// Called once from the constructor.
 {
   ///// create an OpenGL widget
@@ -1009,21 +1028,57 @@ void PreferencesBase::initOpenGL()
   maxLineWidthGL = lwrange[1];
   lineWidthGranularity = lwgran[0];
 
+  ///// Get the texturing capabilities
+  if(GLEE_VERSION_2_1)
+    qDebug("GLEE reports OpenGL 2.1");
+  else if(GLEE_VERSION_2_0)
+    qDebug("GLEE reports OpenGL 2.0");
+  else if(GLEE_VERSION_1_5)
+    qDebug("GLEE reports OpenGL 1.5");
+  else if(GLEE_VERSION_1_4)
+    qDebug("GLEE reports OpenGL 1.4");
+  else if(GLEE_VERSION_1_3)
+    qDebug("GLEE reports OpenGL 1.3");
+  else if(GLEE_VERSION_1_2)
+    qDebug("GLEE reports OpenGL 1.2");
+  else
+    qDebug("GLEE reports OpenGL 1.1");
+  
+  if(!GLEE_VERSION_1_2)
+  {
+    // disable high quality volume rendering because 3D texturing is not available
+    CheckBoxVolumeHQ->setChecked(false);
+    CheckBoxVolumeHQ->setEnabled(false);
+  }
+
   ///// Get the texture size parameters
+  // 2D texturing
   GLint maxSize;
   glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
   // take one size lower than indicated for safety
   if(maxSize <= 128)
-    maxSize = 6; // 2^6 = 64, should be the minimum supported size
+    max2DTextureSize = 6; // 2^6 = 64, should be the minimum supported size
   else if(maxSize <= 256)
-    maxSize = 7; // 2^7 = 128
+    max2DTextureSize = 7; // 2^7 = 128
   else
-    maxSize = 8; // 2^8 = 256, maximum size to be used by Brabosphere, corresponding to a Volume render needing 256*256*256*4*3 bytes = 192 MB
-                   // the next size is 512 and would need around 1.5 GB of texture memory...
-  // setup the slider
-  SliderSlices->setMaxValue(maxSize);
+    max2DTextureSize = 8; // 2^8 = 256, maximum size to be used by Brabosphere, corresponding to a Volume render needing 256*256*256*4*3 bytes = 192 MB
+                          // the next size is 512 and would need around 1.5 GB of texture memory...
+  // 3D texturing
+  if(GLEE_VERSION_1_2)
+  {
+    glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &maxSize);
+    if(maxSize <= 128)
+      max3DTextureSize = 6; // 2^6 = 64, should be the minimum supported size
+    else if(maxSize <= 256)
+      max3DTextureSize = 7; // 2^7 = 128
+    else
+      max3DTextureSize = 8; // 2^8 = 256, maximum size to be used by Brabosphere, corresponding to a Volume render needing 256*256*256*4 bytes = 64 MB
+                          // the next size is 512 and would need 512 MB of texture memory
+  }
+  else
+      max3DTextureSize = 0;
 
-  //*
+  /*
   qDebug("Renderer: %s",(const char*)glGetString(GL_RENDERER));
   qDebug("Vendor: %s",(const char*)glGetString(GL_VENDOR));
   qDebug("Version: %s",(const char*)glGetString(GL_VERSION));
@@ -1092,6 +1147,7 @@ void PreferencesBase::saveWidgets()
   data.materialSpecular = SliderSpecular->value();
   data.materialShininess = SliderShininess->value();
   data.perspectiveProjection = RadioButtonPerspective->isChecked();
+  data.use3DTextures = CheckBoxVolumeHQ->isChecked();
 
   ///// PVM
   data.pvmHosts.clear();
@@ -1168,6 +1224,9 @@ void PreferencesBase::restoreWidgets()
   SliderSpecular->setValue(data.materialSpecular);
   SliderShininess->setValue(data.materialShininess);
   ButtonGroupProjection->setButton(data.perspectiveProjection ? 0 : 1);
+  if(CheckBoxVolumeHQ->isEnabled())
+    CheckBoxVolumeHQ->setChecked(data.use3DTextures);
+  updateSliderSlices();
 
   ///// PVM
   ListViewPVMHosts->clear();

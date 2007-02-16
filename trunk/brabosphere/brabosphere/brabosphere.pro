@@ -153,3 +153,10 @@ kdmi_dll {
   INCLUDEPATH += $$KMDIDIR
   LIBS += -L$$KMDIDIR -lkmdi
 }
+
+################
+# GLee support #
+################
+INCLUDEPATH += ../3rdparty/GLee
+HEADERS += ../3rdparty/GLee/GLee.h
+SOURCES += ../3rdparty/GLee/GLee.c

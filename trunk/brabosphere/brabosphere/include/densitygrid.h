@@ -48,8 +48,8 @@ class DensityGrid
     enum ColorMapType{MAP_BLUE_RAINBOW_RED = 0, MAP_RED_RAINBOW_BLUE, MAP_BLACK_RAINBOW_WHITE, 
                       MAP_WHITE_RAINBOW_BLACK, MAP_BLUE_MAGENTA_RED, MAP_RED_MAGENTA_BLUE,
                       MAP_LAST};        ///< currently equal to the possibilities in the class MappedSurfaceWidget
+    enum Plane{PLANE_XY, PLANE_XZ, PLANE_YZ, PLANE_ZX};     ///< Different orientations for slices
 
-    enum Plane{PLANE_XY, PLANE_XZ, PLANE_YZ};     ///< Different orientations for slices
     ///// public member functions for changing data
 	  void setParameters(const std::vector<double>* values, const Point3D<unsigned int>& pointDimension, const Point3D<float>& pointDelta, const Point3D<float>& pointOrigin);         // set up the parameters for the surface 
     void setMappingParameters(const std::vector<double>* values, const unsigned int map, const float maxValue, const float minValue);       // sets up the mapping density for the given regular density and the color map
