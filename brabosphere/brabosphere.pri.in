@@ -40,6 +40,9 @@ CONFIG += qt thread opengl exceptions rtti warn_on
 DEFINES += NO_KDE2
 COMMONDIR = ../common
 INCLUDEPATH += include $$COMMONDIR/include
+release {
+  DEFINES += NDEBUG
+}
 
 ###########################
 # Common files            #

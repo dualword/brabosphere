@@ -386,7 +386,6 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               if(opacity > 255)
                 opacity = 255;
               //opacity = opacity > 25 ? 255 : 0;
-              //opacity = 255;
               image.setPixel(x, y-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
             }
             else
@@ -395,7 +394,6 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               if(opacity > 255)
                 opacity = 255;
               //opacity = opacity > 25 ? 255 : 0;
-              //opacity = 255;
               image.setPixel(x, y-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
             }
           }
@@ -427,42 +425,41 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
         for(unsigned int y = 0; y < numPoints.y(); y++)
         {
           if(y != index)
-            itPoints += numPoints.z();
-          else
           {
-            for(unsigned int z = numPoints.z(); z > 0; z--)
+            itPoints += numPoints.z();
+            continue;
+          }
+          // here y == index
+          for(unsigned int z = numPoints.z(); z > 0; z--)
+          {
+            value = *itPoints++;
+            if(colorMap == MAP_LAST)
             {
-              value = *itPoints++;
-              if(colorMap == MAP_LAST)
+              if(value > 0.0)
               {
-                if(value > 0.0)
-                {
-                  opacity = static_cast<int>(value/maxPlotValue*255.0);
-                  if(opacity > 255)
-                    opacity = 255;
-                  //opacity = opacity > 25 ? 255 : 0;
-                  //opacity = 255;
-                  image.setPixel(x, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
-                }
-                else
-                {
-                  opacity = static_cast<int>(value/minPlotValue*255.0);
-                  if(opacity > 255)
-                    opacity = 255;
-                  //opacity = opacity > 25 ? 255 : 0;
-                  //opacity = 255;
-                  image.setPixel(x, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
-                }
+                opacity = static_cast<int>(value/maxPlotValue*255.0);
+                if(opacity > 255)
+                  opacity = 255;
+                //opacity = opacity > 25 ? 255 : 0;
+                image.setPixel(x, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
               }
               else
               {
-                double mapValue = (value - minPlotValue)/(maxPlotValue - minPlotValue);
-                if(mapValue < 0.0)
-                  mapValue = 0.0;
-                else if(mapValue > 1.0)
-                  mapValue = 1.0;
-                image.setPixel(x, z-1, mapColor(mapValue).rgb());
+                opacity = static_cast<int>(value/minPlotValue*255.0);
+                if(opacity > 255)
+                  opacity = 255;
+                //opacity = opacity > 25 ? 255 : 0;
+                image.setPixel(x, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
               }
+            }
+            else
+            {
+              double mapValue = (value - minPlotValue)/(maxPlotValue - minPlotValue);
+              if(mapValue < 0.0)
+                mapValue = 0.0;
+              else if(mapValue > 1.0)
+                mapValue = 1.0;
+              image.setPixel(x, z-1, mapColor(mapValue).rgb());
             }
           }
         }
@@ -491,7 +488,6 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               if(opacity > 255)
                 opacity = 255;
               //opacity = opacity > 25 ? 255 : 0;
-              //opacity = 255;
               image.setPixel(y, z-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
             }
             else
@@ -500,7 +496,6 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
               if(opacity > 255)
                 opacity = 255;
               //opacity = opacity > 25 ? 255 : 0;
-              //opacity = 255;
               image.setPixel(y, z-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
             }
           }
@@ -512,6 +507,60 @@ QImage DensityGrid::getSlice(const unsigned int plane, const unsigned int index,
             else if(mapValue > 1.0)
               mapValue = 1.0;
             image.setPixel(y, z-1, mapColor(mapValue).rgb());
+          }
+        }
+      }
+      colorMap = currentMap;
+      return image;
+    }
+
+    case PLANE_ZX: // varying y-index but rotated
+    {
+      assert(index < numPoints.y());
+      QImage image(numPoints.z(), numPoints.x(), 32);
+      image.setAlphaBuffer(true);
+      std::vector<double>::const_iterator itPoints = densityValues.begin();
+      for(unsigned int x = numPoints.x(); x > 0; x--)
+      {
+        for(unsigned int y = 0; y < numPoints.y(); y++)
+        {
+          if(y != index)
+          {
+            itPoints += numPoints.z();
+            continue;
+          }
+          // here y == index
+          for(unsigned int z = 0; z < numPoints.z(); z++)
+          {
+            value = *itPoints++;
+            if(colorMap == MAP_LAST)
+            {
+              if(value > 0.0)
+              {
+                opacity = static_cast<int>(value/maxPlotValue*255.0);
+                if(opacity > 255)
+                  opacity = 255;
+                //opacity = opacity > 25 ? 255 : 0;
+                image.setPixel(z, x-1, qRgba(positiveColor.red(), positiveColor.green(), positiveColor.blue(), opacity));
+              }
+              else
+              {
+                opacity = static_cast<int>(value/minPlotValue*255.0);
+                if(opacity > 255)
+                  opacity = 255;
+                //opacity = opacity > 25 ? 255 : 0;
+                image.setPixel(z, x-1, qRgba(negativeColor.red(), negativeColor.green(), negativeColor.blue(), opacity));
+              }
+            }
+            else
+            {
+              double mapValue = (value - minPlotValue)/(maxPlotValue - minPlotValue);
+              if(mapValue < 0.0)
+                mapValue = 0.0;
+              else if(mapValue > 1.0)
+                mapValue = 1.0;
+              image.setPixel(z, x-1, mapColor(mapValue).rgb());
+            }
           }
         }
       }
@@ -670,9 +719,10 @@ void DensityGrid::calculateSurface(const double isoDensity)
 Point3D<float> DensityGrid::intersection(const unsigned int x, const unsigned int y, const unsigned int z, const unsigned int edge)
 /// Calculates the intersection point.
 {
+  assert(edge < 12);
+
   unsigned int v1x = x, v1y = y, v1z = z;
   unsigned int v2x = x, v2y = y, v2z = z;
-
   switch(edge)
   {
     case 0:  v2y += 1;
@@ -748,6 +798,8 @@ Point3D<float> DensityGrid::interpolate(const Point3D<float> point1, const Point
 unsigned int DensityGrid::getEdgeID(const unsigned int x, const unsigned int y, const unsigned int z, const unsigned int edge)
 /// Returns the ID of an edge.
 {
+  assert(edge < 12);
+
   switch(edge)
   {
     case 0:  return getVertexID(x, y, z) + 1;
@@ -762,8 +814,9 @@ unsigned int DensityGrid::getEdgeID(const unsigned int x, const unsigned int y, 
     case 9:  return getVertexID(x, y+1, z) + 2;
     case 10: return getVertexID(x+1, y+1, z) + 2;
     case 11: return getVertexID(x+1, y, z) + 2;
-    default: return static_cast<unsigned int>(-1); // should be a very large positive number 
+    //default: return static_cast<unsigned int>(-1);
   }
+  return 0; // is never reached
 }
 
 ///// getVertexID ///////////////////////////////////////////////////////////////
@@ -841,15 +894,15 @@ void DensityGrid::calculateNormals(vector<float>* singleNormals, const unsigned 
 	  Vector3D<float> vector2(verticesList[surface]->at(id1), verticesList[surface]->at(id3));
 	  Vector3D<float> normal = vector2.cross(vector1);
 	  normal.normalize();
-	  singleNormals->at(id1*3)     += normal.x();
-	  singleNormals->at(id1*3 + 1) += normal.y();
-	  singleNormals->at(id1*3 + 2) += normal.z();
-	  singleNormals->at(id2*3)     += normal.x();
-	  singleNormals->at(id2*3 + 1) += normal.y();
-	  singleNormals->at(id2*3 + 2) += normal.z();
-	  singleNormals->at(id3*3)     += normal.x();
-	  singleNormals->at(id3*3 + 1) += normal.y();
-	  singleNormals->at(id3*3 + 2) += normal.z();
+	  singleNormals->operator[](id1*3)     += normal.x();
+	  singleNormals->operator[](id1*3 + 1) += normal.y();
+	  singleNormals->operator[](id1*3 + 2) += normal.z();
+	  singleNormals->operator[](id2*3)     += normal.x();
+	  singleNormals->operator[](id2*3 + 1) += normal.y();
+	  singleNormals->operator[](id2*3 + 2) += normal.z();
+	  singleNormals->operator[](id3*3)     += normal.x();
+	  singleNormals->operator[](id3*3 + 1) += normal.y();
+	  singleNormals->operator[](id3*3 + 2) += normal.z();
   }
 }
 

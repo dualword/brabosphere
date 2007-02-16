@@ -440,7 +440,7 @@ void DensityBase::updateListView()
     columnColourWidth = ListViewParameters->columnWidth(COLUMN_COLOUR);
     QPixmap pm(ListViewParameters->width(), item->height() - 2);
     pm.fill(ColorButtonLevel->color());
-    item->setPixmap(COLUMN_COLOUR,pm);
+    item->setPixmap(COLUMN_COLOUR, pm);
     ListViewParameters->setColumnWidth(COLUMN_COLOUR, columnColourWidth);
   }
   item->setText(COLUMN_RGB, QString::number(ColorButtonLevel->color().rgb()));
@@ -482,9 +482,7 @@ void DensityBase::updateSettings()
 void DensityBase::updateVisibility(QListViewItem* item, const QPoint&, int column)
 /// Updates the visibility of a surface when a Checkbox is clicked.
 {
-  if(item == 0)
-    return;
-  if(column != 0)
+  if(item == 0 || column != 0)
     return;
 
   ///// the visibility of a surface was changed
@@ -721,7 +719,7 @@ void DensityBase::updateOpacity()
 /// SliderOpacity.
 {
   if(SliderOpacity->value() == 100)
-    LabelOpacity->setText(QString::number(SliderOpacity->value()) + " %");
+    LabelOpacity->setText("100 %");
   else
     LabelOpacity->setText(" " + QString::number(SliderOpacity->value()) + " %");
 }
@@ -1301,6 +1299,16 @@ void DensityBase::updateDensity()
     LabelDensityB->show();
   }
   enableWidgets();
+
+  ///// If a new density is loaded and nothing is shown in the view (no surfaces created,
+  ///// no volume rendering or slices), create a default surface or surface pair
+  if(surfaceProperties.empty() && ComboBoxVisualizationType->currentItem() == 0)
+  {
+    if(PushButtonAdd2->isEnabled())
+      addSurfacePair();
+    else
+      addSurface();
+  }
 }
 
 ///// updateProgress //////////////////////////////////////////////////////////
@@ -1376,6 +1384,7 @@ bool DensityBase::identicalGrids()
 /// on the same grid. If true these densities can be succesfully combined.
 {
 
+#ifndef NDEBUG
   if(densityPointsA.size() != densityPointsB.size())
     qDebug("grids are not identical because sizes differ: %d and %d",densityPointsA.size(),densityPointsB.size());
 
@@ -1387,6 +1396,7 @@ bool DensityBase::identicalGrids()
 
   if(!(deltaA == deltaB))
     qDebug("grids are not identical because deltas differ: A(%f,%f,%f) and B(%f,%f,%f)",deltaA.x(),deltaA.y(),deltaA.z(),deltaB.x(),deltaB.y(),deltaB.z());
+#endif
 
   return densityPointsA.size() == densityPointsB.size() && originA == originB && numPointsA == numPointsB && deltaA == deltaB;
 }

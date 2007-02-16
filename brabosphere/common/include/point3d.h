@@ -33,7 +33,8 @@
 
 ///// Forward class declarations & header files ///////////////////////////////
 #include <cmath>
-
+#include <iostream>
+#include <string>
 
 ///// class Point3D ///////////////////////////////////////////////////////////
 template<class T> class Point3D
@@ -68,6 +69,7 @@ template<class T> class Point3D
     {  
       return xCoord == p.xCoord && yCoord == p.yCoord && zCoord == p.zCoord;
     }
+    template <class U> friend std::ostream& operator<<(std::ostream& stream, const Point3D<T>& point);        // provides a printable representation of the Point3D
 
     ///// public member functions for changing data
     void setValues(const T x, const T y, const T z);           // sets the soordinates (cartesian by default)
@@ -190,6 +192,18 @@ template <class T> void Point3D<T>::add(const Point3D& p)
   xCoord += p.xCoord;
   yCoord += p.yCoord;
   zCoord += p.zCoord;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///// Global Friend Functions                                             /////
+///////////////////////////////////////////////////////////////////////////////
+
+///// operator<< //////////////////////////////////////////////////////////////
+template <class U> std::ostream& operator<<(std::ostream& stream, const Point3D<U>& point)
+/// Returns a serialized Point3D.
+{
+  stream << "(" << point.x() << ", " << point.y() << ", " << point.z() << ")";
+  return stream;
 }
 
 #endif
